@@ -53,7 +53,7 @@ Object.entries(textureMap).forEach(([key, paths]) => {
 
 loader.load("/models/desert.glb", (glb) => {
   glb.scene.traverse((child) => {
-    console.log(child.name)
+  /*   console.log(child.name) */
     if (child.isMesh) {
       Object.keys(textureMap).forEach((key) => {
         if (child.name.includes(key)) {
@@ -61,6 +61,36 @@ loader.load("/models/desert.glb", (glb) => {
             map: loadedTextures.day[key],
           });
           child.material = material;
+
+          if (child.isMesh && child.name.includes("cloud")) {
+            child.material.transparent = true;
+            child.material.opacity = 0.7;
+
+            // Store extra data per cloud
+            cloud.push({
+              mesh: child,
+              baseY: child.position.y,
+              floatSpeed: Math.random() * 0.1 + 0.05,
+              floatOffset: Math.random() * Math.PI * 2, // random phase
+              rotationSpeed: Math.random() * 0.0002 + 0.00005 // gentle rotation
+            });
+          }
+
+             if (child.name.includes("_roA")) {
+        rotAObjects.push({
+          mesh: child,
+
+        });
+        }
+
+        if (child.name.includes("_raB")) {
+        rotBObjects.push({
+          mesh: child,
+  
+        });
+      }
+               
+        
 
           if (child.material.map) {
             child.material.map.minFilter = THREE.LinearFilter;
@@ -107,6 +137,10 @@ const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
+
+const cloud = [];
+const rotAObjects = [];
+const rotBObjects = [];
 
 const scene = new THREE.Scene();
 
@@ -155,15 +189,15 @@ if (window.innerWidth < 768) {
   );
 } else {
   camera.position.set(
-    -13.757830381437602,
-    4.031331088414266,
-    22.81442298293254
+-8.867873355746468,
+4.633520540397707,
+19.639515902753672
   );
 
   controls.target.set(
-    0.05434256799569519,
-    2.3990680369343007,
-    -1.157919459830688
+0.11253906347616015,
+2.214055273424188,
+-1.1283890249547992
   );
 }
 
@@ -182,21 +216,42 @@ window.addEventListener("resize", () => {
 
 function animate() {
 
-
-
 };
 
-
+const clock = new THREE.Clock();
 
 const render = () => {
   controls.update();
 
-  console.log(camera.position);
-  console.log("000000000000");
-  console.log(controls.target);
+   /*  console.log(camera.position);
+    console.log("000000000000");
+    console.log(controls.target); */
 
   scene.background = new THREE.Color("#c5dba7");
   renderer.render(scene, camera);
+
+  const time = clock.getElapsedTime();
+const startDeg = 180; //dont know why right
+const rangeDeg = 10; 
+const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
+
+  cloud.forEach(c => {
+    const mesh = c.mesh;
+
+    // Float up and down
+    mesh.position.y = c.baseY + Math.sin(time * c.floatSpeed + c.floatOffset) * 0.5;
+
+    // Slight rotation
+    mesh.rotation.y += c.rotationSpeed;
+  });
+
+  rotAObjects.forEach(obj => {
+  obj.mesh.rotation.x = angle;
+});
+
+rotBObjects.forEach(obj => {
+  obj.mesh.rotation.x = -angle;
+});
 
   window.requestAnimationFrame(render);
 
