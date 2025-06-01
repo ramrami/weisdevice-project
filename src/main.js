@@ -106,11 +106,21 @@ window.addEventListener("resize", () => {
 
 /**  -------------------------- Mouse Tracking -------------------------- */
 window.addEventListener("mousemove", (e) => {
-  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-});
+  touchHappened = false;//detail
+  pointer.x = (e.clientX / sizes.width) * 2 - 1;
+  pointer.y = -(e.clientY / sizes.height) * 2 + 1;
+},
+  { passive: false }
+);
 
-window.addEventListener("click", (e) => {
+window.addEventListener("touchstart", (e) => {
+  pointer.x = (e.touches[0].clientX / sizes.width) * 2 - 1;
+  pointer.y = -(e.touches[0].clientY / sizes.height) * 2 + 1;
+},
+  { passive: false }//important for mobile 
+);
+
+function handleRaycasterInteraction() {
   if (hoveredObject) {
     const object = hoveredObject;
 
@@ -124,14 +134,32 @@ window.addEventListener("click", (e) => {
       showModal(modals.legal);
     }
   }
-});
+};
 
+window.addEventListener("click", handleRaycasterInteraction);
+
+let touchHappened = false;
 document.querySelectorAll(".modal-exit-button").forEach((button) => {
+  button.addEventListener("touchend", (e) => {
+    touchHappened = true;
+    const modal = e.target.closest(".modal");
+    hideModal(modal);
+  },
+    { passive: false }
+  );
+
   button.addEventListener("click", (e) => {
-    const modal = e.target.closest(".modal"); 
-    hideModal(modal); 
-  });
-});
+    if (touchHappened) return;
+    const modal = e.target.closest(".modal");
+    hideModal(modal);
+  },
+    { passive: false }
+  );
+
+
+},
+
+);
 /**  -------------------------- Texture Setup -------------------------- */
 const textureLoader = new THREE.TextureLoader();
 const textureMap = {
@@ -250,12 +278,17 @@ const render = () => {
   const intersects = raycaster.intersectObjects(raycasterObjects);
 
   for (let i = 0; i < intersects.length; i++) {
-    intersects[i].object.material.color.set(0xff0000); // Debug highlight
+    intersects[i].object.material.color.set(0xff0000); // Debug highlight 
   }
 
   if (intersects.length > 0) {
     const hit = intersects[0].object;
     hoveredObject = hit;
+    /*     	•	intersects is an array of all 3D objects that are currently under the mouse or touch pointer.
+      •	The array is sorted by distance, so intersects[0] is the closest object your pointer is “touching.”
+      •	hoveredObject = hit stores that one object. */
+    /*    Why is this if (intersects.length > 0) block inside the render() function?
+     Because it must run every animation frame — not just once. */
 
     if (hit.name.includes("pointer") || hit.name.includes("btn")) {
       document.body.style.cursor = "pointer";
