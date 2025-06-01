@@ -68,8 +68,31 @@ loader.load("/models/desert.glb", (glb) => {
         }
 
         if (child.name.includes("cloud")) {
-          child.material.transparent = true;   // enable transparency
-          child.material.opacity = 0.8;        // set desired opacity
+          child.material.transparent = true;
+          child.material.opacity = 0.7;
+        }
+
+        const envMap = new THREE.CubeTextureLoader()
+          .setPath('/textures/skymap/')
+          .load([
+            'px.webp', 'nx.webp',
+            'py.webp', 'ny.webp',
+            'pz.webp', 'nz.webp'
+          ]);
+
+        scene.environment = envMap;
+
+        if (child.name.includes("pcwei")/*  || child.name.includes("monitor") */) {
+          const oldMap = child.material.map; // keep the existing texture
+
+          child.material = new THREE.MeshStandardMaterial({
+            map: oldMap,
+            metalness: 0.9,
+            roughness: 0.2,
+            envMap: envMap,
+            envMapIntensity: 3.0,
+          });
+
         }
       })
     }
@@ -86,7 +109,6 @@ const sizes = {
 };
 
 const scene = new THREE.Scene();
-
 
 const camera = new THREE.PerspectiveCamera(
   35,
@@ -114,7 +136,7 @@ controls.minAzimuthAngle = -Infinity;
 controls.maxAzimuthAngle = Infinity;
 
 controls.enableDamping = true;
-controls.enablePan = false;
+/* controls.enablePan = false; */
 controls.dampingFactor = 0.05;
 
 controls.update();
@@ -122,21 +144,26 @@ controls.update();
 //Set starting camera position
 if (window.innerWidth < 768) {
   camera.position.set(
-    29.567116827654726,
-    14.018476147584705,
-    31.37040363900147
+    -11.383115329475373,
+    10.671866710496602,
+    37.856171218786116
   );
   controls.target.set(
-    -0.08206262548844094,
-    3.3119233527087255,
-    -0.7433922282864018
+    0.2906936012104184,
+    2.6137582034237625,
+    -0.5250785161947387,
   );
 } else {
-  camera.position.set(17.49173098423395, 9.108969527553887, 17.850992894238058);
+  camera.position.set(
+    -13.757830381437602,
+    4.031331088414266,
+    22.81442298293254
+  );
+
   controls.target.set(
-    0.4624746759408973,
-    1.9719940043010387,
-    -0.8300979125494505
+    0.05434256799569519,
+    2.3990680369343007,
+    -1.157919459830688
   );
 }
 
@@ -163,6 +190,10 @@ function animate() {
 
 const render = () => {
   controls.update();
+
+  console.log(camera.position);
+  console.log("000000000000");
+  console.log(controls.target);
 
   scene.background = new THREE.Color("#c5dba7");
   renderer.render(scene, camera);
