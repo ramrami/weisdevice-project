@@ -32,13 +32,57 @@
   }
 }
 
+/* General modal window */
 .modal {
   position: absolute;
-  top: 50%;
+    top: 50%;
   left: 50%;
   transform: translate(-50%,-50%);
-  background-color: black;
-  font-size: 32px;
+  width: 300px;
+  background-color: var(--color-base-white);
+  border: 3px solid var(--color-base-black);
+  box-shadow: 4px 4px 0 var(--color-base-black);
+  padding: 1rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
   z-index: 999;
   display: none;
+}
+
+/* Modal title */
+.modal-title {
+  margin: 0 0 1rem 0;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-device-blue);
+  color: var(--color-base-white);
+  border-bottom: 2px solid var(--color-base-black);
+  font-family: 'Pixellari', sans-serif;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+/* Exit "X" button */
+.modal-exit-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-accent-pink);
+  color: var(--color-base-black);
+  font-weight: bold;
+  font-size: 25px;
+  border: 2px solid var(--color-base-black);
+  box-shadow: 2px 2px 0 var(--color-base-black);
+  cursor: pointer;
+  font-family: 'Pixellari', sans-serif;
+  line-height: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-exit-button:hover {
+  background-color: var(--color-accent-yellow);
 }
