@@ -28,6 +28,10 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const scene = new THREE.Scene();
 
+let currentIndex = 0;
+let nextIndex = 1;
+let monitorMesh = null; // store the reference to the monitor mesh
+
 const modals = {
   work: document.querySelector(".modal.work"),
   about: document.querySelector(".modal.about"),
@@ -163,8 +167,15 @@ const textureMap = {
   terrain: { day: "/textures/terrain_texture.webp" },
   other: { day: "/textures/other_texture.webp" },
   pcwei: { day: "/textures/pcwei_texture.webp" },
-  monitor: { day: "/textures/monitor/monitor_A_texture.webp" },
 };
+
+const monitor_texture = [textureLoader.load('/textures/monitor/monitor_A_texture.webp'),
+textureLoader.load('/textures/monitor/monitor_B_texture.webp'),
+textureLoader.load('/textures/monitor/monitor_C_texture.webp'),
+textureLoader.load('/textures/monitor/monitor_D_texture.webp')];
+monitor_texture.forEach(tex => {
+  tex.flipY = false; // or true if it was already flipped
+});
 
 const loadedTextures = { day: {} };
 Object.entries(textureMap).forEach(([key, paths]) => {
@@ -235,6 +246,48 @@ loader.load("/models/desert.glb", (glb) => {
         roughness: 0.2,
         envMap: envMap,
         envMapIntensity: 3.0,
+      });
+    }
+
+
+    if (name.includes("monitor")) {
+      monitorMesh = child; // store reference for later updates
+      child.material = new THREE.ShaderMaterial({
+        uniforms: {
+          uTextureA: { value: monitor_texture[currentIndex] },
+          uTextureB: { value: monitor_texture[nextIndex] },
+          uBrightness: { value: 1.0 },
+          uContrast: { value: 1.0 },
+          uMix: { value: 0.0 }
+        },
+        vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+        fragmentShader: `
+        uniform sampler2D uTextureA;
+        uniform sampler2D uTextureB;
+        uniform float uBrightness;
+        uniform float uContrast;
+        uniform float uMix;
+        varying vec2 vUv;
+
+        void main() {
+          vec4 texA = texture2D(uTextureA, vUv);
+          vec4 texB = texture2D(uTextureB, vUv);
+          vec4 mixed = mix(texA, texB, uMix);
+
+          // Apply brightness and contrast
+          mixed.rgb = (mixed.rgb - 0.5) * uContrast + 0.5; // contrast
+          mixed.rgb *= uBrightness; // brightness
+
+          gl_FragColor = mixed;
+        }
+      `,
+        side: THREE.DoubleSide
       });
     }
   });
@@ -353,20 +406,75 @@ const render = (timestamp) => {
   raycaster.setFromCamera(pointer, camera);
   currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-  if (currentIntersects.length > 0) {
-    const currentIntersectObject = currentIntersects[0].object;
+if (currentIntersects.length > 0) {
+  const object = currentIntersects[0].object;
 
-    if (currentIntersectObject.name.includes("pointer")) {
-      document.body.style.cursor = "pointer";
-    } else {
-      document.body.style.cursor = "default";
-    }
+  let isMonitor = object.name.includes("monitor");
+  let isPointer = object.name.includes("pointer");
+
+  // Set cursor
+  if (isPointer || isMonitor) {
+    document.body.style.cursor = "pointer";
   } else {
     document.body.style.cursor = "default";
   }
+
+  // Handle monitor hover effect
+  if (isMonitor && monitorMesh && monitorMesh.material) {
+    gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.2, duration: 0.5 });
+    gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.3, duration: 0.5 });
+  } else if (monitorMesh && monitorMesh.material) {
+    gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
+    gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+  }
+} else {
+  document.body.style.cursor = "default";
+
+  // Reset monitor appearance if nothing is hovered
+  if (monitorMesh && monitorMesh.material) {
+    gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
+    gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+  }
+}
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
 };
 
 render();
+
+window.addEventListener("click", () => {
+  if (!currentIntersects || currentIntersects.length === 0) return;
+
+  const clickedObj = currentIntersects[0].object;
+  if (clickedObj.name.includes("monitor") && currentIndex < 3) {
+    nextIndex = currentIndex + 1;
+
+    // Prepare new textures for blending
+    if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
+      const uniforms = monitorMesh.material.uniforms;
+
+      uniforms.uTextureA.value = monitor_texture[currentIndex];
+      uniforms.uTextureB.value = monitor_texture[nextIndex];
+      uniforms.uMix.value = 0.0;
+
+      // Animate mix from 0 to 1
+      gsap.to(uniforms.uMix, {
+        value: 1.0,
+        duration: 1.0,
+        ease: "power2.inOut",
+        onComplete: () => {
+          // After transition, set currentIndex = nextIndex and reset mix
+          currentIndex = nextIndex;
+          uniforms.uTextureA.value = monitor_texture[currentIndex];
+          uniforms.uTextureB.value = monitor_texture[currentIndex];
+          uniforms.uMix.value = 0.0;
+        }
+      });
+    }
+
+    if (nextIndex === 3) {
+      console.log("Reached final texture. No further switches.");
+    }
+  }
+});
