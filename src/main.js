@@ -242,6 +242,10 @@ loader.load("/models/desert.glb", (glb) => {
   scene.add(glb.scene);
 });
 
+/**  -------------------------- monitor -------------------------- */
+
+
+
 /**  -------------------------- smoke -------------------------- */
 const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
 smokeGeometry.translate(-0.5, 5, -2); // slight upward offset
