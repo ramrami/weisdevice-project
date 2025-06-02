@@ -242,10 +242,6 @@ loader.load("/models/desert.glb", (glb) => {
   scene.add(glb.scene);
 });
 
-/**  -------------------------- monitor -------------------------- */
-
-
-
 /**  -------------------------- smoke -------------------------- */
 const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
 smokeGeometry.translate(-0.5, 5, -2); // slight upward offset
@@ -324,19 +320,6 @@ const smokeMaterial = new THREE.ShaderMaterial({
 const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
 smoke.position.set(0, 2, 0);
 scene.add(smoke);
-/**  -------------------------- monitor mesh -------------------------- */
-/* const screenGeometry = new THREE.PlaneGeometry(1.6, 0.9); // size as needed
-const screenMaterial = new THREE.MeshBasicMaterial({
-  map: loadedTextures.day.monitor.day,
-  transparent: true,
-});
-const screenMesh = new THREE.Mesh(screenGeometry, screenMaterial);
-screenMesh.name = "monitorScreen";
-screenMesh.position.set(x, y, z); // 
-screenMesh.rotation.y = Math.PI; // or whatever orientation fits
-scene.add(screenMesh);
-
-raycasterObjects.push(screenMesh); */ // allow hover & click
 
 /**  -------------------------- Animation -------------------------- */
 const clock = new THREE.Clock();
