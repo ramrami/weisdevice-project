@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smooth Texture Switch with Sparks</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 3;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const loader = new THREE.TextureLoader();
+    const textures = [
+      loader.load('public/media/favicon/favicon.svg'),
+      loader.load('public/textures/other_texture.webp'),
+      loader.load('public/textures/pcwei_texture.webp'),
+      loader.load('public/textures/monitor/monitor_B_texture.webp') // NEW 4th texture
+    ];
+
+    let currentIndex = 0;
+    let nextIndex = 1;
+    let transition = false;
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTextureA: { value: textures[currentIndex] },
+        uTextureB: { value: textures[nextIndex] },
+        uBrightness: { value: 1.0 },
+        uMix: { value: 0.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uTextureA;
+        uniform sampler2D uTextureB;
+        uniform float uBrightness;
+        uniform float uMix;
+        varying vec2 vUv;
+        void main() {
+          vec4 texA = texture2D(uTextureA, vUv);
+          vec4 texB = texture2D(uTextureB, vUv);
+          vec4 mixed = mix(texA, texB, uMix);
+          mixed.rgb *= uBrightness;
+          gl_FragColor = mixed;
+        }
+      `,
+      side: THREE.DoubleSide
+    });
+
+    const geometry = new THREE.PlaneGeometry(2, 1);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    let isHovered = false;
+    let targetBrightness = 1.0;
+
+    // ---------------------------
+    // Spark System
+    // ---------------------------
+    class Spark {
+      constructor(position) {
+        const geometry = new THREE.SphereGeometry(0.02, 6, 6);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff66 });
+        this.mesh = new THREE.Mesh(geometry, material);
+
+        this.mesh.position.copy(position);
+        this.velocity = new THREE.Vector3(
+          (Math.random() - 0.5) * 0.1, // Slower
+          Math.random() * 0.2 + 0.1,   // Mostly upward
+          (Math.random() - 0.5) * 0.1
+        );
+        this.life = 1.0;
+
+        scene.add(this.mesh);
+      }
+
+      update(delta) {
+        this.mesh.position.addScaledVector(this.velocity, delta * 60);
+        this.life -= delta * 2;
+        this.mesh.material.opacity = this.life;
+        this.mesh.material.transparent = true;
+        if (this.life <= 0) {
+          scene.remove(this.mesh);
+          return false;
+        }
+        return true;
+      }
+    }
+
+    const sparks = [];
+
+    function spawnSparks(position, count = 12) {
+      for (let i = 0; i < count; i++) {
+        sparks.push(new Spark(position.clone()));
+      }
+    }
+
+    window.addEventListener('mousemove', (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    window.addEventListener('click', () => {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(mesh);
+      if (intersects.length > 0 && !transition && currentIndex < 3) {
+        nextIndex = currentIndex + 1;
+        transition = true;
+        material.uniforms.uTextureB.value = textures[nextIndex];
+        material.uniforms.uMix.value = 0.0;
+        spawnSparks(mesh.position); // 💥 sparks only when not at final texture
+      }
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(mesh);
+      isHovered = intersects.length > 0;
+
+      targetBrightness = isHovered ? 1.3 : 1.0;
+      material.uniforms.uBrightness.value += (targetBrightness - material.uniforms.uBrightness.value) * 0.1;
+
+      if (transition) {
+        material.uniforms.uMix.value += 0.05;
+        if (material.uniforms.uMix.value >= 1.0) {
+          material.uniforms.uMix.value = 0.0;
+          material.uniforms.uTextureA.value = textures[nextIndex];
+          currentIndex = nextIndex;
+          transition = false;
+        }
+      }
+
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const alive = sparks[i].update(delta);
+        if (!alive) sparks.splice(i, 1);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

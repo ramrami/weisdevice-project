@@ -154,8 +154,6 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
   },
     { passive: false }
   );
-
-
 },
 
 );
@@ -174,6 +172,74 @@ Object.entries(textureMap).forEach(([key, paths]) => {
   dayTexture.flipY = false;
   dayTexture.colorSpace = THREE.SRGBColorSpace;
   loadedTextures.day[key] = dayTexture;
+});
+
+/**  -------------------------- Model Loader -------------------------- */
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/draco/');
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
+
+loader.load("/models/desert.glb", (glb) => {
+  const envMap = new THREE.CubeTextureLoader()
+    .setPath('/textures/skymap/')
+    .load(['px.webp', 'nx.webp', 'py.webp', 'ny.webp', 'pz.webp', 'nz.webp']);
+  scene.environment = envMap;
+
+  glb.scene.traverse((child) => {
+    if (!child.isMesh) return;
+    const name = child.name;
+
+    // Apply textures
+    Object.keys(textureMap).forEach((key) => {
+      if (name.includes(key)) {
+        const material = new THREE.MeshBasicMaterial({
+          map: loadedTextures.day[key],
+        });
+        material.map.minFilter = THREE.LinearFilter;
+        child.material = material;
+      }
+    });
+
+    // Clouds
+    if (name.includes("cloud")) {
+      child.material.transparent = true;
+      child.material.opacity = 0.7;
+      cloud.push({
+        mesh: child,
+        baseY: child.position.y,
+        floatSpeed: Math.random() * 0.1 + 0.05,
+        floatOffset: Math.random() * Math.PI * 2,
+        rotationSpeed: Math.random() * 0.0002 + 0.00005
+      });
+    }
+
+    // Animate parts
+    if (name.includes("roA")) {
+      rotAObjects.push({ mesh: child });
+    } else if (name.includes("raB")) {
+      rotBObjects.push({ mesh: child });
+    }
+
+    // Raycaster targets
+    if (name.includes("raycaster")) {
+      raycasterObjects.push(child);
+    }
+
+    // Special metallic material for pcwei
+    if (name.includes("pcwei")) {
+      const oldMap = child.material.map;
+      child.material = new THREE.MeshStandardMaterial({
+        map: oldMap,
+        metalness: 0.9,
+        roughness: 0.2,
+        envMap: envMap,
+        envMapIntensity: 3.0,
+      });
+    }
+  });
+
+  scene.add(glb.scene);
 });
 
 /**  -------------------------- smoke -------------------------- */
@@ -254,73 +320,19 @@ const smokeMaterial = new THREE.ShaderMaterial({
 const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
 smoke.position.set(0, 2, 0);
 scene.add(smoke);
-/**  -------------------------- Model Loader -------------------------- */
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('/draco/');
-const loader = new GLTFLoader();
-loader.setDRACOLoader(dracoLoader);
-
-loader.load("/models/desert.glb", (glb) => {
-  const envMap = new THREE.CubeTextureLoader()
-    .setPath('/textures/skymap/')
-    .load(['px.webp', 'nx.webp', 'py.webp', 'ny.webp', 'pz.webp', 'nz.webp']);
-  scene.environment = envMap;
-
-  glb.scene.traverse((child) => {
-    if (!child.isMesh) return;
-    const name = child.name;
-
-    // Apply textures
-    Object.keys(textureMap).forEach((key) => {
-      if (name.includes(key)) {
-        const material = new THREE.MeshBasicMaterial({
-          map: loadedTextures.day[key],
-        });
-        material.map.minFilter = THREE.LinearFilter;
-        child.material = material;
-      }
-    });
-
-    // Clouds
-    if (name.includes("cloud")) {
-      child.material.transparent = true;
-      child.material.opacity = 0.7;
-      cloud.push({
-        mesh: child,
-        baseY: child.position.y,
-        floatSpeed: Math.random() * 0.1 + 0.05,
-        floatOffset: Math.random() * Math.PI * 2,
-        rotationSpeed: Math.random() * 0.0002 + 0.00005
-      });
-    }
-
-    // Animate parts
-    if (name.includes("roA")) {
-      rotAObjects.push({ mesh: child });
-    } else if (name.includes("raB")) {
-      rotBObjects.push({ mesh: child });
-    }
-
-    // Raycaster targets
-    if (name.includes("raycaster")) {
-      raycasterObjects.push(child);
-    }
-
-    // Special metallic material for pcwei
-    if (name.includes("pcwei")) {
-      const oldMap = child.material.map;
-      child.material = new THREE.MeshStandardMaterial({
-        map: oldMap,
-        metalness: 0.9,
-        roughness: 0.2,
-        envMap: envMap,
-        envMapIntensity: 3.0,
-      });
-    }
-  });
-
-  scene.add(glb.scene);
+/**  -------------------------- monitor mesh -------------------------- */
+/* const screenGeometry = new THREE.PlaneGeometry(1.6, 0.9); // size as needed
+const screenMaterial = new THREE.MeshBasicMaterial({
+  map: loadedTextures.day.monitor.day,
+  transparent: true,
 });
+const screenMesh = new THREE.Mesh(screenGeometry, screenMaterial);
+screenMesh.name = "monitorScreen";
+screenMesh.position.set(x, y, z); // 
+screenMesh.rotation.y = Math.PI; // or whatever orientation fits
+scene.add(screenMesh);
+
+raycasterObjects.push(screenMesh); */ // allow hover & click
 
 /**  -------------------------- Animation -------------------------- */
 const clock = new THREE.Clock();
