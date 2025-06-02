@@ -20,7 +20,9 @@ const sizes = {
 const cloud = [];
 const rotAObjects = [];
 const rotBObjects = [];
+
 const raycasterObjects = [];
+let currentIntersects = null;
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -108,8 +110,7 @@ window.addEventListener("mousemove", (e) => {
   touchHappened = false;//detail
   pointer.x = (e.clientX / sizes.width) * 2 - 1;
   pointer.y = -(e.clientY / sizes.height) * 2 + 1;
-},
-  { passive: false }
+}
 );
 
 window.addEventListener("touchstart", (e) => {
@@ -120,8 +121,8 @@ window.addEventListener("touchstart", (e) => {
 );
 
 function handleRaycasterInteraction() {
-  if (hoveredObject) {
-    const object = hoveredObject;
+  if (currentIntersects && currentIntersects.length > 0) {
+    const object = currentIntersects[0].object;
 
     if (object.name.includes("workbtn")) {
       showModal(modals.work);
@@ -217,9 +218,9 @@ loader.load("/models/desert.glb", (glb) => {
     }
 
     // Animate parts
-    if (name.includes("_roA")) {
+    if (name.includes("roA")) {
       rotAObjects.push({ mesh: child });
-    } else if (name.includes("_raB")) {
+    } else if (name.includes("raB")) {
       rotBObjects.push({ mesh: child });
     }
 
@@ -246,11 +247,11 @@ loader.load("/models/desert.glb", (glb) => {
 
 /**  -------------------------- Animation -------------------------- */
 const clock = new THREE.Clock();
-let hoveredObject = null;
 
+scene.background = new THREE.Color("#c5dba7");
 const render = () => {
   controls.update();
-  scene.background = new THREE.Color("#c5dba7");
+  
 
   const time = clock.getElapsedTime();
   const startDeg = 180;
@@ -274,30 +275,26 @@ const render = () => {
 
   // Raycaster hover
   raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects(raycasterObjects);
-/* 
-  for (let i = 0; i < intersects.length; i++) {
-    intersects[i].object.material.color.set(0xff0000); // Debug highlight 
-  } */
+  currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-  if (intersects.length > 0) {
-    const hit = intersects[0].object;
-    hoveredObject = hit;
+for (let i = 0; i < currentIntersects.length; i++) {
+  currentIntersects[i].object.material.color.set(0xff0000); // Debug highlight
+}
+  if (currentIntersects.length > 0) {
+    const currentIntersectObject = currentIntersects[0].object;
     /*     	•	intersects is an array of all 3D objects that are currently under the mouse or touch pointer.
       •	The array is sorted by distance, so intersects[0] is the closest object your pointer is “touching.”
       •	hoveredObject = hit stores that one object. */
     /*    Why is this if (intersects.length > 0) block inside the render() function?
      Because it must run every animation frame — not just once. */
 
-    if (hit.name.includes("pointer") || hit.name.includes("btn")) {
+    if (currentIntersectObject.name.includes("pointer")) {
       document.body.style.cursor = "pointer";
     } else {
       document.body.style.cursor = "default";
     }
   } else {
-    hoveredObject = null;
-    document.body.style.cursor = "default";
-  }
+      document.body.style.cursor = "default";}
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
