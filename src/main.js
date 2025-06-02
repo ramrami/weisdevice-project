@@ -185,7 +185,6 @@ smokeGeometry.rotateY(-Math.PI / 2.2);
 const perlinTexture = textureLoader.load("/shaders/perlin.png");
 perlinTexture.wrapS = THREE.RepeatWrapping;
 perlinTexture.wrapT = THREE.RepeatWrapping;
-console.log("Perlin texture:", perlinTexture.image);
 const smokeVertexShader = `
 uniform float uTime;
 uniform sampler2D uPerlinTexture;
@@ -334,10 +333,6 @@ const render = (timestamp) => {
   const startDeg = 180;
   const rangeDeg = 10;
   const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
-
-  console.log('Camera Position:', camera.position);
-  console.log("oooo");
-  console.log('Controls Target:', controls.target);
 
   smokeMaterial.uniforms.uTime.value = time;
   // Animate clouds
