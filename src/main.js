@@ -1,6 +1,5 @@
 /**  -------------------------- Imports -------------------------- */
-import { compileString } from "sass";
-import "./style.scss";
+/* import { compileString } from "sass"; */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -276,10 +275,10 @@ const render = () => {
   // Raycaster hover
   raycaster.setFromCamera(pointer, camera);
   const intersects = raycaster.intersectObjects(raycasterObjects);
-
+/* 
   for (let i = 0; i < intersects.length; i++) {
     intersects[i].object.material.color.set(0xff0000); // Debug highlight 
-  }
+  } */
 
   if (intersects.length > 0) {
     const hit = intersects[0].object;
