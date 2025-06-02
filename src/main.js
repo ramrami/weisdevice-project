@@ -35,7 +35,6 @@ const modals = {
   legal: document.querySelector(".modal.legal")
 };
 
-
 /**  -------------------------- modal -------------------------- */
 const showModal = (modal) => {
   modal.style.display = "block"
@@ -166,7 +165,7 @@ const textureMap = {
   terrain: { day: "/textures/terrain_texture.webp" },
   other: { day: "/textures/other_texture.webp" },
   pcwei: { day: "/textures/pcwei_texture.webp" },
-  monitor: { day: "/textures/monitor_A_texture.webp" },
+  monitor: { day: "/textures/monitor/monitor_A_texture.webp" },
 };
 
 const loadedTextures = { day: {} };
@@ -177,6 +176,85 @@ Object.entries(textureMap).forEach(([key, paths]) => {
   loadedTextures.day[key] = dayTexture;
 });
 
+/**  -------------------------- smoke -------------------------- */
+const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
+smokeGeometry.translate(-0.5, 5, -2); // slight upward offset
+smokeGeometry.scale(0.5, 0.5, 0.5);
+smokeGeometry.rotateY(-Math.PI / 2.2);
+
+const perlinTexture = textureLoader.load("/shaders/perlin.png");
+perlinTexture.wrapS = THREE.RepeatWrapping;
+perlinTexture.wrapT = THREE.RepeatWrapping;
+console.log("Perlin texture:", perlinTexture.image);
+const smokeVertexShader = `
+uniform float uTime;
+uniform sampler2D uPerlinTexture;
+
+varying vec2 vUv;
+
+vec2 rotate2D(vec2 pos, float angle) {
+  float s = sin(angle);
+  float c = cos(angle);
+  return mat2(c, -s, s, c) * pos;
+}
+
+void main() {
+  vec3 newPosition = position;
+
+  float twistPerlin = texture(uPerlinTexture, vec2(0.5, uv.y * 0.2 - uTime * 0.01)).r;
+  float angle = twistPerlin * 3.0;
+  newPosition.xz = rotate2D(newPosition.xz, angle);
+
+  vec2 windOffset = vec2(
+    texture(uPerlinTexture, vec2(0.25, uTime * 0.01)).r - 0.5,
+    texture(uPerlinTexture, vec2(0.75, uTime * 0.01)).r - 0.5
+  );
+  windOffset *= pow(uv.y, 2.0) * 1.5;
+  newPosition.xz += windOffset;
+
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+  vUv = uv;
+}
+`;
+const smokeFragmentShader = `
+uniform float uTime;
+uniform sampler2D uPerlinTexture;
+
+varying vec2 vUv;
+
+void main() {
+  vec2 smokeUv = vUv;
+  smokeUv.x *= 0.5;
+  smokeUv.y *= 0.3;
+  smokeUv.y -= uTime * 0.04;
+
+  float smoke = texture(uPerlinTexture, smokeUv).r;
+  smoke = smoothstep(0.5, 1.0, smoke);
+
+  smoke *= smoothstep(0.0, 0.1, vUv.x);
+  smoke *= smoothstep(1.0, 0.9, vUv.x);
+  smoke *= smoothstep(0.0, 0.1, vUv.y);
+  smoke *= smoothstep(1.0, 0.4, vUv.y);
+
+/* gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); */
+gl_FragColor = vec4(1, 1, 1, smoke); 
+}
+`;
+const smokeMaterial = new THREE.ShaderMaterial({
+  vertexShader: smokeVertexShader,
+  fragmentShader: smokeFragmentShader,
+  uniforms: {
+    uTime: new THREE.Uniform(0),
+    uPerlinTexture: new THREE.Uniform(perlinTexture),
+  },
+  side: THREE.DoubleSide,
+  transparent: true,
+  depthWrite: false,
+});
+
+const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
+smoke.position.set(0, 2, 0);
+scene.add(smoke);
 /**  -------------------------- Model Loader -------------------------- */
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
@@ -249,15 +327,17 @@ loader.load("/models/desert.glb", (glb) => {
 const clock = new THREE.Clock();
 
 scene.background = new THREE.Color("#c5dba7");
-const render = () => {
+const render = (timestamp) => {
   controls.update();
-  
 
   const time = clock.getElapsedTime();
   const startDeg = 180;
   const rangeDeg = 10;
   const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
 
+
+    
+  smokeMaterial.uniforms.uTime.value = time;
   // Animate clouds
   cloud.forEach(c => {
     const mesh = c.mesh;
@@ -277,24 +357,17 @@ const render = () => {
   raycaster.setFromCamera(pointer, camera);
   currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-for (let i = 0; i < currentIntersects.length; i++) {
-  currentIntersects[i].object.material.color.set(0xff0000); // Debug highlight
-}
   if (currentIntersects.length > 0) {
     const currentIntersectObject = currentIntersects[0].object;
-    /*     	•	intersects is an array of all 3D objects that are currently under the mouse or touch pointer.
-      •	The array is sorted by distance, so intersects[0] is the closest object your pointer is “touching.”
-      •	hoveredObject = hit stores that one object. */
-    /*    Why is this if (intersects.length > 0) block inside the render() function?
-     Because it must run every animation frame — not just once. */
-
+ 
     if (currentIntersectObject.name.includes("pointer")) {
       document.body.style.cursor = "pointer";
     } else {
       document.body.style.cursor = "default";
     }
   } else {
-      document.body.style.cursor = "default";}
+    document.body.style.cursor = "default";
+  }
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
