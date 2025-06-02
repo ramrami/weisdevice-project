@@ -86,11 +86,11 @@ controls.update();
 
 /**  -------------------------- Responsive Camera -------------------------- */
 if (window.innerWidth < 768) {
-  camera.position.set(-11.38, 10.67, 37.85);
-  controls.target.set(0.29, 2.61, -0.52);
+  camera.position.set(-12.909337086928565, 8.550931829236296, 20.598656336120253);
+  controls.target.set(0.3329815555892619, 2.654559498384689, -0.5054645533440316);
 } else {
-  camera.position.set(-8.86, 4.63, 19.63);
-  controls.target.set(0.11, 2.21, -1.12);
+  camera.position.set(-5.522436315597833, 8.036417974169375, 14.73025582438407);
+  controls.target.set(-0.03621834906034986, 2.0794669599639444, -0.9874727502508671);
 }
 
 window.addEventListener("resize", () => {
@@ -335,8 +335,10 @@ const render = (timestamp) => {
   const rangeDeg = 10;
   const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
 
+  console.log('Camera Position:', camera.position);
+  console.log("oooo");
+  console.log('Controls Target:', controls.target);
 
-    
   smokeMaterial.uniforms.uTime.value = time;
   // Animate clouds
   cloud.forEach(c => {
@@ -359,7 +361,7 @@ const render = (timestamp) => {
 
   if (currentIntersects.length > 0) {
     const currentIntersectObject = currentIntersects[0].object;
- 
+
     if (currentIntersectObject.name.includes("pointer")) {
       document.body.style.cursor = "pointer";
     } else {
