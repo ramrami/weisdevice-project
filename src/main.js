@@ -413,7 +413,9 @@ if (currentIntersects.length > 0) {
   let isPointer = object.name.includes("pointer");
 
   // Set cursor
-  if (isPointer || isMonitor) {
+ if (isMonitor && currentIndex === 3) {
+    document.body.style.cursor = "not-allowed";
+  } else if (isPointer || isMonitor) {
     document.body.style.cursor = "pointer";
   } else {
     document.body.style.cursor = "default";
