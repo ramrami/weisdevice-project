@@ -6,4 +6,9 @@
   --color-rock-brown: #c49a6c;
   --color-base-white: #f4f4f4;
   --color-base-black: #1e1e1e;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

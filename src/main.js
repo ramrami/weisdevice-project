@@ -41,14 +41,9 @@ const modals = {
 
 /**  -------------------------- modal -------------------------- */
 const showModal = (modal) => {
-  modal.style.display = "block"
-
+  modal.classList.remove("hidden");
   gsap.set(modal, { opacity: 0 });
-
-  gsap.to(modal, {
-    opacity: 1,
-    duration: 0.5,
-  });
+  gsap.to(modal, { opacity: 1, duration: 0.5 });
 };
 
 const hideModal = (modal) => {
@@ -56,7 +51,7 @@ const hideModal = (modal) => {
     opacity: 0,
     duration: 0.5,
     onComplete: () => {
-      modal.style.display = "none"
+      modal.classList.add("hidden");
     }
   });
 };
