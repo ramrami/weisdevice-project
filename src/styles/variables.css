@@ -1,5 +1,5 @@
 :root {
-  --color-bg: #d8e1b2;
+  --color-bg: #C5DBA7;
   --color-accent-pink: #f8a8b5;
   --color-accent-yellow: #f7f189;
   --color-device-blue: #4579c2;
@@ -11,4 +11,40 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-family: 'Pixellari', sans-serif;
+  color: var(--color-base-black);
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 0.95rem;
+  color: var(--color-base-black);
+  margin: 1rem 0;
+  font-family: 'VT323', monospace;
+}
+
+p, li {
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;     /* ~20px — comfortably readable */
+  line-height: 1.6;
+  color: var(--color-base-black);
+}
+
+ul {
+  margin-left: 1.5rem;
+  list-style-type: square;
+  color: var(--color-device-blue);
+}
+
+hr {
+  border: none;
+  margin: 0.5rem 0;
+}
+
+a {
+  color: var(--color-device-blue);
+  text-decoration: underline;
 }
