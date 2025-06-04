@@ -168,10 +168,10 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--color-bg);
-  border: 0.125rem solid var(--color-base-black);
+  border: 0.2rem dashed  var(--color-base-black);
   padding: 0.5rem;
   margin-bottom: 3rem;
-  transform: rotate(-0.4deg);
+  transform: rotate(-0.7deg);
   overflow: hidden;
 }
 
@@ -179,6 +179,7 @@ body {
   width: 100%;
   margin-bottom: 0.5rem;
   transform: rotate(-0.3deg);
+  border: 0.2rem solid var(--color-base-black);
 }
 
 .infobar-content {
@@ -188,7 +189,7 @@ body {
   padding: 1rem 0.25rem 1.5rem 0.25rem;
 }
 
-.infobar .title {
+.title {
   font-family: 'Pixellari', sans-serif;
   font-size: 1.5rem;
 }
@@ -216,6 +217,8 @@ body {
   transform: rotate(15deg);
   transition: transform 0.1s ease-in-out;
   white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .more-button:hover {
@@ -223,8 +226,52 @@ body {
   transform: rotate(-4deg) scale(1.05);
 }
 
+.work .modal-content {
+  padding-bottom: 5rem;
+}
+
 .legal .modal-content {
-  padding: 2.5rem 2rem 5rem 2rem;
+  padding: 4rem 2rem 5rem 2rem;
+}
+
+.contact .modal-content {
+  padding: 3rem 2rem 0 2rem;
+}
+
+.about .modal-content {
+  padding: 3rem 2rem 5rem 2rem;
+}
+
+.contact .infobar {
+  padding: 2rem 2rem 5rem 2rem;
+}
+
+img.about-me-image {
+   width: 192px;
+  height: 192px;
+  max-width: none;
+  margin: 2rem 2rem 0rem 2rem;
+}
+
+.about-me-text {
+  padding: 2rem;
+}
+
+.highlight {
+  background-color: var(--color-base-white);
+  color: var(--color-base-black);
+  display: inline-block;
+  margin: 5px;
+}
+
+.rotate1 {
+  transform: rotate(-1.3deg);
+}
+.rotate2 {
+  transform: rotate(1.4deg);
+}
+.rotate3 {
+  transform: rotate(-2deg);
 }
 
 /* Scrollbar styles */
@@ -296,5 +343,13 @@ body {
 
   .legal .modal-content {
   padding: 2.5rem 1rem 5rem 1rem;
+}
+
+.about-me-text {
+  padding: 0;
+}
+
+img.about-me-image {
+  margin: 0 0 2rem 0;
 }
 }

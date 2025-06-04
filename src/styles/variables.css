@@ -4,7 +4,7 @@
   --color-accent-yellow: #f7f189;
   --color-device-blue: #4579c2;
   --color-rock-brown: #c49a6c;
-  --color-base-white: #f4f4f4;
+  --color-base-white: #FAFCF7;
   --color-base-black: #3b3935;
 
   font-synthesis: none;
@@ -16,7 +16,7 @@
 h1 {
   font-family: 'Pixellari', sans-serif;
   color: var(--color-base-black);
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 h2 {
@@ -28,7 +28,7 @@ h2 {
 
 p, li {
   font-family: 'VT323', monospace;
-  font-size: 1.25rem;     /* ~20px — comfortably readable */
+  font-size: 1.25rem;     
   line-height: 1.6;
   color: var(--color-base-black);
 }
