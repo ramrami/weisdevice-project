@@ -282,7 +282,6 @@ loader.load("/models/desert.glb", (glb) => {
           gl_FragColor = mixed;
         }
       `,
-        side: THREE.DoubleSide
       });
     }
   });
@@ -401,38 +400,38 @@ const render = (timestamp) => {
   raycaster.setFromCamera(pointer, camera);
   currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-if (currentIntersects.length > 0) {
-  const object = currentIntersects[0].object;
+  if (currentIntersects.length > 0) {
+    const object = currentIntersects[0].object;
 
-  let isMonitor = object.name.includes("monitor");
-  let isPointer = object.name.includes("pointer");
+    let isMonitor = object.name.includes("monitor");
+    let isPointer = object.name.includes("pointer");
 
-  // Set cursor
- if (isMonitor && currentIndex === 3) {
-    document.body.style.cursor = "not-allowed";
-  } else if (isPointer || isMonitor) {
-    document.body.style.cursor = "pointer";
+    // Set cursor
+    if (isMonitor && currentIndex === 3) {
+      document.body.style.cursor = "not-allowed";
+    } else if (isPointer || isMonitor) {
+      document.body.style.cursor = "pointer";
+    } else {
+      document.body.style.cursor = "default";
+    }
+
+    // Handle monitor hover effect
+    if (isMonitor && monitorMesh && monitorMesh.material) {
+      gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.2, duration: 0.5 });
+      gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.3, duration: 0.5 });
+    } else if (monitorMesh && monitorMesh.material) {
+      gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
+      gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+    }
   } else {
     document.body.style.cursor = "default";
-  }
 
-  // Handle monitor hover effect
-  if (isMonitor && monitorMesh && monitorMesh.material) {
-    gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.2, duration: 0.5 });
-    gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.3, duration: 0.5 });
-  } else if (monitorMesh && monitorMesh.material) {
-    gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
-    gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+    // Reset monitor appearance if nothing is hovered
+    if (monitorMesh && monitorMesh.material) {
+      gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
+      gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+    }
   }
-} else {
-  document.body.style.cursor = "default";
-
-  // Reset monitor appearance if nothing is hovered
-  if (monitorMesh && monitorMesh.material) {
-    gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
-    gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
-  }
-}
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);

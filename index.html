@@ -25,82 +25,126 @@
 <body>
   <div id="app"></div>
 
+  <div style="
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: yellow;
+  padding: 12px 20px;
+  border: 1px solid black;
+  z-index: 999;
+  font-family: sans-serif;
+  font-size: 14px;
+  max-width: 90%;
+  text-align: center;
+">
+    ⚠️ Warning: Please do not use this app! It is still under development.
+    There is currently no privacy policy or credits information available.
+    — Xianyao Wei, 14:23, June 3, 2025
+  </div>
+
   <div class="work modal hidden">
+
     <div class="titlebar">
       <h1 class="modal-title">Work</h1>
       <button class="modal-exit-button" aria-label="Close">&times;</button>
+    </div>
+    <div class="filepath-bar">
+      <span class="path">C:\Weisdevice\Portfolio\Work</span>
+      <div class="status-indicators">
+        <span>View: Thumbnails</span>
+        <span>Size: Auto</span>
+        <span>Read-only</span>
+      </div>
     </div>
 
     <div class="modal-content image-list">
       <div class="image-list-inner">
 
-         <div class="image-item">
-        <img src="/images/interphysis-thumbnail.webp" alt="Project 1">
-        <div class="infobar">
-          <span class="keyword">Wireless Game Module</span>
-          <span class="title">Interphysis</span>
-          <span class="year">2024</span>
+        <div class="image-item">
+          <div class="infobar">
+            <img src="/images/interphysis-thumbnail.webp" alt="interphysis-thumbnail">
+            <div class="infobar-content">
+              <div class="title">Interphysis</div>
+              <span class="keyword">Wireless Game Module</span>
+              <span class="year">2024</span>
+            </div>
+            <button class="more-button">More</button>
+          </div>
         </div>
-          <button class="more-button">More</button>
-      </div>
 
-      <div class="image-item">
-        <img src="/images/anglerfish-thumbnail.webp" alt="Project 2">
-        <div class="infobar">
-          <span class="keyword">Realtime AI Installtion</span>
-          <span class="title">Anglerfish</span>
-          <span class="year">2024</span>
+        <div class="image-item">
+          <div class="infobar">
+             <img src="/images/anglerfish-thumbnail.webp" alt="anglerfish-thumbnail">
+            <div class="infobar-content">
+              <div class="title">Anglerfish</div>
+              <span class="keyword">Realtime AI Installtion</span>
+              <span class="year">2024</span>
+            </div>
+            <button class="more-button">More</button>
+          </div>
         </div>
-          <button class="more-button">More</button>
-      </div>
 
-      <div class="image-item">
-        <img src="/images/dna-thumbnail.webp" alt="Project 3">
-        <div class="infobar">
-          <span class="keyword">Web-based Interaction</span>
-          <span class="title">DNA</span>
-          <span class="year">2024</span>
+        <div class="image-item">
+          <div class="infobar">
+              <img src="/images/dna-thumbnail.webp" alt="dna-thumbnail">
+            <div class="infobar-content">
+              <div class="title">DNA</div>
+              <span class="keyword">Web-based Interaction</span>
+              <span class="year">2024</span>
+            </div>
+            <button class="more-button">More</button>
+          </div>
         </div>
-          <button class="more-button">More</button>
-      </div>
 
-      <div class="image-item">
-        <img src="/images/boxman-thumbnail.webp" alt="Project 4">
-        <div class="infobar">
-          <span class="keyword">Chatbot Interface</span>
-          <span class="title">Boxman</span>
-          <span class="year">2023</span>
+        <div class="image-item">
+          <div class="infobar">
+                      <img src="/images/boxman-thumbnail.webp" alt="boxman-thumbnail">
+            <div class="infobar-content">
+              <div class="title">Boxman</div>
+              <span class="keyword">Chatbot Interface</span>
+              <span class="year">2023</span>
+            </div>
+            <button class="more-button">More</button>
+          </div>
         </div>
-          <button class="more-button">More</button>
-      </div>
 
-      <div class="image-item">
-        <img src="/images/futurehuman-thumbnail.webp" alt="Project 5">
-        <div class="infobar">
-          <span class="keyword">Illustration</span>
-          <span class="title">Future Human</span>
-          <span class="year">2022</span>
+        <div class="image-item">
+          <div class="infobar">
+                     <img src="/images/futurehuman-thumbnail.webp" alt="futurehuman-thumbnail">
+            <div class="infobar-content">
+              <div class="title">Future Human</div>
+              <span class="keyword">Illustration</span>
+              <span class="year">2022</span>
+            </div>
+            <button class="more-button">More</button>
+          </div>
         </div>
-          <button class="more-button">More</button>
       </div>
     </div>
   </div>
-      </div>
-     
+
 
   <div class="about modal hidden">
-    <h1 class="modal-title">About</h1>
-    <button class="modal-exit-button" aria-label="Close">&times;</button>
+    <div class="titlebar">
+      <h1 class="modal-title">About</h1>
+      <button class="modal-exit-button" aria-label="Close">&times;</button>
+    </div>
   </div>
 
   <div class="contact modal hidden">
-    <h1 class="modal-title">Content</h1>
-    <button class="modal-exit-button" aria-label="Close">&times;</button>
+    <div class="titlebar">
+      <h1 class="modal-title">Contact</h1>
+      <button class="modal-exit-button" aria-label="Close">&times;</button>
+    </div>
   </div>
 
   <div class="legal modal hidden">
-    <h1 class="modal-title">Legal</h1>
-    <button class="modal-exit-button" aria-label="Close">&times;</button>
+    <div class="titlebar">
+      <h1 class="modal-title">Legal</h1>
+      <button class="modal-exit-button" aria-label="Close">&times;</button>
+    </div>
   </div>
 
 
