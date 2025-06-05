@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cyberpunk Mouse Trail</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      height: 100vh;
+      cursor: crosshair;
+    }
+
+    .bit {
+      position: absolute;
+      font-family: monospace;
+      color: #0f0;
+      pointer-events: none;
+      opacity: 1;
+      animation: bitAnim 1s ease-out forwards;
+      user-select: none;
+      white-space: pre;
+    }
+
+    @keyframes bitAnim {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(40px) scale(0.8);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  let trail = { x: mouse.x, y: mouse.y };
+
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  function spawnBit(x, y) {
+    const bit = document.createElement('div');
+    bit.className = 'bit';
+    bit.textContent = Math.random() > 0.5 ? '0' : '1';
+
+    const offsetX = (Math.random() - 0.5) * 80;
+    const offsetY = (Math.random() - 0.5) * 80;
+    const size = 10 + Math.random() * 20;
+
+    bit.style.left = `${x + offsetX}px`;
+    bit.style.top = `${y + offsetY}px`;
+    bit.style.fontSize = `${size}px`;
+    bit.style.transform = `rotate(${(Math.random() - 0.5) * 60}deg)`;
+
+    document.body.appendChild(bit);
+    setTimeout(() => bit.remove(), 1000);
+  }
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Spring-following
+    const stiffness = 0.1;
+    const damping = 0.8;
+
+    const dx = mouse.x - trail.x;
+    const dy = mouse.y - trail.y;
+
+    trail.x += dx * stiffness;
+    trail.y += dy * stiffness;
+
+    // Spawn bits at trail position
+    if (Math.random() < 0.7) { // control how often bits spawn
+      spawnBit(trail.x, trail.y);
+    }
+  }
+
+  animate();
+</script>
+
+</body>
+</html>

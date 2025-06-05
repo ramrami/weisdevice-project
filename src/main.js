@@ -287,12 +287,42 @@ loader.load("/models/desert.glb", (glb) => {
       });
     }
 
-    if (child.name.includes("hover")) {
-      child.userData.initialScale = new THREE.Vector3().copy(child.scale);
-      child.userData.initialPosition = new THREE.Vector3().copy(child.position);
-      child.userData.initialRotation = new THREE.Vector3().copy(child.rotation);
-      child.userData.isAnimating = false;
-    }
+if (child.name.includes("hover")) {
+  child.userData.initialScale = child.scale.clone();
+  child.userData.initialPosition = child.position.clone();
+  child.userData.initialRotation = child.rotation.clone();
+
+  // Create GSAP timeline (paused by default)
+  const tl = gsap.timeline({ paused: true });
+
+  const scaleFactor = 1.3;
+  const positionOffset = 0.1;
+  const rotationOffset = Math.PI / 8;
+
+  tl.to(child.scale, {
+    x: child.userData.initialScale.x * scaleFactor,
+    y: child.userData.initialScale.y * scaleFactor,
+    z: child.userData.initialScale.z * scaleFactor,
+    duration: 0.3,
+    ease: "power2.out"
+  }, 0);
+
+  tl.to(child.position, {
+    x: child.userData.initialPosition.x + positionOffset,
+    y: child.userData.initialPosition.y + positionOffset,
+    z: child.userData.initialPosition.z + positionOffset,
+    duration: 0.3,
+    ease: "power2.out"
+  }, 0);
+
+  tl.to(child.rotation, {
+    y: child.userData.initialRotation.y + rotationOffset,
+    duration: 0.3,
+    ease: "power2.out"
+  }, 0);
+
+  child.userData.hoverTimeline = tl;
+}
 
   });
 
@@ -379,7 +409,7 @@ smoke.position.set(0, 2, 0);
 scene.add(smoke);
 
 /**  -------------------------- Animation -------------------------- */
-function playHoverAAnimation(object, isHovering) {
+/* function playHoverAAnimation(object, isHovering) {
   if (!object.userData) return;
 
   gsap.killTweensOf(object.scale);
@@ -435,7 +465,7 @@ function playHoverAAnimation(object, isHovering) {
       ease: "power2.out",
     });
   }
-}
+} */
 
 
 const clock = new THREE.Clock();
@@ -487,17 +517,24 @@ const render = () => {
   // Handle hoverA animation
 if (isHoverA) {
   if (hoveredObject !== currentHoveredObject) {
-    if (currentHoveredObject) playHoverAAnimation(currentHoveredObject, false);
-    playHoverAAnimation(hoveredObject, true);
+    // Stop previous
+    if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
+      currentHoveredObject.userData.hoverTimeline.reverse();
+    }
+
+    // Play new
+    if (hoveredObject.userData.hoverTimeline) {
+      hoveredObject.userData.hoverTimeline.play();
+    }
+
     currentHoveredObject = hoveredObject;
   }
 } else {
-  if (currentHoveredObject) {
-    playHoverAAnimation(currentHoveredObject, false);
+  if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
+    currentHoveredObject.userData.hoverTimeline.reverse();
     currentHoveredObject = null;
   }
 }
-
   // Cursor style
   if (isMonitor && currentIndex === 3) {
     document.body.style.cursor = "not-allowed";
