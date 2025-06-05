@@ -287,12 +287,13 @@ loader.load("/models/desert.glb", (glb) => {
       });
     }
 
-    if (child.name.includes("hoverA")) {
+    if (child.name.includes("hover")) {
       child.userData.initialScale = new THREE.Vector3().copy(child.scale);
       child.userData.initialPosition = new THREE.Vector3().copy(child.position);
       child.userData.initialRotation = new THREE.Vector3().copy(child.rotation);
       child.userData.isAnimating = false;
     }
+
   });
 
   scene.add(glb.scene);
@@ -474,7 +475,7 @@ const render = () => {
     hoveredObject = currentIntersects[0].object;
     isMonitor = hoveredObject.name.includes("monitor");
     isPointer = hoveredObject.name.includes("pointer");
-    isHoverA = hoveredObject.name.includes("hoverA");
+    isHoverA = hoveredObject.name.includes("hover");
   }
 
   // Handle hoverA animation
