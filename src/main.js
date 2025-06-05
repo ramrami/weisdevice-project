@@ -8,7 +8,7 @@ import gsap from "gsap";
 
 /* import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 import { workgroupArray } from "three/tsl";
- */
+
 /**  -------------------------- Global Variables -------------------------- */
 const canvas = document.querySelector("#experience-canvas");
 
@@ -22,7 +22,9 @@ const rotAObjects = [];
 const rotBObjects = [];
 
 const raycasterObjects = [];
-let currentIntersects = null;
+let currentIntersects = [];//was null i changed notsure
+let currentHoveredObject = null;
+
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -198,7 +200,7 @@ loader.load("/models/desert.glb", (glb) => {
 
     // Apply textures
     Object.keys(textureMap).forEach((key) => {
-      if (name.includes(key)) {
+      if (child.name.includes(key)) {
         const material = new THREE.MeshBasicMaterial({
           map: loadedTextures.day[key],
         });
@@ -208,7 +210,7 @@ loader.load("/models/desert.glb", (glb) => {
     });
 
     // Clouds
-    if (name.includes("cloud")) {
+    if (child.name.includes("cloud")) {
       child.material.transparent = true;
       child.material.opacity = 0.7;
       cloud.push({
@@ -221,19 +223,19 @@ loader.load("/models/desert.glb", (glb) => {
     }
 
     // Animate parts
-    if (name.includes("roA")) {
+    if (child.name.includes("roA")) {
       rotAObjects.push({ mesh: child });
     } else if (name.includes("raB")) {
       rotBObjects.push({ mesh: child });
     }
 
     // Raycaster targets
-    if (name.includes("raycaster")) {
+    if (child.name.includes("raycaster")) {
       raycasterObjects.push(child);
     }
 
     // Special metallic material for pcwei
-    if (name.includes("pcwei")) {
+    if (child.name.includes("pcwei")) {
       const oldMap = child.material.map;
       child.material = new THREE.MeshStandardMaterial({
         map: oldMap,
@@ -245,7 +247,7 @@ loader.load("/models/desert.glb", (glb) => {
     }
 
 
-    if (name.includes("monitor")) {
+    if (child.name.includes("monitor")) {
       monitorMesh = child; // store reference for later updates
       child.material = new THREE.ShaderMaterial({
         uniforms: {
@@ -283,6 +285,13 @@ loader.load("/models/desert.glb", (glb) => {
         }
       `,
       });
+    }
+
+    if (child.name.includes("hoverA")) {
+      child.userData.initialScale = new THREE.Vector3().copy(child.scale);
+      child.userData.initialPosition = new THREE.Vector3().copy(child.position);
+      child.userData.initialRotation = new THREE.Vector3().copy(child.rotation);
+      child.userData.isAnimating = false;
     }
   });
 
@@ -369,26 +378,78 @@ smoke.position.set(0, 2, 0);
 scene.add(smoke);
 
 /**  -------------------------- Animation -------------------------- */
+function playHoverAAnimation(object, isHovering) {
+  if (object.userData.isAnimating) return;
+
+  object.userData.isAnimating = true;
+
+  if (isHovering) {
+    gsap.to(object.scale, {
+      x: object.userData.initialScale.x * 1.2,
+      y: object.userData.initialScale.y * 1.2,
+      z: object.userData.initialScale.z * 1.2,
+      duration: 0.2,
+      ease: "bounce.in", // fixed typo
+      onComplete: () => {
+        object.userData.isAnimating = false;
+      }
+    });
+    gsap.to(object.rotation, {
+      x: object.userData.initialRotation.x + Math.PI / 8,
+      duration: 0.5,
+      ease: "bounce.out(1.8)",
+      onComplete: ()=> {
+        object.userData.isAnimating = false;
+      }
+    });
+  } else {
+    gsap.to(object.scale, {
+      x: object.userData.initialScale.x,
+      y: object.userData.initialScale.y,
+      z: object.userData.initialScale.z,
+      duration: 0.2,
+      ease: "bounce.in", // fixed typo
+      onComplete: () => {
+        object.userData.isAnimating = false;
+      }
+    });
+        gsap.to(object.rotation, {
+      x: object.userData.initialRotation.x,
+      duration: 0.5,
+      ease: "bounce.out(1.8)",
+      onComplete: ()=> {
+        object.userData.isAnimating = false;
+      }
+    });
+    
+  }
+}
+
+
+
 const clock = new THREE.Clock();
 
 scene.background = new THREE.Color("#c5dba7");
-const render = (timestamp) => {
-  controls.update();
 
+
+
+const render = () => {
+  controls.update();
   const time = clock.getElapsedTime();
+
+  // Animate rotation and clouds
   const startDeg = 180;
   const rangeDeg = 10;
   const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
 
   smokeMaterial.uniforms.uTime.value = time;
-  // Animate clouds
+
   cloud.forEach(c => {
     const mesh = c.mesh;
     mesh.position.y = c.baseY + Math.sin(time * c.floatSpeed + c.floatOffset) * 0.5;
     mesh.rotation.y += c.rotationSpeed;
   });
 
-  // Animate parts
   rotAObjects.forEach(obj => {
     obj.mesh.rotation.x = angle;
   });
@@ -396,40 +457,54 @@ const render = (timestamp) => {
     obj.mesh.rotation.x = -angle;
   });
 
-  // Raycaster hover
+  // Raycaster
   raycaster.setFromCamera(pointer, camera);
   currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
+  let hoveredObject = null;
+  let isMonitor = false;
+  let isPointer = false;
+  let isHoverA = false;
+
   if (currentIntersects.length > 0) {
-    const object = currentIntersects[0].object;
+    hoveredObject = currentIntersects[0].object;
+    isMonitor = hoveredObject.name.includes("monitor");
+    isPointer = hoveredObject.name.includes("pointer");
+    isHoverA = hoveredObject.name.includes("hoverA");
+  }
 
-    let isMonitor = object.name.includes("monitor");
-    let isPointer = object.name.includes("pointer");
-
-    // Set cursor
-    if (isMonitor && currentIndex === 3) {
-      document.body.style.cursor = "not-allowed";
-    } else if (isPointer || isMonitor) {
-      document.body.style.cursor = "pointer";
-    } else {
-      document.body.style.cursor = "default";
-    }
-
-    // Handle monitor hover effect
-    if (isMonitor && monitorMesh && monitorMesh.material) {
-      gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.2, duration: 0.5 });
-      gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.3, duration: 0.5 });
-    } else if (monitorMesh && monitorMesh.material) {
-      gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
-      gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+  // Handle hoverA animation
+  if (isHoverA) {
+    if (hoveredObject !== currentHoveredObject) {
+      if (currentHoveredObject) playHoverAAnimation(currentHoveredObject, false);
+      playHoverAAnimation(hoveredObject, true);
+      currentHoveredObject = hoveredObject;
     }
   } else {
-    document.body.style.cursor = "default";
+    if (currentHoveredObject) {
+      playHoverAAnimation(currentHoveredObject, false);
+      currentHoveredObject = null;
+    }
+  }
 
-    // Reset monitor appearance if nothing is hovered
-    if (monitorMesh && monitorMesh.material) {
-      gsap.to(monitorMesh.material.uniforms.uBrightness, { value: 1.0, duration: 0.5 });
-      gsap.to(monitorMesh.material.uniforms.uContrast, { value: 1.0, duration: 0.5 });
+  // Cursor style
+  if (isMonitor && currentIndex === 3) {
+    document.body.style.cursor = "not-allowed";
+  } else if (isPointer || isMonitor || isHoverA) {
+    document.body.style.cursor = "pointer";
+  } else {
+    document.body.style.cursor = "default";
+  }
+
+  // Monitor hover visual effect
+  if (monitorMesh?.material?.uniforms) {
+    const uniforms = monitorMesh.material.uniforms;
+    if (isMonitor) {
+      gsap.to(uniforms.uBrightness, { value: 1.2, duration: 0.5 });
+      gsap.to(uniforms.uContrast, { value: 1.3, duration: 0.5 });
+    } else {
+      gsap.to(uniforms.uBrightness, { value: 1.0, duration: 0.5 });
+      gsap.to(uniforms.uContrast, { value: 1.0, duration: 0.5 });
     }
   }
 
