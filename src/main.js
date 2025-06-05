@@ -383,6 +383,10 @@ function playHoverAAnimation(object, isHovering) {
 
   object.userData.isAnimating = true;
 
+  gsap.killTweensOf(object.scale);
+  gsap.killTweensOf(object.rotation);
+  gsap.killTweensOf(object.rotation);
+
   if (isHovering) {
     gsap.to(object.scale, {
       x: object.userData.initialScale.x * 1.2,
@@ -395,7 +399,7 @@ function playHoverAAnimation(object, isHovering) {
       }
     });
     gsap.to(object.rotation, {
-      x: object.userData.initialRotation.x + Math.PI / 8,
+      y: object.userData.initialRotation.y + Math.PI / 8,
       duration: 0.5,
       ease: "bounce.out(1.8)",
       onComplete: ()=> {
@@ -414,7 +418,7 @@ function playHoverAAnimation(object, isHovering) {
       }
     });
         gsap.to(object.rotation, {
-      x: object.userData.initialRotation.x,
+      y: object.userData.initialRotation.y,
       duration: 0.5,
       ease: "bounce.out(1.8)",
       onComplete: ()=> {
