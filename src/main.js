@@ -386,13 +386,17 @@ function playHoverAAnimation(object, isHovering) {
 
   gsap.killTweensOf(object.scale);
   gsap.killTweensOf(object.rotation);
-  gsap.killTweensOf(object.rotation);
+  gsap.killTweensOf(object.position);
+
+  const scalefactor = 1.2;
+  const positionfactor = 0.5;
+ const rotationfactor = 8;
 
   if (isHovering) {
     gsap.to(object.scale, {
-      x: object.userData.initialScale.x * 1.2,
-      y: object.userData.initialScale.y * 1.2,
-      z: object.userData.initialScale.z * 1.2,
+      x: object.userData.initialScale.x * scalefactor,
+      y: object.userData.initialScale.y * scalefactor,
+      z: object.userData.initialScale.z * scalefactor,
       duration: 0.2,
       ease: "bounce.in", // fixed typo
       onComplete: () => {
@@ -400,10 +404,20 @@ function playHoverAAnimation(object, isHovering) {
       }
     });
     gsap.to(object.rotation, {
-      y: object.userData.initialRotation.y + Math.PI / 8,
+      y: object.userData.initialRotation.y + Math.PI / rotationfactor,
       duration: 0.5,
-      ease: "bounce.out(1.8)",
+      ease: "bounce.in",
       onComplete: ()=> {
+        object.userData.isAnimating = false;
+      }
+    });
+        gsap.to(object.position, {
+      x: object.userData.initialPosition.x + positionfactor,
+      y: object.userData.initialPosition.y + positionfactor,
+      z: object.userData.initialPosition.z + positionfactor,
+      duration: 0.5,
+      ease: "bounce.in", // fixed typo
+      onComplete: () => {
         object.userData.isAnimating = false;
       }
     });
@@ -413,16 +427,26 @@ function playHoverAAnimation(object, isHovering) {
       y: object.userData.initialScale.y,
       z: object.userData.initialScale.z,
       duration: 0.2,
-      ease: "bounce.in", // fixed typo
+      ease: "bounce.out", // fixed typo
       onComplete: () => {
         object.userData.isAnimating = false;
       }
     });
         gsap.to(object.rotation, {
       y: object.userData.initialRotation.y,
-      duration: 0.5,
-      ease: "bounce.out(1.8)",
+      duration: 0.2,
+      ease: "bounce.out",
       onComplete: ()=> {
+        object.userData.isAnimating = false;
+      }
+    });
+            gsap.to(object.position, {
+      x: object.userData.initialPosition.x,
+      y: object.userData.initialPosition.y,
+      z: object.userData.initialPosition.z,
+      duration: 0.2,
+      ease: "bounce.out", // fixed typo
+      onComplete: () => {
         object.userData.isAnimating = false;
       }
     });
@@ -477,7 +501,7 @@ const render = () => {
     isPointer = hoveredObject.name.includes("pointer");
     isHoverA = hoveredObject.name.includes("hover");
   }
-
+console.log("currentHoverObject is:", currentHoveredObject);
   // Handle hoverA animation
   if (isHoverA) {
     if (hoveredObject !== currentHoveredObject) {
