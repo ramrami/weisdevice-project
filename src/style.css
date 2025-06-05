@@ -37,6 +37,7 @@ body {
 
 /* Base modal window */
 .modal {
+  filter: url(#wobble);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -46,7 +47,6 @@ body {
   /* 700px */
   max-height: 80vh;
   background-color: var(--color-base-white);
-  background-image: radial-gradient(var(--color-bg) 0.8px, transparent 0.5px);
   background-size: 12px 12px;
   border: 0.1875rem solid var(--color-base-black);
   box-shadow: 0.25rem 0.25rem 0 var(--color-base-black);
