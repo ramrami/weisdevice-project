@@ -450,7 +450,6 @@ function playHoverAAnimation(object, isHovering) {
         object.userData.isAnimating = false;
       }
     });
-    
   }
 }
 
@@ -501,7 +500,7 @@ const render = () => {
     isPointer = hoveredObject.name.includes("pointer");
     isHoverA = hoveredObject.name.includes("hover");
   }
-console.log("currentHoverObject is:", currentHoveredObject);
+
   // Handle hoverA animation
   if (isHoverA) {
     if (hoveredObject !== currentHoveredObject) {
