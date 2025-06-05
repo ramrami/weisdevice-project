@@ -380,79 +380,62 @@ scene.add(smoke);
 
 /**  -------------------------- Animation -------------------------- */
 function playHoverAAnimation(object, isHovering) {
-  if (object.userData.isAnimating) return;
-
-  object.userData.isAnimating = true;
+  if (!object.userData) return;
 
   gsap.killTweensOf(object.scale);
   gsap.killTweensOf(object.rotation);
   gsap.killTweensOf(object.position);
 
+  const s = object.userData.initialScale;
+  const p = object.userData.initialPosition;
+  const r = object.userData.initialRotation;
+
   const scalefactor = 1.2;
-  const positionfactor = 0.5;
- const rotationfactor = 8;
+  const positionfactor = 0;
+  const rotationfactor = 8;
 
   if (isHovering) {
     gsap.to(object.scale, {
-      x: object.userData.initialScale.x * scalefactor,
-      y: object.userData.initialScale.y * scalefactor,
-      z: object.userData.initialScale.z * scalefactor,
-      duration: 0.2,
-      ease: "bounce.in", // fixed typo
-      onComplete: () => {
-        object.userData.isAnimating = false;
-      }
+      x: s.x * scalefactor,
+      y: s.y * scalefactor,
+      z: s.z * scalefactor,
+      duration: 0.3,
+      ease: "power2.out",
     });
     gsap.to(object.rotation, {
-      y: object.userData.initialRotation.y + Math.PI / rotationfactor,
-      duration: 0.5,
-      ease: "bounce.in",
-      onComplete: ()=> {
-        object.userData.isAnimating = false;
-      }
+      y: r.y + Math.PI / rotationfactor,
+      duration: 0.4,
+      ease: "power2.out",
     });
-        gsap.to(object.position, {
-      x: object.userData.initialPosition.x + positionfactor,
-      y: object.userData.initialPosition.y + positionfactor,
-      z: object.userData.initialPosition.z + positionfactor,
-      duration: 0.5,
-      ease: "bounce.in", // fixed typo
-      onComplete: () => {
-        object.userData.isAnimating = false;
-      }
+    gsap.to(object.position, {
+      x: p.x + positionfactor,
+      y: p.y + positionfactor,
+      z: p.z + positionfactor,
+      duration: 0.4,
+      ease: "power2.out",
     });
   } else {
     gsap.to(object.scale, {
-      x: object.userData.initialScale.x,
-      y: object.userData.initialScale.y,
-      z: object.userData.initialScale.z,
-      duration: 0.2,
-      ease: "bounce.out", // fixed typo
-      onComplete: () => {
-        object.userData.isAnimating = false;
-      }
+      x: s.x,
+      y: s.y,
+      z: s.z,
+      duration: 0.3,
+      ease: "power2.out",
     });
-        gsap.to(object.rotation, {
-      y: object.userData.initialRotation.y,
-      duration: 0.2,
-      ease: "bounce.out",
-      onComplete: ()=> {
-        object.userData.isAnimating = false;
-      }
+    gsap.to(object.rotation, {
+      y: r.y,
+      duration: 0.3,
+      ease: "power2.out",
     });
-            gsap.to(object.position, {
-      x: object.userData.initialPosition.x,
-      y: object.userData.initialPosition.y,
-      z: object.userData.initialPosition.z,
-      duration: 0.2,
-      ease: "bounce.out", // fixed typo
-      onComplete: () => {
-        object.userData.isAnimating = false;
-      }
+    gsap.to(object.position, {
+      x: p.x,
+      y: p.y,
+      z: p.z,
+      duration: 0.3,
+      ease: "power2.out",
     });
   }
 }
-
 
 
 const clock = new THREE.Clock();
@@ -502,18 +485,18 @@ const render = () => {
   }
 
   // Handle hoverA animation
-  if (isHoverA) {
-    if (hoveredObject !== currentHoveredObject) {
-      if (currentHoveredObject) playHoverAAnimation(currentHoveredObject, false);
-      playHoverAAnimation(hoveredObject, true);
-      currentHoveredObject = hoveredObject;
-    }
-  } else {
-    if (currentHoveredObject) {
-      playHoverAAnimation(currentHoveredObject, false);
-      currentHoveredObject = null;
-    }
+if (isHoverA) {
+  if (hoveredObject !== currentHoveredObject) {
+    if (currentHoveredObject) playHoverAAnimation(currentHoveredObject, false);
+    playHoverAAnimation(hoveredObject, true);
+    currentHoveredObject = hoveredObject;
   }
+} else {
+  if (currentHoveredObject) {
+    playHoverAAnimation(currentHoveredObject, false);
+    currentHoveredObject = null;
+  }
+}
 
   // Cursor style
   if (isMonitor && currentIndex === 3) {
@@ -572,8 +555,5 @@ window.addEventListener("click", () => {
       });
     }
 
-    if (nextIndex === 3) {
-      console.log("Reached final texture. No further switches.");
-    }
   }
 });
