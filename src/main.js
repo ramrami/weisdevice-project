@@ -45,6 +45,18 @@ const modals = {
   legal: document.querySelector(".modal.legal")
 };
 
+const djAudioMap = {};
+
+for (let i = 1; i <= 9; i++) {
+  const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
+/*   audio.volume = 0.7; */
+  djAudioMap[`DJ${i}`] = audio;
+}
+
+const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); // Replace with your file
+
+const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg'); // Replace with your file
+
 /**  -------------------------- music -------------------------- */
 const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
@@ -60,8 +72,17 @@ toggleBtn.addEventListener("click", () => {
   } else {
     audio.pause();
     musicIcon.src = "/assets/icons/volume-on.svg";
+
   }
   musicPlaying = !musicPlaying;
+
+    Object.values(djAudioMap).forEach(dj => {
+    dj.muted = !musicPlaying;
+      if (!musicPlaying) dj.pause();
+  });
+
+
+  
 });
 /**  -------------------------- modal -------------------------- */
 const showModal = (modal) => {
@@ -676,13 +697,6 @@ const render = () => {
 
 render();
 
-const djAudioMap = {};
-
-for (let i = 1; i <= 9; i++) {
-  const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
-/*   audio.volume = 0.7; */
-  djAudioMap[`DJ${i}`] = audio;
-}
 
 
 window.addEventListener("click", () => {
@@ -729,10 +743,9 @@ window.addEventListener("click", () => {
       audio.currentTime = 0; // restart from beginning
       audio.play();
     }
+     if (!musicPlaying) audio.pause();
   }
 //--------------pc btn-----------------//
-const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); // Replace with your file
-let pchasPlayedMusic = false;
 
  if (clickedObj.name.includes("pcbtn")) {
 
@@ -748,21 +761,21 @@ let pchasPlayedMusic = false;
     uniforms.uTextureB.value = monitor_texture[currentIndex];
     uniforms.uMix.value = 0.0; // Show only Texture A
 
-       if (!pchasPlayedMusic) {
+    if (musicPlaying) {
+      pcButtonMusic.currentTime = 0;
       pcButtonMusic.play();
-      pchasPlayedMusic = true;
     }
   }
 }
 //------------slider------------//
-const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg'); // Replace with your file
-let sliderhasPlayedMusic = false;
+
 
   if (clickedObj.name.includes("slider") && sliderMesh) {
-           if (!sliderhasPlayedMusic) {
-      sliderMusic.play();
-      sliderhasPlayedMusic = true;
-    }
+    if (musicPlaying) {
+    sliderMusic.currentTime = 0;
+    sliderMusic.play();
+  }
+
 
     const orig = sliderMesh.userData.originalPosition;
 
