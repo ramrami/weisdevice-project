@@ -676,6 +676,15 @@ const render = () => {
 
 render();
 
+const djAudioMap = {};
+
+for (let i = 1; i <= 9; i++) {
+  const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
+/*   audio.volume = 0.7; */
+  djAudioMap[`DJ${i}`] = audio;
+}
+
+
 window.addEventListener("click", () => {
   if (!currentIntersects || currentIntersects.length === 0) return;
 
@@ -708,7 +717,19 @@ window.addEventListener("click", () => {
 
   }
   
+  const match = clickedObj.name.match(/DJ[1-9]/);
+  if (match) {
+    const djKey = match[0]; // e.g., "DJ3"
 
+    // Stop all DJ audios if you want one at a time
+    Object.values(djAudioMap).forEach(a => a.pause());
+
+    const audio = djAudioMap[djKey];
+    if (audio) {
+      audio.currentTime = 0; // restart from beginning
+      audio.play();
+    }
+  }
 //--------------pc btn-----------------//
 const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); // Replace with your file
 let pchasPlayedMusic = false;
@@ -777,7 +798,7 @@ if (!clickedObj.userData.originalColor) {
 
 // Light-up animation using GSAP
 gsap.to(clickedObj.material.color, {
-  r: 1, g: 5, b: 1, 
+  r: 1, g: 3, b: 1, 
   duration: 0.2,
   yoyo: true,
   repeat: 1,
