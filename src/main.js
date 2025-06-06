@@ -45,6 +45,24 @@ const modals = {
   legal: document.querySelector(".modal.legal")
 };
 
+/**  -------------------------- music -------------------------- */
+const audio = document.getElementById("bg-music");
+const musicIcon = document.getElementById("music-icon");
+const toggleBtn = document.getElementById("music-toggle");
+
+let musicPlaying = false;
+
+toggleBtn.addEventListener("click", () => {
+  if (!musicPlaying) {
+    audio.play();
+    audio.volume = 0.5;
+    musicIcon.src = "public/media/favicon/favicon.ico";
+  } else {
+    audio.pause();
+    musicIcon.src = "/assets/icons/volume-on.svg";
+  }
+  musicPlaying = !musicPlaying;
+});
 /**  -------------------------- modal -------------------------- */
 const showModal = (modal) => {
   modal.classList.remove("hidden");
@@ -218,12 +236,12 @@ const hoverVariants = {
     position: [0, 0, 0],
     rotation: [0, Math.PI / 3, 0],
   },
-   slider: {
+  slider: {
     scale: [1.1, 1.2, 1.1],
     position: [0, 0, 0],
     rotation: [0, 0, 0],
   },
-   pcbtn: {
+  pcbtn: {
     scale: [1.2, 1.1, 1.1],
     position: [0, 0, 0],
     rotation: [0, 0, 0],
@@ -238,14 +256,14 @@ const hoverVariants = {
 const clickVariants = {
   DJ: {
     scale: [1.0, 1.5, 1.0],
-    position: [0, -0.08, 0],
+    position: [0, -0.03, 0],
     duration: 0.3,
     easeOut: "elastic.out(1, 0.3)"
   },
   pcbtn: {
     scale: [1.0, 1.0, 1.0],
-  
-     position: [0, 0, -0.02],
+
+    position: [0, 0, -0.02],
     duration: 0.3,
     easeOut: "elastic.out(1, 0.3)"
   },
@@ -273,11 +291,11 @@ loader.load("/models/desert.glb", (glb) => {
     });
 
 
-if (child.name.includes("slider")) {
-  sliderMesh = child;
-  child.userData.originalPosition = child.position.clone(); // store original position
-  raycasterObjects.push(child); // make sure it's interactable
-}
+    if (child.name.includes("slider")) {
+      sliderMesh = child;
+      child.userData.originalPosition = child.position.clone(); // store original position
+      raycasterObjects.push(child); // make sure it's interactable
+    }
 
     // Clouds
     if (child.name.includes("cloud")) {
@@ -325,7 +343,8 @@ if (child.name.includes("slider")) {
           uTextureB: { value: monitor_texture[nextIndex] },
           uBrightness: { value: 1.0 },
           uContrast: { value: 1.0 },
-          uMix: { value: 0.0 }
+          uMix: { value: 0.0 },
+          uAberrationAmount: { value: 0.01 }
         },
         vertexShader: `
         varying vec2 vUv;
@@ -335,24 +354,41 @@ if (child.name.includes("slider")) {
         }
       `,
         fragmentShader: `
-        uniform sampler2D uTextureA;
-        uniform sampler2D uTextureB;
-        uniform float uBrightness;
-        uniform float uContrast;
-        uniform float uMix;
-        varying vec2 vUv;
+uniform sampler2D uTextureA;
+uniform sampler2D uTextureB;
+uniform float uBrightness;
+uniform float uContrast;
+uniform float uMix;
+uniform float uAberrationAmount; // Add this uniform in JS
+varying vec2 vUv;
 
-        void main() {
-          vec4 texA = texture2D(uTextureA, vUv);
-          vec4 texB = texture2D(uTextureB, vUv);
-          vec4 mixed = mix(texA, texB, uMix);
+void main() {
+  // Chromatic offset vector (can be radial, here it's a fixed offset)
+  vec2 offset = vec2(uAberrationAmount);
 
-          // Apply brightness and contrast
-          mixed.rgb = (mixed.rgb - 0.5) * uContrast + 0.5; // contrast
-          mixed.rgb *= uBrightness; // brightness
+  // Sample each channel at slightly different UVs
+  vec4 texA = vec4(
+    texture2D(uTextureA, vUv + offset).r,   // Red
+    texture2D(uTextureA, vUv).g,            // Green
+    texture2D(uTextureA, vUv - offset).b,   // Blue
+    1.0
+  );
 
-          gl_FragColor = mixed;
-        }
+  vec4 texB = vec4(
+    texture2D(uTextureB, vUv + offset).r,
+    texture2D(uTextureB, vUv).g,
+    texture2D(uTextureB, vUv - offset).b,
+    1.0
+  );
+
+  vec4 mixed = mix(texA, texB, uMix);
+
+  // Apply brightness and contrast
+  mixed.rgb = (mixed.rgb - 0.5) * uContrast + 0.5;
+  mixed.rgb *= uBrightness;
+
+  gl_FragColor = mixed;
+}
       `,
       });
     }
@@ -365,8 +401,8 @@ if (child.name.includes("slider")) {
       const config = clickVariants[variantKey];
 
       const [sx, sy, sz] = config.scale;
-        const [dx, dy, dz] = config.position;
-          const originalPosition = { ...child.position };
+      const [dx, dy, dz] = config.position;
+      const originalPosition = { ...child.position };
 
       const tl = gsap.timeline({ paused: true });
 
@@ -378,15 +414,15 @@ if (child.name.includes("slider")) {
         ease: "power2.in"
       });
 
-        tl.to(child.position, {
-    x: originalPosition.x + dx,
-    y: originalPosition.y + dy,
-    z: originalPosition.z + dz,
-    duration: config.duration * 0.5,
-    ease: "power2.out"
-  }, 0);
+      tl.to(child.position, {
+        x: originalPosition.x + dx,
+        y: originalPosition.y + dy,
+        z: originalPosition.z + dz,
+        duration: config.duration * 0.5,
+        ease: "power2.out"
+      }, 0);
 
-      
+
       tl.to(child.scale, {
         x: child.scale.x,
         y: child.scale.y,
@@ -395,13 +431,13 @@ if (child.name.includes("slider")) {
         ease: config.easeOut
       });
 
-       tl.to(child.position, {
-    x: originalPosition.x,
-    y: originalPosition.y,
-    z: originalPosition.z,
-    duration: config.duration,
-    ease: config.easeOut
-  }, `-=${config.duration}`);
+      tl.to(child.position, {
+        x: originalPosition.x,
+        y: originalPosition.y,
+        z: originalPosition.z,
+        duration: config.duration,
+        ease: config.easeOut
+      }, `-=${config.duration}`);
 
       child.userData.clickTimeline = tl;
       raycasterObjects.push(child);
@@ -421,8 +457,8 @@ if (child.name.includes("slider")) {
       else if (child.name.includes("v3")) variantKey = "v3";
       else if (child.name.includes("DJ")) variantKey = "DJ";
       else if (child.name.includes("Tthings")) variantKey = "Tthings";
-       else if (child.name.includes("slider")) variantKey = "slider";
-        else if (child.name.includes("pcbtn")) variantKey = "pcbtn";
+      else if (child.name.includes("slider")) variantKey = "slider";
+      else if (child.name.includes("pcbtn")) variantKey = "pcbtn";
 
       const config = hoverVariants[variantKey];
       const [sx, sy, sz] = config.scale;
@@ -669,29 +705,29 @@ window.addEventListener("click", () => {
     }
 
   }
- if (clickedObj.name.includes("slider") && sliderMesh) {
-  const orig = sliderMesh.userData.originalPosition;
+  if (clickedObj.name.includes("slider") && sliderMesh) {
+    const orig = sliderMesh.userData.originalPosition;
 
-  if (sliderIsAtOriginal) {
-    // Move to offset position
-    gsap.to(sliderMesh.position, {
-      x: orig.x + sliderOffset.x,
-      y: orig.y + sliderOffset.y,
-      z: orig.z + sliderOffset.z,
-      duration: 0.8,
-      ease: "power2.inOut"
-    });
-  } else {
-    // Move back to original
-    gsap.to(sliderMesh.position, {
-      x: orig.x,
-      y: orig.y,
-      z: orig.z,
-      duration: 0.8,
-      ease: "power2.inOut"
-    });
+    if (sliderIsAtOriginal) {
+      // Move to offset position
+      gsap.to(sliderMesh.position, {
+        x: orig.x + sliderOffset.x,
+        y: orig.y + sliderOffset.y,
+        z: orig.z + sliderOffset.z,
+        duration: 0.8,
+        ease: "power2.inOut"
+      });
+    } else {
+      // Move back to original
+      gsap.to(sliderMesh.position, {
+        x: orig.x,
+        y: orig.y,
+        z: orig.z,
+        duration: 0.8,
+        ease: "power2.inOut"
+      });
+    }
+
+    sliderIsAtOriginal = !sliderIsAtOriginal;
   }
-
-  sliderIsAtOriginal = !sliderIsAtOriginal;
-}
 });

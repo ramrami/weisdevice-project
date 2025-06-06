@@ -25,6 +25,13 @@
 <body>
   <div id="app"></div>
 
+  <audio id="bg-music" loop>
+  <source src="/audio/frankum__vintage-elecro-pop-loop.ogg" type="audio/mpeg">
+</audio>
+<button id="music-toggle" style="position:absolute;top:20px;left:20px;z-index:10;border:none;background:none;cursor:pointer;">
+  <img id="music-icon" src="/public/media/favicon/favicon.ico" width="24" height="24" alt="music">
+</button>
+
   <section class="work modal hidden">
 
     <div class="titlebar">
@@ -123,11 +130,13 @@
         <img src="/media/favicon/web-app-manifest-192x192.png" alt="Portrait of me" class="about-me-image" />
         <div class="about-me-text">
           <h1 class="title">About Me</h1>
+          <hr />
           <p>
             I’m currently studying Design (Master’s) in Germany.
             I enjoy exploring how technology can create playful, interactive experiences — and learning and experimenting
             are things that genuinely make me happy.
           </p>
+          <hr />
           <hr />
           <h1 class="title">Tools</h1>
           <hr />
