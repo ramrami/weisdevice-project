@@ -188,6 +188,29 @@ dracoLoader.setDecoderPath('/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
+const hoverVariants = {
+  default: {
+    scale: [1.3, 1.3, 1.3],
+    position: [0.1, -0.1, 0.1],
+    rotation: [0, -Math.PI / 8, 0], // [x, y, z]
+  },
+  v2: {
+    scale: [1.1, 1.1, 1.1],
+    position: [0.3, 0.1, -0.2],
+    rotation: [0, Math.PI / 16, 0],
+  },
+  v3: {
+    scale: [1.5, 1.5, 1.2],
+    position: [-0.2, 0.2, 0.4],
+    rotation: [0.1, Math.PI / 6, -0.1],
+  },
+    DJ: {
+    scale: [1.2, 1.2, 1.2],
+    position: [0, 0, 0],
+    rotation: [0, Math.PI/3, 0],
+  }
+};
+
 loader.load("/models/desert.glb", (glb) => {
   const envMap = new THREE.CubeTextureLoader()
     .setPath('/textures/skymap/')
@@ -287,36 +310,45 @@ loader.load("/models/desert.glb", (glb) => {
       });
     }
 
-if (child.name.includes("hover")) {
+if (child.name.includes("hover")) {//that is alway hoverA in blender
+
   child.userData.initialScale = child.scale.clone();
   child.userData.initialPosition = child.position.clone();
   child.userData.initialRotation = child.rotation.clone();
 
-  // Create GSAP timeline (paused by default)
+  // Determine which variant to use
+  let variantKey = "default";
+  if (child.name.includes("v2")) variantKey = "v2";
+  else if (child.name.includes("v3")) variantKey = "v3";
+  else if (child.name.includes("DJ")) variantKey = "DJ";
+
+  const config = hoverVariants[variantKey];
+  const [sx, sy, sz] = config.scale;
+  const [px, py, pz] = config.position;
+  const [rx, ry, rz] = config.rotation;
+
   const tl = gsap.timeline({ paused: true });
 
-  const scaleFactor = 1.3;
-  const positionOffset = 0.1;
-  const rotationOffset = Math.PI / 8;
-
   tl.to(child.scale, {
-    x: child.userData.initialScale.x * scaleFactor,
-    y: child.userData.initialScale.y * scaleFactor,
-    z: child.userData.initialScale.z * scaleFactor,
+    x: child.userData.initialScale.x * sx,
+    y: child.userData.initialScale.y * sy,
+    z: child.userData.initialScale.z * sz,
     duration: 0.3,
     ease: "power2.out"
   }, 0);
 
   tl.to(child.position, {
-    x: child.userData.initialPosition.x + positionOffset,
-    y: child.userData.initialPosition.y + positionOffset,
-    z: child.userData.initialPosition.z + positionOffset,
+    x: child.userData.initialPosition.x + px,
+    y: child.userData.initialPosition.y + py,
+    z: child.userData.initialPosition.z + pz,
     duration: 0.3,
     ease: "power2.out"
   }, 0);
 
   tl.to(child.rotation, {
-    y: child.userData.initialRotation.y + rotationOffset,
+    x: child.userData.initialRotation.x + rx,
+    y: child.userData.initialRotation.y + ry,
+    z: child.userData.initialRotation.z + rz,
     duration: 0.3,
     ease: "power2.out"
   }, 0);
