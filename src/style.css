@@ -13,6 +13,7 @@ body {
   font-size: 1.25rem;
   /* 20px */
   color: var(--color-base-black);
+  background-color: var(--color-base-white);
 }
 
 #experience {
@@ -37,7 +38,7 @@ body {
 
 #music-toggle {
 position:absolute;
-top:35px;
+top:25px;
 left:35px;
 width: 50px;
 height: 50px;

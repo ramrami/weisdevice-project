@@ -521,6 +521,82 @@ void main() {
   scene.add(glb.scene);
 });
 
+
+    const gridSize = 100;
+    const gridRes = 1;
+
+    const gridgeometry = new THREE.PlaneGeometry(gridSize, gridSize, gridRes, gridRes);
+
+    const gridmaterial = new THREE.ShaderMaterial({
+      transparent: true,
+     /*  side: THREE.DoubleSide, */
+      uniforms: {
+        uSize: { value: gridSize }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv - 0.5;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+fragmentShader: `
+  varying vec2 vUv;
+  uniform float uSize;
+
+  float gridLine(float coord, float size) {
+    float line = abs(fract(coord * size) - 0.5);
+    return smoothstep(0.1, 0.0, line); // smooth lines
+  }
+
+  void main() {
+    float dist = length(vUv) * 2.0;
+    float alpha = smoothstep(1.0, 0.5, dist);
+
+    float xLine = gridLine(vUv.x, uSize);
+    float yLine = gridLine(vUv.y, uSize);
+    float lineStrength = max(xLine, yLine);
+
+    gl_FragColor = vec4(vec3(0.2), alpha * lineStrength * 0.1);
+  }
+`
+    });
+
+    const grid = new THREE.Mesh(gridgeometry, gridmaterial);
+    grid.rotation.x = -Math.PI / 2;
+    grid.position.set(0.5,-2.01,0.5);
+    scene.add(grid);
+
+// X-axis "fat line" (red)
+const xPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(100, 0.1),
+  new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    transparent: true,
+    opacity: 0.3, // adjust as needed
+    depthWrite: false // prevents z-fighting if needed
+  })
+);
+xPlane.rotation.x = -Math.PI / 2;
+xPlane.position.set(0, -2, 0);
+scene.add(xPlane);
+
+// Y-axis "fat line" (green)
+const yPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(100, 0.1),
+  new THREE.MeshBasicMaterial({
+    color: 0x00ff00,
+    transparent: true,
+    opacity: 0.3,
+    depthWrite: false
+  })
+);
+yPlane.rotation.z = Math.PI / 2;
+yPlane.rotation.x = -Math.PI / 2;
+yPlane.position.set(0, -2, 0);
+scene.add(yPlane);
+
+
 /**  -------------------------- smoke -------------------------- */
 const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
 smokeGeometry.translate(-0.5, 5, -2); // slight upward offset
