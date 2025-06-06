@@ -32,7 +32,7 @@ const scene = new THREE.Scene();
 
 let currentIndex = 0;
 let nextIndex = 1;
-let monitorMesh = null; // store the reference to the monitor mesh
+let monitorMesh = null;
 
 const modals = {
   work: document.querySelector(".modal.work"),
@@ -124,6 +124,11 @@ function handleRaycasterInteraction() {
   if (currentIntersects && currentIntersects.length > 0) {
     const object = currentIntersects[0].object;
 
+    // Click animation
+    if (object.userData.clickTimeline) {
+      object.userData.clickTimeline.restart(); // always plays from start
+    }
+
     if (object.name.includes("workbtn")) {
       showModal(modals.work);
     } else if (object.name.includes("aboutbtn")) {
@@ -195,20 +200,51 @@ const hoverVariants = {
     rotation: [0, -Math.PI / 8, 0], // [x, y, z]
   },
   v2: {
-    scale: [1.1, 1.1, 1.1],
-    position: [0.3, 0.1, -0.2],
-    rotation: [0, Math.PI / 16, 0],
+    scale: [1.1, 1.5, 1.1],
+    position: [0, 0.05, 0],
+    rotation: [0, Math.PI / 18, 0],
   },
   v3: {
-    scale: [1.5, 1.5, 1.2],
-    position: [-0.2, 0.2, 0.4],
-    rotation: [0.1, Math.PI / 6, -0.1],
+    scale: [1.2, 1.5, 1.2],
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
   },
-    DJ: {
+  DJ: {
     scale: [1.2, 1.2, 1.2],
     position: [0, 0, 0],
-    rotation: [0, Math.PI/3, 0],
-  }
+    rotation: [0, Math.PI / 3, 0],
+  },
+   slider: {
+    scale: [1.1, 1.2, 1.1],
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+  },
+   pcbtn: {
+    scale: [1.2, 1.1, 1.1],
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+  },
+  Tthings: {
+    scale: [1.2, 1, 1.2],
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+  },
+};
+
+const clickVariants = {
+  DJ: {
+    scale: [1.0, 1.5, 1.0],
+    position: [0, -0.08, 0],
+    duration: 0.3,
+    easeOut: "elastic.out(1, 0.3)"
+  },
+  pcbtn: {
+    scale: [1.0, 1.0, 1.0],
+  
+     position: [0, 0, -0.05],
+    duration: 0.3,
+    easeOut: "elastic.out(1, 0.3)"
+  },
 };
 
 loader.load("/models/desert.glb", (glb) => {
@@ -310,51 +346,106 @@ loader.load("/models/desert.glb", (glb) => {
       });
     }
 
-if (child.name.includes("hover")) {//that is alway hoverA in blender
+    if (child.name.includes("DJ") || child.name.includes("pcbtn")) {//just so
+      let variantKey = null;
+      if (child.name.includes("DJ")) variantKey = "DJ";
+      else if (child.name.includes("pcbtn")) variantKey = "pcbtn";
 
-  child.userData.initialScale = child.scale.clone();
-  child.userData.initialPosition = child.position.clone();
-  child.userData.initialRotation = child.rotation.clone();
+      const config = clickVariants[variantKey];
 
-  // Determine which variant to use
-  let variantKey = "default";
-  if (child.name.includes("v2")) variantKey = "v2";
-  else if (child.name.includes("v3")) variantKey = "v3";
-  else if (child.name.includes("DJ")) variantKey = "DJ";
+      const [sx, sy, sz] = config.scale;
+        const [dx, dy, dz] = config.position;
+          const originalPosition = { ...child.position };
 
-  const config = hoverVariants[variantKey];
-  const [sx, sy, sz] = config.scale;
-  const [px, py, pz] = config.position;
-  const [rx, ry, rz] = config.rotation;
+      const tl = gsap.timeline({ paused: true });
 
-  const tl = gsap.timeline({ paused: true });
+      tl.to(child.scale, {
+        x: child.scale.x * sx,
+        y: child.scale.y * sy,
+        z: child.scale.z * sz,
+        duration: config.duration * 0.5,
+        ease: "power2.in"
+      });
 
-  tl.to(child.scale, {
-    x: child.userData.initialScale.x * sx,
-    y: child.userData.initialScale.y * sy,
-    z: child.userData.initialScale.z * sz,
-    duration: 0.3,
+        tl.to(child.position, {
+    x: originalPosition.x + dx,
+    y: originalPosition.y + dy,
+    z: originalPosition.z + dz,
+    duration: config.duration * 0.5,
     ease: "power2.out"
   }, 0);
 
-  tl.to(child.position, {
-    x: child.userData.initialPosition.x + px,
-    y: child.userData.initialPosition.y + py,
-    z: child.userData.initialPosition.z + pz,
-    duration: 0.3,
-    ease: "power2.out"
-  }, 0);
+      
+      tl.to(child.scale, {
+        x: child.scale.x,
+        y: child.scale.y,
+        z: child.scale.z,
+        duration: config.duration,
+        ease: config.easeOut
+      });
 
-  tl.to(child.rotation, {
-    x: child.userData.initialRotation.x + rx,
-    y: child.userData.initialRotation.y + ry,
-    z: child.userData.initialRotation.z + rz,
-    duration: 0.3,
-    ease: "power2.out"
-  }, 0);
+       tl.to(child.position, {
+    x: originalPosition.x,
+    y: originalPosition.y,
+    z: originalPosition.z,
+    duration: config.duration,
+    ease: config.easeOut
+  }, `-=${config.duration}`);
 
-  child.userData.hoverTimeline = tl;
-}
+      child.userData.clickTimeline = tl;
+      raycasterObjects.push(child);
+    }
+
+
+
+    if (child.name.includes("hover")) {//that is alway hoverA in blender
+
+      child.userData.initialScale = child.scale.clone();
+      child.userData.initialPosition = child.position.clone();
+      child.userData.initialRotation = child.rotation.clone();
+
+      // Determine which variant to use
+      let variantKey = "default";
+      if (child.name.includes("v2")) variantKey = "v2";
+      else if (child.name.includes("v3")) variantKey = "v3";
+      else if (child.name.includes("DJ")) variantKey = "DJ";
+      else if (child.name.includes("Tthings")) variantKey = "Tthings";
+       else if (child.name.includes("slider")) variantKey = "slider";
+        else if (child.name.includes("pcbtn")) variantKey = "pcbtn";
+
+      const config = hoverVariants[variantKey];
+      const [sx, sy, sz] = config.scale;
+      const [px, py, pz] = config.position;
+      const [rx, ry, rz] = config.rotation;
+
+      const tl = gsap.timeline({ paused: true });
+
+      tl.to(child.scale, {
+        x: child.userData.initialScale.x * sx,
+        y: child.userData.initialScale.y * sy,
+        z: child.userData.initialScale.z * sz,
+        duration: 0.3,
+        ease: "power2.out"
+      }, 0);
+
+      tl.to(child.position, {
+        x: child.userData.initialPosition.x + px,
+        y: child.userData.initialPosition.y + py,
+        z: child.userData.initialPosition.z + pz,
+        duration: 0.3,
+        ease: "power2.out"
+      }, 0);
+
+      tl.to(child.rotation, {
+        x: child.userData.initialRotation.x + rx,
+        y: child.userData.initialRotation.y + ry,
+        z: child.userData.initialRotation.z + rz,
+        duration: 0.3,
+        ease: "power2.out"
+      }, 0);
+
+      child.userData.hoverTimeline = tl;
+    }
 
   });
 
@@ -547,30 +638,30 @@ const render = () => {
   }
 
   // Handle hoverA animation
-if (isHoverA) {
-  if (hoveredObject !== currentHoveredObject) {
-    // Stop previous
+  if (isHoverA) {
+    if (hoveredObject !== currentHoveredObject) {
+      // Stop previous
+      if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
+        currentHoveredObject.userData.hoverTimeline.reverse();
+      }
+
+      // Play new
+      if (hoveredObject.userData.hoverTimeline) {
+        hoveredObject.userData.hoverTimeline.play();
+      }
+
+      currentHoveredObject = hoveredObject;
+    }
+  } else {
     if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
       currentHoveredObject.userData.hoverTimeline.reverse();
+      currentHoveredObject = null;
     }
-
-    // Play new
-    if (hoveredObject.userData.hoverTimeline) {
-      hoveredObject.userData.hoverTimeline.play();
-    }
-
-    currentHoveredObject = hoveredObject;
   }
-} else {
-  if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
-    currentHoveredObject.userData.hoverTimeline.reverse();
-    currentHoveredObject = null;
-  }
-}
   // Cursor style
   if (isMonitor && currentIndex === 3) {
     document.body.style.cursor = "not-allowed";
-  } else if (isPointer || isMonitor || isHoverA) {
+  } else if (isPointer || isMonitor) {
     document.body.style.cursor = "pointer";
   } else {
     document.body.style.cursor = "default";
