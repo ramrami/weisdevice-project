@@ -69,10 +69,10 @@ toggleBtn.addEventListener("click", () => {
   if (!musicPlaying) {
     audio.play();
     audio.volume = 0.5;
-    musicIcon.src = "public/media/favicon/favicon.ico";
+    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
   } else {
     audio.pause();
-    musicIcon.src = "/assets/icons/volume-on.svg";
+    musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
   }
   musicPlaying = !musicPlaying;
