@@ -45,11 +45,12 @@ const modals = {
   legal: document.querySelector(".modal.legal")
 };
 
+
 const djAudioMap = {};
 
 for (let i = 1; i <= 9; i++) {
   const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
-/*   audio.volume = 0.7; */
+  /*   audio.volume = 0.7; */
   djAudioMap[`DJ${i}`] = audio;
 }
 
@@ -76,13 +77,13 @@ toggleBtn.addEventListener("click", () => {
   }
   musicPlaying = !musicPlaying;
 
-    Object.values(djAudioMap).forEach(dj => {
+  Object.values(djAudioMap).forEach(dj => {
     dj.muted = !musicPlaying;
-      if (!musicPlaying) dj.pause();
+    if (!musicPlaying) dj.pause();
   });
 
 
-  
+
 });
 /**  -------------------------- modal -------------------------- */
 const showModal = (modal) => {
@@ -689,7 +690,7 @@ const render = () => {
     }
   }
 
-  
+
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
@@ -703,11 +704,16 @@ window.addEventListener("click", () => {
   if (!currentIntersects || currentIntersects.length === 0) return;
 
   const clickedObj = currentIntersects[0].object;
+
   if (clickedObj.name.includes("monitor") && currentIndex < 3) {
+    if (musicPlaying && currentIndex < 3) {
+      pcButtonMusic.currentTime = 0;
+      pcButtonMusic.play();
+    }
     nextIndex = currentIndex + 1;
 
     // Prepare new textures for blending
-    if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
+    if (monitorMesh.material.uniforms) {
       const uniforms = monitorMesh.material.uniforms;
 
       uniforms.uTextureA.value = monitor_texture[currentIndex];
@@ -717,7 +723,7 @@ window.addEventListener("click", () => {
       // Animate mix from 0 to 1
       gsap.to(uniforms.uMix, {
         value: 1.0,
-        duration: 1.0,
+        duration: 0.5,
         ease: "power2.inOut",
         onComplete: () => {
           // After transition, set currentIndex = nextIndex and reset mix
@@ -730,7 +736,7 @@ window.addEventListener("click", () => {
     }
 
   }
-  
+
   const match = clickedObj.name.match(/DJ[1-9]/);
   if (match) {
     const djKey = match[0]; // e.g., "DJ3"
@@ -743,38 +749,38 @@ window.addEventListener("click", () => {
       audio.currentTime = 0; // restart from beginning
       audio.play();
     }
-     if (!musicPlaying) audio.pause();
+    if (!musicPlaying) audio.pause();
   }
-//--------------pc btn-----------------//
+  //--------------pc btn-----------------//
 
- if (clickedObj.name.includes("pcbtn")) {
+  if (clickedObj.name.includes("pcbtn")) {
 
 
 
-  if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
-    currentIndex = 0;
-    nextIndex = 1;
+    if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
+      currentIndex = 0;
+      nextIndex = 1;
 
-    const uniforms = monitorMesh.material.uniforms;
+      const uniforms = monitorMesh.material.uniforms;
 
-    uniforms.uTextureA.value = monitor_texture[currentIndex];
-    uniforms.uTextureB.value = monitor_texture[currentIndex];
-    uniforms.uMix.value = 0.0; // Show only Texture A
+      uniforms.uTextureA.value = monitor_texture[currentIndex];
+      uniforms.uTextureB.value = monitor_texture[currentIndex];
+      uniforms.uMix.value = 0.0; // Show only Texture A
 
-    if (musicPlaying) {
-      pcButtonMusic.currentTime = 0;
-      pcButtonMusic.play();
+      if (musicPlaying) {
+        pcButtonMusic.currentTime = 0;
+        pcButtonMusic.play();
+      }
     }
   }
-}
-//------------slider------------//
+  //------------slider------------//
 
 
   if (clickedObj.name.includes("slider") && sliderMesh) {
     if (musicPlaying) {
-    sliderMusic.currentTime = 0;
-    sliderMusic.play();
-  }
+      sliderMusic.currentTime = 0;
+      sliderMusic.play();
+    }
 
 
     const orig = sliderMesh.userData.originalPosition;
@@ -802,23 +808,23 @@ window.addEventListener("click", () => {
     sliderIsAtOriginal = !sliderIsAtOriginal;
   }
 
-  if(clickedObj.name.includes("slider") || clickedObj.name.includes("pcbtn") || clickedObj.name.includes("DJ")) {
+  if (clickedObj.name.includes("slider") || clickedObj.name.includes("pcbtn") || clickedObj.name.includes("DJ")) {
 
-      // Save original color (only once per object)
-if (!clickedObj.userData.originalColor) {
-  clickedObj.userData.originalColor = clickedObj.material.color.clone();
-}
+    // Save original color (only once per object)
+    if (!clickedObj.userData.originalColor) {
+      clickedObj.userData.originalColor = clickedObj.material.color.clone();
+    }
 
-// Light-up animation using GSAP
-gsap.to(clickedObj.material.color, {
-  r: 1, g: 3, b: 1, 
-  duration: 0.2,
-  yoyo: true,
-  repeat: 1,
-  onComplete: () => {
-    // Restore to original color (optional safety)
-    clickedObj.material.color.copy(clickedObj.userData.originalColor);
-  }
-});
+    // Light-up animation using GSAP
+    gsap.to(clickedObj.material.color, {
+      r: 1, g: 3, b: 1,
+      duration: 0.2,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => {
+        // Restore to original color (optional safety)
+        clickedObj.material.color.copy(clickedObj.userData.originalColor);
+      }
+    });
   }
 });
