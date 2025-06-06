@@ -668,6 +668,8 @@ const render = () => {
     }
   }
 
+  
+
   renderer.render(scene, camera);
   requestAnimationFrame(render);
 };
@@ -705,7 +707,42 @@ window.addEventListener("click", () => {
     }
 
   }
+  
+
+//--------------pc btn-----------------//
+const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); // Replace with your file
+let pchasPlayedMusic = false;
+
+ if (clickedObj.name.includes("pcbtn")) {
+
+
+
+  if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
+    currentIndex = 0;
+    nextIndex = 1;
+
+    const uniforms = monitorMesh.material.uniforms;
+
+    uniforms.uTextureA.value = monitor_texture[currentIndex];
+    uniforms.uTextureB.value = monitor_texture[currentIndex];
+    uniforms.uMix.value = 0.0; // Show only Texture A
+
+       if (!pchasPlayedMusic) {
+      pcButtonMusic.play();
+      pchasPlayedMusic = true;
+    }
+  }
+}
+//------------slider------------//
+const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg'); // Replace with your file
+let sliderhasPlayedMusic = false;
+
   if (clickedObj.name.includes("slider") && sliderMesh) {
+           if (!sliderhasPlayedMusic) {
+      sliderMusic.play();
+      sliderhasPlayedMusic = true;
+    }
+
     const orig = sliderMesh.userData.originalPosition;
 
     if (sliderIsAtOriginal) {
@@ -729,5 +766,25 @@ window.addEventListener("click", () => {
     }
 
     sliderIsAtOriginal = !sliderIsAtOriginal;
+  }
+
+  if(clickedObj.name.includes("slider") || clickedObj.name.includes("pcbtn") || clickedObj.name.includes("DJ")) {
+
+      // Save original color (only once per object)
+if (!clickedObj.userData.originalColor) {
+  clickedObj.userData.originalColor = clickedObj.material.color.clone();
+}
+
+// Light-up animation using GSAP
+gsap.to(clickedObj.material.color, {
+  r: 1, g: 5, b: 1, 
+  duration: 0.2,
+  yoyo: true,
+  repeat: 1,
+  onComplete: () => {
+    // Restore to original color (optional safety)
+    clickedObj.material.color.copy(clickedObj.userData.originalColor);
+  }
+});
   }
 });
