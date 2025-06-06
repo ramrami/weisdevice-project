@@ -34,6 +34,10 @@ let currentIndex = 0;
 let nextIndex = 1;
 let monitorMesh = null;
 
+let sliderMesh = null;
+let sliderIsAtOriginal = true;
+const sliderOffset = new THREE.Vector3(0, 0, -0.5); // ← relative movement
+
 const modals = {
   work: document.querySelector(".modal.work"),
   about: document.querySelector(".modal.about"),
@@ -241,7 +245,7 @@ const clickVariants = {
   pcbtn: {
     scale: [1.0, 1.0, 1.0],
   
-     position: [0, 0, -0.05],
+     position: [0, 0, -0.02],
     duration: 0.3,
     easeOut: "elastic.out(1, 0.3)"
   },
@@ -267,6 +271,13 @@ loader.load("/models/desert.glb", (glb) => {
         child.material = material;
       }
     });
+
+
+if (child.name.includes("slider")) {
+  sliderMesh = child;
+  child.userData.originalPosition = child.position.clone(); // store original position
+  raycasterObjects.push(child); // make sure it's interactable
+}
 
     // Clouds
     if (child.name.includes("cloud")) {
@@ -531,64 +542,6 @@ const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
 smoke.position.set(0, 2, 0);
 scene.add(smoke);
 
-/**  -------------------------- Animation -------------------------- */
-/* function playHoverAAnimation(object, isHovering) {
-  if (!object.userData) return;
-
-  gsap.killTweensOf(object.scale);
-  gsap.killTweensOf(object.rotation);
-  gsap.killTweensOf(object.position);
-
-  const s = object.userData.initialScale;
-  const p = object.userData.initialPosition;
-  const r = object.userData.initialRotation;
-
-  const scalefactor = 1.2;
-  const positionfactor = 0;
-  const rotationfactor = 8;
-
-  if (isHovering) {
-    gsap.to(object.scale, {
-      x: s.x * scalefactor,
-      y: s.y * scalefactor,
-      z: s.z * scalefactor,
-      duration: 0.3,
-      ease: "power2.out",
-    });
-    gsap.to(object.rotation, {
-      y: r.y + Math.PI / rotationfactor,
-      duration: 0.4,
-      ease: "power2.out",
-    });
-    gsap.to(object.position, {
-      x: p.x + positionfactor,
-      y: p.y + positionfactor,
-      z: p.z + positionfactor,
-      duration: 0.4,
-      ease: "power2.out",
-    });
-  } else {
-    gsap.to(object.scale, {
-      x: s.x,
-      y: s.y,
-      z: s.z,
-      duration: 0.3,
-      ease: "power2.out",
-    });
-    gsap.to(object.rotation, {
-      y: r.y,
-      duration: 0.3,
-      ease: "power2.out",
-    });
-    gsap.to(object.position, {
-      x: p.x,
-      y: p.y,
-      z: p.z,
-      duration: 0.3,
-      ease: "power2.out",
-    });
-  }
-} */
 
 
 const clock = new THREE.Clock();
@@ -716,4 +669,29 @@ window.addEventListener("click", () => {
     }
 
   }
+ if (clickedObj.name.includes("slider") && sliderMesh) {
+  const orig = sliderMesh.userData.originalPosition;
+
+  if (sliderIsAtOriginal) {
+    // Move to offset position
+    gsap.to(sliderMesh.position, {
+      x: orig.x + sliderOffset.x,
+      y: orig.y + sliderOffset.y,
+      z: orig.z + sliderOffset.z,
+      duration: 0.8,
+      ease: "power2.inOut"
+    });
+  } else {
+    // Move back to original
+    gsap.to(sliderMesh.position, {
+      x: orig.x,
+      y: orig.y,
+      z: orig.z,
+      duration: 0.8,
+      ease: "power2.inOut"
+    });
+  }
+
+  sliderIsAtOriginal = !sliderIsAtOriginal;
+}
 });
