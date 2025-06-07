@@ -21,6 +21,8 @@ const cloud = [];
 const rotAObjects = [];
 const rotBObjects = [];
 
+let isModalOpen = false;
+
 const raycasterObjects = [];
 let currentIntersects = [];//was null i changed notsure
 let currentHoveredObject = null;
@@ -86,13 +88,42 @@ toggleBtn.addEventListener("click", () => {
 
 });
 /**  -------------------------- modal -------------------------- */
+const experience = document.getElementById("experience");
+
 const showModal = (modal) => {
   modal.classList.remove("hidden");
+  isModalOpen = true;
+  controls.enabled = false;
+
+  experience.classList.add("blur");
+
+  
+
+  raycasterObjects.forEach(obj => {
+    if (obj.userData && obj.userData.hoverTimeline) {
+      obj.userData.hoverDisabled = true;
+    }
+  });
+
+  document.body.style.cursor = "default";
+  currentIntersects = [];
+
   gsap.set(modal, { opacity: 0 });
   gsap.to(modal, { opacity: 1, duration: 0.5 });
 };
 
 const hideModal = (modal) => {
+    isModalOpen = false;
+  controls.enabled = true;
+  
+  experience.classList.remove("blur");
+
+    raycasterObjects.forEach(obj => {
+    if (obj.userData && obj.userData.hoverTimeline) {
+      obj.userData.hoverDisabled = false;
+    }
+  });
+
   gsap.to(modal, {
     opacity: 0,
     duration: 0.5,
@@ -708,6 +739,9 @@ const render = () => {
     obj.mesh.rotation.x = -angle;
   });
 
+  if(!isModalOpen) {
+
+  
   // Raycaster
   raycaster.setFromCamera(pointer, camera);
   currentIntersects = raycaster.intersectObjects(raycasterObjects);
@@ -725,7 +759,7 @@ const render = () => {
   }
 
   // Handle hoverA animation
-  if (isHoverA) {
+  if (isHoverA&& !hoveredObject.userData.hoverDisabled) {
     if (hoveredObject !== currentHoveredObject) {
       // Stop previous
       if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
@@ -766,7 +800,7 @@ const render = () => {
     }
   }
 
-
+  }
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);

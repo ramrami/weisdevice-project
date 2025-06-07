@@ -26,6 +26,17 @@ body {
   user-select: none;
 }
 
+#experience.blur::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4); /* Dark overlay */
+  backdrop-filter: blur(6px);     /* Blur the canvas */
+  pointer-events: none;           /* Let clicks go through */
+  z-index: 2; 
+  user-select: none;                    /* Ensure it appears above canvas, below modals */
+}
+
 #experience-canvas {
   height: 100%;
   width: 100%;
@@ -49,6 +60,11 @@ background:var(--color-accent-pink);
 cursor:pointer;
 filter: url(#wobble);
 transform: rotate(4deg);
+ user-select: none;
+  -webkit-user-select: none;
+  /* Safari */
+  -ms-user-select: none;
+  /* IE/Edge */
 }
 
 #music-toggle img {
