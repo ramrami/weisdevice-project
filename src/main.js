@@ -48,6 +48,40 @@ const modals = {
 };
 
 
+/**  -------------------------- loadingscreen -------------------------- */
+const loadingText = document.getElementById("loading-text");
+const progressBar = document.getElementById("progress-bar");
+const enterButton = document.getElementById("enter-button");
+const loadingScreen = document.getElementById("loading-screen");
+
+const manager = new THREE.LoadingManager();
+
+manager.onProgress = (url, loaded, total) => {
+  const percent = Math.floor((loaded / total) * 100);
+  progressBar.value = percent;
+  loadingText.textContent = `Loading ${loaded} of ${total}...`;
+};
+
+manager.onLoad = () => {
+  loadingText.textContent = `Loaded!`;
+  enterButton.disabled = false;
+  enterButton.classList.add("active");
+};
+
+// When button is clicked, hide loading screen and start experience
+enterButton.addEventListener("click", () => {
+   audio.play();
+    audio.volume = 0.5;
+     musicPlaying = true;
+  musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+  loadingScreen.classList.add("hide");
+  loadingScreen.addEventListener("transitionend", () => loadingScreen.remove());
+});
+
+
+
+/**  -------------------------- music -------------------------- */
+
 const djAudioMap = {};
 
 for (let i = 1; i <= 9; i++) {
@@ -60,7 +94,8 @@ const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmatio
 
 const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg'); // Replace with your file
 
-/**  -------------------------- music -------------------------- */
+
+
 const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const toggleBtn = document.getElementById("music-toggle");
@@ -239,7 +274,7 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
 
 );
 /**  -------------------------- Texture Setup -------------------------- */
-const textureLoader = new THREE.TextureLoader();
+const textureLoader = new THREE.TextureLoader(manager);
 const textureMap = {
   terrain: { day: "/textures/terrain_texture.webp" },
   other: { day: "/textures/other_texture.webp" },
@@ -263,9 +298,10 @@ Object.entries(textureMap).forEach(([key, paths]) => {
 });
 
 /**  -------------------------- Model Loader -------------------------- */
+
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
-const loader = new GLTFLoader();
+const loader = new GLTFLoader(manager);
 loader.setDRACOLoader(dracoLoader);
 
 const hoverVariants = {
