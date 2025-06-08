@@ -78,7 +78,17 @@ enterButton.addEventListener("click", () => {
   loadingScreen.addEventListener("transitionend", () => loadingScreen.remove());
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+  const tipText = document.getElementById("tip-text");
 
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  if (isTouchDevice) {
+    tipText.textContent = "💡 Tip: Tap and swipe to explore.";
+  } else {
+    tipText.textContent = "💡 Tip: Click and drag to explore.";
+  }
+});
 
 /**  -------------------------- music -------------------------- */
 
@@ -132,7 +142,8 @@ const showModal = (modal) => {
 
   experience.classList.add("blur");
 
-  
+  toggleBtn.classList.add("hidden");
+
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -152,6 +163,9 @@ const hideModal = (modal) => {
   controls.enabled = true;
   
   experience.classList.remove("blur");
+
+  toggleBtn.classList.remove("hidden");
+
 
     raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
