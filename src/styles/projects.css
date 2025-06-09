@@ -1,0 +1,97 @@
+.project-container {
+  padding: 6rem 1.5rem 4rem;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--color-base-white);
+}
+
+.nav-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  padding: 0.75rem 2rem;
+  background-color: var(--color-base-white);
+  border-bottom: 1px solid var(--color-base-black);
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+}
+.backnav-button {
+  font-family: 'Pixellari', sans-serif;
+  font-size: 1rem;
+  color: var(--color-base-black);
+  background-color: var(--color-bg);
+  border: 0.125rem solid var(--color-base-black);
+  box-shadow: 0.125rem 0.125rem 0 var(--color-base-black);
+  padding: 0.4rem 1rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.nav-button {
+  font-family: 'Pixellari', sans-serif;
+  font-size: 1rem;
+  color: var(--color-base-black);
+  background-color: var(--color-accent-pink);
+  border: 0.125rem solid var(--color-base-black);
+  box-shadow: 0.125rem 0.125rem 0 var(--color-base-black);
+  padding: 0.4rem 1rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.nav-button:hover {
+  background-color: var(--color-accent-yellow);
+}
+
+.project-title {
+  font-family: 'Pixellari', sans-serif;
+  font-size: 2.5rem;
+  color: var(--color-base-black);
+  margin-bottom: 0.5rem;
+}
+
+.project-meta {
+  font-family: 'VT323', monospace;
+  font-size: 1.4rem;
+  color: var(--color-device-blue);
+  margin-bottom: 2rem;
+}
+
+iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--color-device-blue);
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.project-description {
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;
+  color: var(--color-base-black);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.tags {
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  color: var(--color-rock-brown);
+  margin-bottom: 2rem;
+}
+
+.project-credit {
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  color: var(--color-base-black);
+  margin-top: 3rem;
+  border-top: 1px solid var(--color-base-black);
+  padding-top: 1rem;
+}

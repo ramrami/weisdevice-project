@@ -22,10 +22,14 @@ const cloud = [];
 const rotAObjects = [];
 const rotBObjects = [];
 
+// single objects, not arrays
+let workbtn = null, contactbtn = null, aboutbtn = null, legalbtn = null;
+
+
 let isModalOpen = false;
 
 const raycasterObjects = [];
-let currentIntersects = [];//was null i changed notsure
+let currentIntersects = [];
 let currentHoveredObject = null;
 
 
@@ -71,12 +75,17 @@ manager.onLoad = () => {
 
 // When button is clicked, hide loading screen and start experience
 enterButton.addEventListener("click", () => {
-    bgMusic.play()
-    bgMusic.volume = 0.5;
-     musicPlaying = true;
+  bgMusic.play();
+  bgMusic.volume = 0.5;
+  musicPlaying = true;
   musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+
   loadingScreen.classList.add("hide");
-  loadingScreen.addEventListener("transitionend", () => loadingScreen.remove());
+
+  loadingScreen.addEventListener("transitionend", () => {
+    loadingScreen.remove();
+    playIntroAnimation(); // ✅ animation now starts after fade-out
+  });
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -166,15 +175,15 @@ const showModal = (modal) => {
 };
 
 const hideModal = (modal) => {
-    isModalOpen = false;
+  isModalOpen = false;
   controls.enabled = true;
-  
+
   experience.classList.remove("blur");
 
   toggleBtn.classList.remove("hidden");
 
 
-    raycasterObjects.forEach(obj => {
+  raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
       obj.userData.hoverDisabled = false;
     }
@@ -503,6 +512,7 @@ void main() {
       });
     }
 
+    //find objects for introanimation
     if (child.name.includes("DJ") || child.name.includes("pcbtn")) {//just so
       let variantKey = null;
       if (child.name.includes("DJ")) variantKey = "DJ";
@@ -553,6 +563,18 @@ void main() {
       raycasterObjects.push(child);
     }
 
+  if (child.name.includes("workbtn")) {
+  workbtn = child;
+}
+if (child.name.includes("contactbtn")) {
+  contactbtn = child;
+}
+if (child.name.includes("aboutbtn")) {
+  aboutbtn = child;
+}
+if (child.name.includes("legalbtn")) {
+  legalbtn = child;
+}
 
 
     if (child.name.includes("hover")) {//that is alway hoverA in blender
@@ -606,29 +628,102 @@ void main() {
 
   });
 
+
+
   scene.add(glb.scene);
+
+  
+  
 });
+  function playIntroAnimation() {
 
+  workbtn.scale.set(0, 0, 0);
+  contactbtn.scale.set(0, 0, 0);
+  aboutbtn.scale.set(0, 0, 0);
+   legalbtn.scale.set(0, 0, 0);
+   monitorMesh.scale.set(0, 0, 0);
 
-    const gridSize = 100;
-    const gridRes = 1;
+  const t1 = gsap.timeline({
+    defaults: {
+      duration: 0.8,
+      ease: "back.out(1.8)"
+    }
+  });
+t1.timeScale(0.5);
 
-    const gridgeometry = new THREE.PlaneGeometry(gridSize, gridSize, gridRes, gridRes);
+  t1.to(workbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  })
+  .to(aboutbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6") 
+  .to(contactbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+   .to(legalbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6");
 
-    const gridmaterial = new THREE.ShaderMaterial({
-      transparent: true,
-     /*  side: THREE.DoubleSide, */
-      uniforms: {
-        uSize: { value: gridSize }
-      },
-      vertexShader: `
+  t1.then(() => t2.play());
+
+   const t2 = gsap.timeline({
+      paused: true,
+    defaults: {
+      duration: 0.8,
+      ease: "back.out(1.8)"
+    }
+  });
+  //t1.timeScale(0.5);
+
+  t2.to(monitorMesh.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  })
+ /*  .to(aboutbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6") // start earlier for a nice overlap
+  .to(contactbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+   .to(legalbtn.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6"); */
+}
+
+const gridSize = 100;
+const gridRes = 1;
+
+const gridgeometry = new THREE.PlaneGeometry(gridSize, gridSize, gridRes, gridRes);
+
+const gridmaterial = new THREE.ShaderMaterial({
+  transparent: true,
+  /*  side: THREE.DoubleSide, */
+  uniforms: {
+    uSize: { value: gridSize }
+  },
+  vertexShader: `
         varying vec2 vUv;
         void main() {
           vUv = uv - 0.5;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-fragmentShader: `
+  fragmentShader: `
   varying vec2 vUv;
   uniform float uSize;
 
@@ -648,12 +743,12 @@ fragmentShader: `
     gl_FragColor = vec4(vec3(0.2), alpha * lineStrength * 0.1);
   }
 `
-    });
+});
 
-    const grid = new THREE.Mesh(gridgeometry, gridmaterial);
-    grid.rotation.x = -Math.PI / 2;
-    grid.position.set(0.5,-2.01,0.5);
-    scene.add(grid);
+const grid = new THREE.Mesh(gridgeometry, gridmaterial);
+grid.rotation.x = -Math.PI / 2;
+grid.position.set(0.5, -2.01, 0.5);
+scene.add(grid);
 
 // X-axis "fat line" (red)
 const xPlane = new THREE.Mesh(
@@ -796,66 +891,66 @@ const render = () => {
     obj.mesh.rotation.x = -angle;
   });
 
-  if(!isModalOpen) {
+  if (!isModalOpen) {
 
-  
-  // Raycaster
-  raycaster.setFromCamera(pointer, camera);
-  currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-  let hoveredObject = null;
-  let isMonitor = false;
-  let isPointer = false;
-  let isHoverA = false;
+    // Raycaster
+    raycaster.setFromCamera(pointer, camera);
+    currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-  if (currentIntersects.length > 0) {
-    hoveredObject = currentIntersects[0].object;
-    isMonitor = hoveredObject.name.includes("monitor");
-    isPointer = hoveredObject.name.includes("pointer");
-    isHoverA = hoveredObject.name.includes("hover");
-  }
+    let hoveredObject = null;
+    let isMonitor = false;
+    let isPointer = false;
+    let isHoverA = false;
 
-  // Handle hoverA animation
-  if (isHoverA&& !hoveredObject.userData.hoverDisabled) {
-    if (hoveredObject !== currentHoveredObject) {
-      // Stop previous
+    if (currentIntersects.length > 0) {
+      hoveredObject = currentIntersects[0].object;
+      isMonitor = hoveredObject.name.includes("monitor");
+      isPointer = hoveredObject.name.includes("pointer");
+      isHoverA = hoveredObject.name.includes("hover");
+    }
+
+    // Handle hoverA animation
+    if (isHoverA && !hoveredObject.userData.hoverDisabled) {
+      if (hoveredObject !== currentHoveredObject) {
+        // Stop previous
+        if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
+          currentHoveredObject.userData.hoverTimeline.reverse();
+        }
+
+        // Play new
+        if (hoveredObject.userData.hoverTimeline) {
+          hoveredObject.userData.hoverTimeline.play();
+        }
+
+        currentHoveredObject = hoveredObject;
+      }
+    } else {
       if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
         currentHoveredObject.userData.hoverTimeline.reverse();
+        currentHoveredObject = null;
       }
-
-      // Play new
-      if (hoveredObject.userData.hoverTimeline) {
-        hoveredObject.userData.hoverTimeline.play();
-      }
-
-      currentHoveredObject = hoveredObject;
     }
-  } else {
-    if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
-      currentHoveredObject.userData.hoverTimeline.reverse();
-      currentHoveredObject = null;
-    }
-  }
-  // Cursor style
-  if (isMonitor && currentIndex === 3) {
-    document.body.style.cursor = "not-allowed";
-  } else if (isPointer || isMonitor) {
-    document.body.style.cursor = "pointer";
-  } else {
-    document.body.style.cursor = "default";
-  }
-
-  // Monitor hover visual effect
-  if (monitorMesh?.material?.uniforms) {
-    const uniforms = monitorMesh.material.uniforms;
-    if (isMonitor) {
-      gsap.to(uniforms.uBrightness, { value: 1.2, duration: 0.5 });
-      gsap.to(uniforms.uContrast, { value: 1.3, duration: 0.5 });
+    // Cursor style
+    if (isMonitor && currentIndex === 3) {
+      document.body.style.cursor = "not-allowed";
+    } else if (isPointer || isMonitor) {
+      document.body.style.cursor = "pointer";
     } else {
-      gsap.to(uniforms.uBrightness, { value: 1.0, duration: 0.5 });
-      gsap.to(uniforms.uContrast, { value: 1.0, duration: 0.5 });
+      document.body.style.cursor = "default";
     }
-  }
+
+    // Monitor hover visual effect
+    if (monitorMesh?.material?.uniforms) {
+      const uniforms = monitorMesh.material.uniforms;
+      if (isMonitor) {
+        gsap.to(uniforms.uBrightness, { value: 1.2, duration: 0.5 });
+        gsap.to(uniforms.uContrast, { value: 1.3, duration: 0.5 });
+      } else {
+        gsap.to(uniforms.uBrightness, { value: 1.0, duration: 0.5 });
+        gsap.to(uniforms.uContrast, { value: 1.0, duration: 0.5 });
+      }
+    }
 
   }
 
@@ -874,7 +969,7 @@ window.addEventListener("click", () => {
 
   if (clickedObj.name.includes("monitor") && currentIndex < 3) {
     if (musicPlaying && currentIndex < 3) {
-      
+
       pcButtonSound.play();
     }
     nextIndex = currentIndex + 1;
@@ -904,28 +999,28 @@ window.addEventListener("click", () => {
 
   }
 
-// Play a DJ track
-const match = clickedObj.name.match(/DJ[1-9]/);
-if (match) {
-  const djKey = match[0];
+  // Play a DJ track
+  const match = clickedObj.name.match(/DJ[1-9]/);
+  if (match) {
+    const djKey = match[0];
 
-  // Stop all others
-  Object.values(djAudioMap).forEach(sound => sound.stop());
+    // Stop all others
+    Object.values(djAudioMap).forEach(sound => sound.stop());
 
-  if (musicPlaying) {
-    djAudioMap[djKey].play();
+    if (musicPlaying) {
+      djAudioMap[djKey].play();
+    }
   }
-}
 
-// PC button click
-if (clickedObj.name.includes("pcbtn") && musicPlaying) {
-  pcButtonSound.play();
-}
+  // PC button click
+  if (clickedObj.name.includes("pcbtn") && musicPlaying) {
+    pcButtonSound.play();
+  }
 
-// Slider toggle
-if (clickedObj.name.includes("slider") && musicPlaying) {
-  sliderSound.play();
-}
+  // Slider toggle
+  if (clickedObj.name.includes("slider") && musicPlaying) {
+    sliderSound.play();
+  }
   //--------------pc btn-----------------//
 
   if (clickedObj.name.includes("pcbtn")) {
@@ -943,7 +1038,7 @@ if (clickedObj.name.includes("slider") && musicPlaying) {
       uniforms.uMix.value = 0.0; // Show only Texture A
 
       if (musicPlaying) {
-       
+
         pcButtonSound.play();
       }
     }
@@ -953,7 +1048,7 @@ if (clickedObj.name.includes("slider") && musicPlaying) {
 
   if (clickedObj.name.includes("slider") && sliderMesh) {
     if (musicPlaying) {
-     
+
       sliderSound.play(); // ✅ use the correct Howl instance
     }
 
