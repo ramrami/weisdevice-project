@@ -23,8 +23,12 @@ const rotAObjects = [];
 const rotBObjects = [];
 
 // single objects, not arrays
-let workbtn = null, contactbtn = null, aboutbtn = null, legalbtn = null;
+let workbtn = null, contactbtn = null, aboutbtn = null, legalbtn = null, pcbtn = null;
+let DJ1 = null, DJ2 = null, DJ3 = null, DJ4 = null, DJ5 = null, DJ6 = null, DJ7 = null, DJ8 = null, DJ9 = null;
 
+let monitorAnimStarted = false;
+let monitorBrightness = 0;
+let monitorContrast = 0;
 
 let isModalOpen = false;
 
@@ -83,8 +87,10 @@ enterButton.addEventListener("click", () => {
   loadingScreen.classList.add("hide");
 
   loadingScreen.addEventListener("transitionend", () => {
+     monitorAnimStarted = true;
     loadingScreen.remove();
     playIntroAnimation(); // ✅ animation now starts after fade-out
+    
   });
 });
 
@@ -460,8 +466,8 @@ loader.load("/models/desert.glb", (glb) => {
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
           uTextureB: { value: monitor_texture[nextIndex] },
-          uBrightness: { value: 1.0 },
-          uContrast: { value: 1.0 },
+uBrightness: { value: 0.0 },
+uContrast: { value: 0.0 },
           uMix: { value: 0.0 },
           uAberrationAmount: { value: 0.01 }
         },
@@ -575,6 +581,37 @@ if (child.name.includes("aboutbtn")) {
 if (child.name.includes("legalbtn")) {
   legalbtn = child;
 }
+if (child.name.includes("pcbtn")) {
+  pcbtn = child;
+}
+if (child.name.includes("DJ1")) {
+  DJ1 = child;
+}
+if (child.name.includes("DJ2")) {
+  DJ2 = child;
+}
+if (child.name.includes("DJ3")) {
+  DJ3 = child;
+}
+if (child.name.includes("DJ4")) {
+  DJ4 = child;
+}
+if (child.name.includes("DJ5")) {
+  DJ5 = child;
+}
+if (child.name.includes("DJ6")) {
+  DJ6 = child;
+}
+if (child.name.includes("DJ7")) {
+  DJ7 = child;
+}
+if (child.name.includes("DJ8")) {
+  DJ8 = child;
+}
+if (child.name.includes("DJ9")) {
+  DJ9 = child;
+}
+
 
 
     if (child.name.includes("hover")) {//that is alway hoverA in blender
@@ -641,7 +678,17 @@ if (child.name.includes("legalbtn")) {
   contactbtn.scale.set(0, 0, 0);
   aboutbtn.scale.set(0, 0, 0);
    legalbtn.scale.set(0, 0, 0);
-   monitorMesh.scale.set(0, 0, 0);
+pcbtn.scale.set(0,0,0);
+sliderMesh.scale.set(0,0,0);
+DJ1.scale.set(0,0,0);
+DJ2.scale.set(0,0,0);
+DJ3.scale.set(0,0,0);
+DJ4.scale.set(0,0,0);
+DJ5.scale.set(0,0,0);
+DJ6.scale.set(0,0,0);
+DJ7.scale.set(0,0,0);
+DJ8.scale.set(0,0,0);
+DJ9.scale.set(0,0,0);
 
   const t1 = gsap.timeline({
     defaults: {
@@ -683,26 +730,69 @@ t1.timeScale(0.5);
   });
   //t1.timeScale(0.5);
 
-  t2.to(monitorMesh.scale, {
+ t2.to(pcbtn.scale, {
     x: 1,
     y: 1,
     z: 1
-  })
- /*  .to(aboutbtn.scale, {
+  }) 
+  .to(sliderMesh.scale, {
     x: 1,
     y: 1,
     z: 1
-  }, "-=0.6") // start earlier for a nice overlap
-  .to(contactbtn.scale, {
+  }, "-=0.6") 
+ .to(DJ1.scale, {
     x: 1,
     y: 1,
     z: 1
   }, "-=0.6")
-   .to(legalbtn.scale, {
+   .to(DJ2.scale, {
     x: 1,
     y: 1,
     z: 1
-  }, "-=0.6"); */
+  }, "-=0.6")
+     .to(DJ3.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+
+     .to(DJ4.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+
+     .to(DJ5.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+
+     .to(DJ6.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+
+     .to(DJ7.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+
+     .to(DJ8.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6")
+
+     .to(DJ9.scale, {
+    x: 1,
+    y: 1,
+    z: 1
+  }, "-=0.6");
+
+
 }
 
 const gridSize = 100;
@@ -941,16 +1031,23 @@ const render = () => {
     }
 
     // Monitor hover visual effect
-    if (monitorMesh?.material?.uniforms) {
-      const uniforms = monitorMesh.material.uniforms;
-      if (isMonitor) {
-        gsap.to(uniforms.uBrightness, { value: 1.2, duration: 0.5 });
-        gsap.to(uniforms.uContrast, { value: 1.3, duration: 0.5 });
-      } else {
-        gsap.to(uniforms.uBrightness, { value: 1.0, duration: 0.5 });
-        gsap.to(uniforms.uContrast, { value: 1.0, duration: 0.5 });
-      }
-    }
+if (monitorAnimStarted && monitorMesh?.material?.uniforms) {
+  const uniforms = monitorMesh.material.uniforms;
+
+  // Animate brightness and contrast up to 1
+  monitorBrightness += (1.0 - monitorBrightness) * 0.05;
+  monitorContrast += (1.0 - monitorContrast) * 0.05;
+
+  uniforms.uBrightness.value = monitorBrightness;
+  uniforms.uContrast.value = monitorContrast;
+
+  // Stop animation once close enough
+  if (Math.abs(1.0 - monitorBrightness) < 0.01 && Math.abs(1.0 - monitorContrast) < 0.01) {
+    uniforms.uBrightness.value = 1.0;
+    uniforms.uContrast.value = 1.0;
+    monitorAnimStarted = false;
+  }
+}
 
   }
 
