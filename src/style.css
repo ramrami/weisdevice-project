@@ -180,12 +180,13 @@ body {
 @keyframes flyToGlobe {
   0% {
     left: 0;
-    transform: scale(0.6) rotate(0deg);
-    opacity: 1;
+    transform: scale(0.4) rotate(0deg);
+    opacity: 0.4;
   }
 
   50% {
     transform: scale(1.2) rotate(50eg);
+     opacity: 1;
   }
 
   100% {

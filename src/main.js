@@ -5,7 +5,7 @@ import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import gsap from "gsap";
-import { Howl } from 'howler';
+
 
 /* import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 import { workgroupArray } from "three/tsl";
@@ -79,8 +79,8 @@ manager.onLoad = () => {
 
 // When button is clicked, hide loading screen and start experience
 enterButton.addEventListener("click", () => {
-  bgMusic.play();
-  bgMusic.volume = 0.5;
+  audio.play();
+    audio.volume = 0.5;
   musicPlaying = true;
   musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
@@ -112,47 +112,41 @@ document.addEventListener("DOMContentLoaded", function () {
 const djAudioMap = {};
 
 for (let i = 1; i <= 9; i++) {
-  djAudioMap[`DJ${i}`] = new Howl({
-    src: [`/audio/DJ/DJ${i}.ogg`],
-    volume: 0.7,
-    preload: true,
-  });
+  const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
+  /*   audio.volume = 0.7; */
+  djAudioMap[`DJ${i}`] = audio;
 }
 
 // UI button sounds
-const pcButtonSound = new Howl({
-  src: ['/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'],
-  volume: 0.7,
-});
+const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); 
 
-const sliderSound = new Howl({
-  src: ['/audio/sound/71853__ludvique__record_scratch.ogg'],
-  volume: 0.7,
-});
-
-const bgMusic = new Howl({
-  src: ['public/audio/frankum__vintage-elecro-pop-loop.ogg'],
-  loop: true,
-  volume: 0.5
-});
-
+const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
+const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const toggleBtn = document.getElementById("music-toggle");
 
-let musicPlaying = false;
+let musicPlaying = true;
 
 toggleBtn.addEventListener("click", () => {
-  musicPlaying = !musicPlaying;
-
+ 
+ musicPlaying = !musicPlaying;
   if (musicPlaying) {
-    bgMusic.play();
+    audio.play();
+    audio.volume = 0.5
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-    Howler.mute(false);
+ 
   } else {
-    bgMusic.pause();
+   audio.pause();
     musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-    Howler.mute(true);
+
   }
+
+
+  Object.values(djAudioMap).forEach(dj => {
+    dj.muted = !musicPlaying;
+    if (!musicPlaying) dj.pause();
+  });
+
 });
 /**  -------------------------- modal -------------------------- */
 const experience = document.getElementById("experience");
@@ -790,7 +784,7 @@ t1.timeScale(0.5);
     x: 1,
     y: 1,
     z: 1
-  }, "-=0.6");
+  }, "-=0.6")
 
 
 }
@@ -1067,7 +1061,8 @@ window.addEventListener("click", () => {
   if (clickedObj.name.includes("monitor") && currentIndex < 3) {
     if (musicPlaying && currentIndex < 3) {
 
-      pcButtonSound.play();
+      pcButtonMusic.currentTime = 0;
+      pcButtonMusic.play();
     }
     nextIndex = currentIndex + 1;
 
@@ -1097,26 +1092,19 @@ window.addEventListener("click", () => {
   }
 
   // Play a DJ track
-  const match = clickedObj.name.match(/DJ[1-9]/);
+const match = clickedObj.name.match(/DJ[1-9]/);
   if (match) {
-    const djKey = match[0];
+    const djKey = match[0]; // e.g., "DJ3"
 
-    // Stop all others
-    Object.values(djAudioMap).forEach(sound => sound.stop());
+    // Stop all DJ audios if you want one at a time
+    Object.values(djAudioMap).forEach(a => a.pause());
 
-    if (musicPlaying) {
-      djAudioMap[djKey].play();
+    const audio = djAudioMap[djKey];
+    if (audio) {
+      audio.currentTime = 0; // restart from beginning
+      audio.play();
     }
-  }
-
-  // PC button click
-  if (clickedObj.name.includes("pcbtn") && musicPlaying) {
-    pcButtonSound.play();
-  }
-
-  // Slider toggle
-  if (clickedObj.name.includes("slider") && musicPlaying) {
-    sliderSound.play();
+    if (!musicPlaying) audio.pause();
   }
   //--------------pc btn-----------------//
 
@@ -1136,7 +1124,8 @@ window.addEventListener("click", () => {
 
       if (musicPlaying) {
 
-        pcButtonSound.play();
+          pcButtonMusic.currentTime = 0;
+        pcButtonMusic.play();
       }
     }
   }
@@ -1145,8 +1134,8 @@ window.addEventListener("click", () => {
 
   if (clickedObj.name.includes("slider") && sliderMesh) {
     if (musicPlaying) {
-
-      sliderSound.play(); // ✅ use the correct Howl instance
+   sliderMusic.currentTime = 0;
+      sliderMusic.play();
     }
 
 
