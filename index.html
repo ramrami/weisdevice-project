@@ -25,49 +25,48 @@
 <body>
   <div id="app"></div>
 
-<div id="loading-screen">
+  <div id="loading-screen">
 
-  <div class="modal ">
-    <div class="titlebar">
-      <span class="modal-title">Loading — Windows NT</span>
-    </div>
-
-    <div class="filepath-bar">
-      <div class="path">C:\WINNT\SYSTEM32\Weisdevice\boot.exe</div>
-      <div class="status-indicators">
-        <span>Disk 1</span><span>Initializing</span><span>OK</span>
+    <div class="modal ">
+      <div class="titlebar">
+        <div id="loading-text" class="modal-title"></div>
       </div>
-    </div>
 
-    <div class="modal-content loading-content">
+      <div class="filepath-bar">
+        <div class="path">C:\WINNT\SYSTEM32\Weisdevice\boot.exe</div>
+        <div class="status-indicators">
+          <span>Disk 1</span><span>Initializing</span><span>OK</span>
+        </div>
+      </div>
 
-        <span id="loading-text" class="rotate3"></span>
+      <div class="modal-content loading-content">
 
         <div class="icon-fly-container">
           <img src="/icon/open-file-folder.svg" class="icon data-icon" />
           <img src="/icon/paper-plane.svg" class="icon folder-icon" />
-           <img src="/icon/globe-showing-europe-africa.svg" class="icon globe-icon" />
+          <img src="/icon/globe-showing-europe-africa.svg" class="icon globe-icon" />
         </div>
 
         <progress id="progress-bar" value="0" max="100"></progress>
 
         <span id="tip-text">💡 Tip: Explore using mouse or touch.</span>
- 
 
-      <div class="nt-buttons">
-        <button class="nt-button rotate1" disabled>Back</button>
-        <button class="nt-button" id="enter-button">Continue</button>
+
+        <div class="nt-buttons">
+          <button class="nt-button rotate1" disabled>Back</button>
+          <button class="nt-button" id="enter-button">Continue</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
   <audio id="bg-music" loop>
-  <source src="/audio/frankum__vintage-elecro-pop-loop.ogg" type="audio/mpeg">
-</audio>
-<button id="music-toggle">
-  <img id="music-icon" src="/public/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg" width="24" height="24" alt="music">
-</button>
+    <source src="/audio/frankum__vintage-elecro-pop-loop.ogg" type="audio/mpeg">
+  </audio>
+  <button id="music-toggle">
+    <img id="music-icon" src="/public/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg" width="24"
+      height="24" alt="music">
+  </button>
 
   <section class="work modal hidden">
 
@@ -170,7 +169,8 @@
           <hr />
           <p>
             I’m currently studying Design (Master’s) in Germany.
-            I enjoy exploring how technology can create playful, interactive experiences — and learning and experimenting
+            I enjoy exploring how technology can create playful, interactive experiences — and learning and
+            experimenting
             are things that genuinely make me happy.
           </p>
           <hr />
@@ -218,7 +218,7 @@
       </div>
 
     </div>
-    
+
   </section>
 
   <section class="legal modal hidden">
@@ -248,7 +248,7 @@
       <hr />
       <p>Extra thanks for the inspiration: Andrew Woan – Sooah’s Room</p>
       <hr />
-     <p>Background music: “Vintage Electro Pop Loop” by frankum (Attribution 4.0, Freesound.org).</p>
+      <p>Background music: “Vintage Electro Pop Loop” by frankum (Attribution 4.0, Freesound.org).</p>
       <hr />
       <hr />
       <hr />
@@ -306,8 +306,8 @@
 
   <svg style="display: none;">
     <filter id="wobble">
-      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="turbulence"/>
-      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="2"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="turbulence" />
+      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="2" />
     </filter>
   </svg>
 

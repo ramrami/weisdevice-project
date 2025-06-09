@@ -5,6 +5,7 @@ import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import gsap from "gsap";
+import { Howl } from 'howler';
 
 /* import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 import { workgroupArray } from "three/tsl";
@@ -70,8 +71,8 @@ manager.onLoad = () => {
 
 // When button is clicked, hide loading screen and start experience
 enterButton.addEventListener("click", () => {
-   audio.play();
-    audio.volume = 0.5;
+    bgMusic.play()
+    bgMusic.volume = 0.5;
      musicPlaying = true;
   musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
   loadingScreen.classList.add("hide");
@@ -92,45 +93,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /**  -------------------------- music -------------------------- */
 
+// DJ audio setup with Howler
 const djAudioMap = {};
 
 for (let i = 1; i <= 9; i++) {
-  const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
-  /*   audio.volume = 0.7; */
-  djAudioMap[`DJ${i}`] = audio;
+  djAudioMap[`DJ${i}`] = new Howl({
+    src: [`/audio/DJ/DJ${i}.ogg`],
+    volume: 0.7,
+    preload: true,
+  });
 }
 
-const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); // Replace with your file
+// UI button sounds
+const pcButtonSound = new Howl({
+  src: ['/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'],
+  volume: 0.7,
+});
 
-const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg'); // Replace with your file
+const sliderSound = new Howl({
+  src: ['/audio/sound/71853__ludvique__record_scratch.ogg'],
+  volume: 0.7,
+});
 
+const bgMusic = new Howl({
+  src: ['public/audio/frankum__vintage-elecro-pop-loop.ogg'],
+  loop: true,
+  volume: 0.5
+});
 
-
-const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const toggleBtn = document.getElementById("music-toggle");
 
 let musicPlaying = false;
 
 toggleBtn.addEventListener("click", () => {
-  if (!musicPlaying) {
-    audio.play();
-    audio.volume = 0.5;
-    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-  } else {
-    audio.pause();
-    musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-
-  }
   musicPlaying = !musicPlaying;
 
-  Object.values(djAudioMap).forEach(dj => {
-    dj.muted = !musicPlaying;
-    if (!musicPlaying) dj.pause();
-  });
-
-
-
+  if (musicPlaying) {
+    bgMusic.play();
+    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    Howler.mute(false);
+  } else {
+    bgMusic.pause();
+    musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    Howler.mute(true);
+  }
 });
 /**  -------------------------- modal -------------------------- */
 const experience = document.getElementById("experience");
@@ -867,8 +874,8 @@ window.addEventListener("click", () => {
 
   if (clickedObj.name.includes("monitor") && currentIndex < 3) {
     if (musicPlaying && currentIndex < 3) {
-      pcButtonMusic.currentTime = 0;
-      pcButtonMusic.play();
+      
+      pcButtonSound.play();
     }
     nextIndex = currentIndex + 1;
 
@@ -897,20 +904,28 @@ window.addEventListener("click", () => {
 
   }
 
-  const match = clickedObj.name.match(/DJ[1-9]/);
-  if (match) {
-    const djKey = match[0]; // e.g., "DJ3"
+// Play a DJ track
+const match = clickedObj.name.match(/DJ[1-9]/);
+if (match) {
+  const djKey = match[0];
 
-    // Stop all DJ audios if you want one at a time
-    Object.values(djAudioMap).forEach(a => a.pause());
+  // Stop all others
+  Object.values(djAudioMap).forEach(sound => sound.stop());
 
-    const audio = djAudioMap[djKey];
-    if (audio) {
-      audio.currentTime = 0; // restart from beginning
-      audio.play();
-    }
-    if (!musicPlaying) audio.pause();
+  if (musicPlaying) {
+    djAudioMap[djKey].play();
   }
+}
+
+// PC button click
+if (clickedObj.name.includes("pcbtn") && musicPlaying) {
+  pcButtonSound.play();
+}
+
+// Slider toggle
+if (clickedObj.name.includes("slider") && musicPlaying) {
+  sliderSound.play();
+}
   //--------------pc btn-----------------//
 
   if (clickedObj.name.includes("pcbtn")) {
@@ -928,8 +943,8 @@ window.addEventListener("click", () => {
       uniforms.uMix.value = 0.0; // Show only Texture A
 
       if (musicPlaying) {
-        pcButtonMusic.currentTime = 0;
-        pcButtonMusic.play();
+       
+        pcButtonSound.play();
       }
     }
   }
@@ -938,8 +953,8 @@ window.addEventListener("click", () => {
 
   if (clickedObj.name.includes("slider") && sliderMesh) {
     if (musicPlaying) {
-      sliderMusic.currentTime = 0;
-      sliderMusic.play();
+     
+      sliderSound.play(); // ✅ use the correct Howl instance
     }
 
 
