@@ -12,6 +12,10 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         interphysis: resolve(__dirname, 'interphysis.html'),
+        anglerfish: resolve(__dirname, 'anglerfish.html'),
+        dna: resolve(__dirname, 'dna.html'),
+        boxman: resolve(__dirname, 'boxman.html'),
+        futurehuman: resolve(__dirname, 'futurehuman.html'),
       }
     }
   }

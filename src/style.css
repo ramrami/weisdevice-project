@@ -1,7 +1,6 @@
 @import "/src/styles/fonts.css";
 @import "/src/styles/reset.css";
 @import "/src/styles/variables.css";
-@import "/src/styles/projects.css";
 
 * {
   margin: 0;
@@ -25,6 +24,7 @@ body {
   left: 0;
   overflow: hidden;
   user-select: none;
+   touch-action: none;
 }
 
 #experience.blur::after {
@@ -414,7 +414,7 @@ body {
   border: 0.125rem solid var(--color-base-black);
   box-shadow: 0.125rem 0.125rem 0 var(--color-base-black);
   cursor: pointer;
-  transform: rotate(15deg);
+  transform: rotate(8deg);
   transition: transform 0.1s ease-in-out;
   white-space: nowrap;
   text-decoration: none;

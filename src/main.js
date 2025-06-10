@@ -125,7 +125,7 @@ const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const toggleBtn = document.getElementById("music-toggle");
 
-let musicPlaying = true;
+let musicPlaying = false;
 
 toggleBtn.addEventListener("click", () => {
  
@@ -279,9 +279,146 @@ function handleRaycasterInteraction() {
       showModal(modals.legal);
     }
   }
-};
 
+    if (!currentIntersects || currentIntersects.length === 0) return;
+
+  const clickedObj = currentIntersects[0].object;
+
+  if (clickedObj.name.includes("monitor") && currentIndex < 3) {
+    if (musicPlaying && currentIndex < 3) {
+
+      pcButtonMusic.currentTime = 0;
+      pcButtonMusic.play();
+    }
+    nextIndex = currentIndex + 1;
+
+    // Prepare new textures for blending
+    if (monitorMesh.material.uniforms) {
+      const uniforms = monitorMesh.material.uniforms;
+
+      uniforms.uTextureA.value = monitor_texture[currentIndex];
+      uniforms.uTextureB.value = monitor_texture[nextIndex];
+      uniforms.uMix.value = 0.0;
+
+      // Animate mix from 0 to 1
+      gsap.to(uniforms.uMix, {
+        value: 1.0,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onComplete: () => {
+          // After transition, set currentIndex = nextIndex and reset mix
+          currentIndex = nextIndex;
+          uniforms.uTextureA.value = monitor_texture[currentIndex];
+          uniforms.uTextureB.value = monitor_texture[currentIndex];
+          uniforms.uMix.value = 0.0;
+        }
+      });
+    }
+
+  }
+
+  // Play a DJ track
+const match = clickedObj.name.match(/DJ[1-9]/);
+  if (match) {
+    const djKey = match[0]; // e.g., "DJ3"
+
+    // Stop all DJ audios if you want one at a time
+    Object.values(djAudioMap).forEach(a => a.pause());
+
+    const audio = djAudioMap[djKey];
+    if (audio) {
+      audio.currentTime = 0; // restart from beginning
+      audio.play();
+    }
+    if (!musicPlaying) audio.pause();
+  }
+  //--------------pc btn-----------------//
+
+  if (clickedObj.name.includes("pcbtn")) {
+
+
+
+    if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
+      currentIndex = 0;
+      nextIndex = 1;
+
+      const uniforms = monitorMesh.material.uniforms;
+
+      uniforms.uTextureA.value = monitor_texture[currentIndex];
+      uniforms.uTextureB.value = monitor_texture[currentIndex];
+      uniforms.uMix.value = 0.0; // Show only Texture A
+
+      if (musicPlaying) {
+
+          pcButtonMusic.currentTime = 0;
+        pcButtonMusic.play();
+      }
+    }
+  }
+  //------------slider------------//
+
+
+  if (clickedObj.name.includes("slider") && sliderMesh) {
+    if (musicPlaying) {
+   sliderMusic.currentTime = 0;
+      sliderMusic.play();
+    }
+
+
+    const orig = sliderMesh.userData.originalPosition;
+
+    if (sliderIsAtOriginal) {
+      // Move to offset position
+      gsap.to(sliderMesh.position, {
+        x: orig.x + sliderOffset.x,
+        y: orig.y + sliderOffset.y,
+        z: orig.z + sliderOffset.z,
+        duration: 0.8,
+        ease: "power2.inOut"
+      });
+    } else {
+      // Move back to original
+      gsap.to(sliderMesh.position, {
+        x: orig.x,
+        y: orig.y,
+        z: orig.z,
+        duration: 0.8,
+        ease: "power2.inOut"
+      });
+    }
+
+    sliderIsAtOriginal = !sliderIsAtOriginal;
+  }
+
+  if (clickedObj.name.includes("slider") || clickedObj.name.includes("pcbtn") || clickedObj.name.includes("DJ")) {
+
+    // Save original color (only once per object)
+    if (!clickedObj.userData.originalColor) {
+      clickedObj.userData.originalColor = clickedObj.material.color.clone();
+    }
+
+    // Light-up animation using GSAP
+    gsap.to(clickedObj.material.color, {
+      r: 1, g: 3, b: 1,
+      duration: 0.2,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => {
+        // Restore to original color (optional safety)
+        clickedObj.material.color.copy(clickedObj.userData.originalColor);
+      }
+    });
+  }
+};
+/* 
 window.addEventListener("click", handleRaycasterInteraction);
+window.addEventListener("touchend", handleRaycasterInteraction); */
+function isTouchDevice() {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+const eventType = isTouchDevice() ? 'touchend' : 'click';
+window.addEventListener(eventType, handleRaycasterInteraction);
 
 let touchHappened = false;
 document.querySelectorAll(".modal-exit-button").forEach((button) => {
@@ -512,7 +649,7 @@ void main() {
       });
     }
 
-    //find objects for introanimation
+  
     if (child.name.includes("DJ") || child.name.includes("pcbtn")) {//just so
       let variantKey = null;
       if (child.name.includes("DJ")) variantKey = "DJ";
@@ -690,7 +827,7 @@ DJ9.scale.set(0,0,0);
       ease: "back.out(1.8)"
     }
   });
-t1.timeScale(0.5);
+
 
   t1.to(workbtn.scale, {
     x: 1,
@@ -722,7 +859,7 @@ t1.timeScale(0.5);
       ease: "back.out(1.8)"
     }
   });
-  //t1.timeScale(0.5);
+ 
 
  t2.to(pcbtn.scale, {
     x: 1,
@@ -1054,133 +1191,5 @@ render();
 
 
 window.addEventListener("click", () => {
-  if (!currentIntersects || currentIntersects.length === 0) return;
 
-  const clickedObj = currentIntersects[0].object;
-
-  if (clickedObj.name.includes("monitor") && currentIndex < 3) {
-    if (musicPlaying && currentIndex < 3) {
-
-      pcButtonMusic.currentTime = 0;
-      pcButtonMusic.play();
-    }
-    nextIndex = currentIndex + 1;
-
-    // Prepare new textures for blending
-    if (monitorMesh.material.uniforms) {
-      const uniforms = monitorMesh.material.uniforms;
-
-      uniforms.uTextureA.value = monitor_texture[currentIndex];
-      uniforms.uTextureB.value = monitor_texture[nextIndex];
-      uniforms.uMix.value = 0.0;
-
-      // Animate mix from 0 to 1
-      gsap.to(uniforms.uMix, {
-        value: 1.0,
-        duration: 0.5,
-        ease: "power2.inOut",
-        onComplete: () => {
-          // After transition, set currentIndex = nextIndex and reset mix
-          currentIndex = nextIndex;
-          uniforms.uTextureA.value = monitor_texture[currentIndex];
-          uniforms.uTextureB.value = monitor_texture[currentIndex];
-          uniforms.uMix.value = 0.0;
-        }
-      });
-    }
-
-  }
-
-  // Play a DJ track
-const match = clickedObj.name.match(/DJ[1-9]/);
-  if (match) {
-    const djKey = match[0]; // e.g., "DJ3"
-
-    // Stop all DJ audios if you want one at a time
-    Object.values(djAudioMap).forEach(a => a.pause());
-
-    const audio = djAudioMap[djKey];
-    if (audio) {
-      audio.currentTime = 0; // restart from beginning
-      audio.play();
-    }
-    if (!musicPlaying) audio.pause();
-  }
-  //--------------pc btn-----------------//
-
-  if (clickedObj.name.includes("pcbtn")) {
-
-
-
-    if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
-      currentIndex = 0;
-      nextIndex = 1;
-
-      const uniforms = monitorMesh.material.uniforms;
-
-      uniforms.uTextureA.value = monitor_texture[currentIndex];
-      uniforms.uTextureB.value = monitor_texture[currentIndex];
-      uniforms.uMix.value = 0.0; // Show only Texture A
-
-      if (musicPlaying) {
-
-          pcButtonMusic.currentTime = 0;
-        pcButtonMusic.play();
-      }
-    }
-  }
-  //------------slider------------//
-
-
-  if (clickedObj.name.includes("slider") && sliderMesh) {
-    if (musicPlaying) {
-   sliderMusic.currentTime = 0;
-      sliderMusic.play();
-    }
-
-
-    const orig = sliderMesh.userData.originalPosition;
-
-    if (sliderIsAtOriginal) {
-      // Move to offset position
-      gsap.to(sliderMesh.position, {
-        x: orig.x + sliderOffset.x,
-        y: orig.y + sliderOffset.y,
-        z: orig.z + sliderOffset.z,
-        duration: 0.8,
-        ease: "power2.inOut"
-      });
-    } else {
-      // Move back to original
-      gsap.to(sliderMesh.position, {
-        x: orig.x,
-        y: orig.y,
-        z: orig.z,
-        duration: 0.8,
-        ease: "power2.inOut"
-      });
-    }
-
-    sliderIsAtOriginal = !sliderIsAtOriginal;
-  }
-
-  if (clickedObj.name.includes("slider") || clickedObj.name.includes("pcbtn") || clickedObj.name.includes("DJ")) {
-
-    // Save original color (only once per object)
-    if (!clickedObj.userData.originalColor) {
-      clickedObj.userData.originalColor = clickedObj.material.color.clone();
-    }
-
-    // Light-up animation using GSAP
-    gsap.to(clickedObj.material.color, {
-      r: 1, g: 3, b: 1,
-      duration: 0.2,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => {
-        // Restore to original color (optional safety)
-        clickedObj.material.color.copy(clickedObj.userData.originalColor);
-      }
-    });
-  }
 });
