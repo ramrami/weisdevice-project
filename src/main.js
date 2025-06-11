@@ -67,7 +67,7 @@ const manager = new THREE.LoadingManager();
 
 manager.onProgress = (url, loaded, total) => {
   const percent = Math.floor((loaded / total) * 100);
-  
+
   gsap.to(progressBar, {
     value: percent,
     duration: 0.3,
@@ -110,6 +110,26 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+
+
+
+/**  -------------------------- theme toggle -------------------------- */
+
+let isDarkMode = false;
+
+const themeToggleButton = document.getElementById("theme-toggle");
+
+themeToggleButton.addEventListener("click", () => {
+  isDarkMode = !isDarkMode;
+
+  switchTheme(isDarkMode ? "night" : "day");
+
+  // Optional: update button icon/text
+  themeToggleButton.textContent = isDarkMode ? "☀️ Light Mode" : "🌙 Dark Mode";
+});
+
+
+
 /**  -------------------------- music -------------------------- */
 
 // DJ audio setup with Howler
@@ -122,7 +142,7 @@ for (let i = 1; i <= 9; i++) {
 }
 
 // UI button sounds
-const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'); 
+const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
 
 const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
 const audio = document.getElementById("bg-music");
@@ -132,15 +152,15 @@ const toggleBtn = document.getElementById("music-toggle");
 let musicPlaying = false;
 
 toggleBtn.addEventListener("click", () => {
- 
- musicPlaying = !musicPlaying;
+
+  musicPlaying = !musicPlaying;
   if (musicPlaying) {
     audio.play();
     audio.volume = 0.5
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
- 
+
   } else {
-   audio.pause();
+    audio.pause();
     musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
   }
@@ -294,7 +314,7 @@ function handleRaycasterInteraction() {
     }
   }
 
-    if (!currentIntersects || currentIntersects.length === 0) return;
+  if (!currentIntersects || currentIntersects.length === 0) return;
 
   const clickedObj = currentIntersects[0].object;
 
@@ -332,7 +352,7 @@ function handleRaycasterInteraction() {
   }
 
   // Play a DJ track
-const match = clickedObj.name.match(/DJ[1-9]/);
+  const match = clickedObj.name.match(/DJ[1-9]/);
   if (match) {
     const djKey = match[0]; // e.g., "DJ3"
 
@@ -364,7 +384,7 @@ const match = clickedObj.name.match(/DJ[1-9]/);
 
       if (musicPlaying) {
 
-          pcButtonMusic.currentTime = 0;
+        pcButtonMusic.currentTime = 0;
         pcButtonMusic.play();
       }
     }
@@ -374,7 +394,7 @@ const match = clickedObj.name.match(/DJ[1-9]/);
 
   if (clickedObj.name.includes("slider") && sliderMesh) {
     if (musicPlaying) {
-   sliderMusic.currentTime = 0;
+      sliderMusic.currentTime = 0;
       sliderMusic.play();
     }
 
@@ -457,10 +477,18 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
 /**  -------------------------- Texture Setup -------------------------- */
 const textureLoader = new THREE.TextureLoader(manager);
 const textureMap = {
-  terrain: { day: "/textures/terrain_texture.webp"
-   },
-  other: { day: "/textures/other_texture.webp" },
-  pcwei: { day: "/textures/pcwei_texture.webp" },
+  terrain: {
+    day: "/textures/terrain_texture.webp",
+    night: "/textures/night-texture/terrain_texture_night.webp"
+  },
+  other: {
+    day: "/textures/other_texture.webp",
+    night: "/textures/night-texture/other_texture_night.webp"
+  },
+  pcwei: {
+    day: "/textures/pcwei_texture.webp",
+    night: "/textures/night-texture/pcwei_texture_night.webp"
+  },
 };
 
 const monitor_texture = [textureLoader.load('/textures/monitor/monitor_A_texture.webp'),
@@ -471,14 +499,56 @@ monitor_texture.forEach(tex => {
   tex.flipY = false; // or true if it was already flipped
 });
 
-const loadedTextures = { day: {} };
+const loadedTextures = { day: {}, night: {} };
+
 Object.entries(textureMap).forEach(([key, paths]) => {
+  // Load and configure day texture
   const dayTexture = textureLoader.load(paths.day);
   dayTexture.flipY = false;
   dayTexture.colorSpace = THREE.SRGBColorSpace;
+  dayTexture.minFilter = THREE.LinearFilter;
+  dayTexture.magFilter = THREE.LinearFilter;
   loadedTextures.day[key] = dayTexture;
-});
 
+  // Load and configure night texture
+  const nightTexture = textureLoader.load(paths.night);
+  nightTexture.flipY = false;
+  nightTexture.colorSpace = THREE.SRGBColorSpace;
+  nightTexture.minFilter = THREE.LinearFilter;
+  nightTexture.magFilter = THREE.LinearFilter;
+  loadedTextures.night[key] = nightTexture;
+});
+function switchTheme(theme) {
+  const modelRoot = scene.userData.modelRoot;
+  if (!modelRoot) return;
+
+
+  gridmaterial.uniforms.uLineColor.value.set(
+  theme === "night" ? 1 : 0.2,
+  theme === "night" ? 1 : 0.2,
+  theme === "night" ? 1 : 0.2
+);
+// Smoke color: red in night mode, white in day
+smokeMaterial.uniforms.uColor.value.set(
+  theme === "night" ? 0.7 : 1,
+  theme === "night" ? 0.3 : 1,
+  theme === "night" ? 0.1 : 1
+);
+  modelRoot.traverse((child) => {
+    if (!child.isMesh) return;
+
+    const key = child.userData.textureKey;
+    if (key && loadedTextures[theme]?.[key]) {
+      const newTexture = loadedTextures[theme][key];
+      if (child.material.map !== newTexture) {
+        child.material.map = newTexture;
+        child.material.needsUpdate = true;
+      }
+    }
+  });
+
+scene.background = new THREE.Color(theme === "night" ? "#1a1a1a" : "#c5dba7");
+}
 /**  -------------------------- Model Loader -------------------------- */
 
 const dracoLoader = new DRACOLoader();
@@ -541,6 +611,9 @@ const clickVariants = {
 };
 
 loader.load("/models/desert.glb", (glb) => {
+  const modelRoot = glb.scene;
+  scene.add(modelRoot);
+  scene.userData.modelRoot = modelRoot;
   const envMap = new THREE.CubeTextureLoader()
     .setPath('/textures/skymap/')
     .load(['px.webp', 'nx.webp', 'py.webp', 'ny.webp', 'pz.webp', 'nz.webp']);
@@ -550,14 +623,15 @@ loader.load("/models/desert.glb", (glb) => {
     if (!child.isMesh) return;
     const name = child.name;
 
-    // Apply textures
     Object.keys(textureMap).forEach((key) => {
       if (child.name.includes(key)) {
-        const material = new THREE.MeshBasicMaterial({
+        child.material = new THREE.MeshBasicMaterial({
           map: loadedTextures.day[key],
         });
-        material.map.minFilter = THREE.LinearFilter;
-        child.material = material;
+        child.material.map.minFilter = THREE.LinearFilter;
+
+        // ✅ Set textureKey so switchTheme works
+        child.userData.textureKey = key;
       }
     });
 
@@ -570,8 +644,16 @@ loader.load("/models/desert.glb", (glb) => {
 
     // Clouds
     if (child.name.includes("cloud")) {
-      child.material.transparent = true;
-      child.material.opacity = 0.7;
+      const key = "other"; // cloud uses the "other" texture set
+      child.material = new THREE.MeshBasicMaterial({
+        map: loadedTextures.day[key],
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false
+      });
+
+      child.userData.textureKey = key;
+
       cloud.push({
         mesh: child,
         baseY: child.position.y,
@@ -595,14 +677,16 @@ loader.load("/models/desert.glb", (glb) => {
 
     // Special metallic material for pcwei
     if (child.name.includes("pcwei")) {
-      const oldMap = child.material.map;
+      const key = "pcwei";
       child.material = new THREE.MeshStandardMaterial({
-        map: oldMap,
+        map: loadedTextures.day[key],
         metalness: 0.9,
         roughness: 0.2,
         envMap: envMap,
         envMapIntensity: 3.0,
       });
+
+      child.userData.textureKey = key;
     }
 
 
@@ -612,8 +696,8 @@ loader.load("/models/desert.glb", (glb) => {
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
           uTextureB: { value: monitor_texture[nextIndex] },
-uBrightness: { value: 0.0 },
-uContrast: { value: 0.0 },
+          uBrightness: { value: 0.0 },
+          uContrast: { value: 0.0 },
           uMix: { value: 0.0 },
           uAberrationAmount: { value: 0.01 }
         },
@@ -664,7 +748,7 @@ void main() {
       });
     }
 
-  
+
     if (child.name.includes("DJ") || child.name.includes("pcbtn")) {//just so
       let variantKey = null;
       if (child.name.includes("DJ")) variantKey = "DJ";
@@ -715,48 +799,48 @@ void main() {
       raycasterObjects.push(child);
     }
 
-  if (child.name.includes("workbtn")) {
-  workbtn = child;
-}
-if (child.name.includes("contactbtn")) {
-  contactbtn = child;
-}
-if (child.name.includes("aboutbtn")) {
-  aboutbtn = child;
-}
-if (child.name.includes("legalbtn")) {
-  legalbtn = child;
-}
-if (child.name.includes("pcbtn")) {
-  pcbtn = child;
-}
-if (child.name.includes("DJ1")) {
-  DJ1 = child;
-}
-if (child.name.includes("DJ2")) {
-  DJ2 = child;
-}
-if (child.name.includes("DJ3")) {
-  DJ3 = child;
-}
-if (child.name.includes("DJ4")) {
-  DJ4 = child;
-}
-if (child.name.includes("DJ5")) {
-  DJ5 = child;
-}
-if (child.name.includes("DJ6")) {
-  DJ6 = child;
-}
-if (child.name.includes("DJ7")) {
-  DJ7 = child;
-}
-if (child.name.includes("DJ8")) {
-  DJ8 = child;
-}
-if (child.name.includes("DJ9")) {
-  DJ9 = child;
-}
+    if (child.name.includes("workbtn")) {
+      workbtn = child;
+    }
+    if (child.name.includes("contactbtn")) {
+      contactbtn = child;
+    }
+    if (child.name.includes("aboutbtn")) {
+      aboutbtn = child;
+    }
+    if (child.name.includes("legalbtn")) {
+      legalbtn = child;
+    }
+    if (child.name.includes("pcbtn")) {
+      pcbtn = child;
+    }
+    if (child.name.includes("DJ1")) {
+      DJ1 = child;
+    }
+    if (child.name.includes("DJ2")) {
+      DJ2 = child;
+    }
+    if (child.name.includes("DJ3")) {
+      DJ3 = child;
+    }
+    if (child.name.includes("DJ4")) {
+      DJ4 = child;
+    }
+    if (child.name.includes("DJ5")) {
+      DJ5 = child;
+    }
+    if (child.name.includes("DJ6")) {
+      DJ6 = child;
+    }
+    if (child.name.includes("DJ7")) {
+      DJ7 = child;
+    }
+    if (child.name.includes("DJ8")) {
+      DJ8 = child;
+    }
+    if (child.name.includes("DJ9")) {
+      DJ9 = child;
+    }
 
 
 
@@ -808,33 +892,33 @@ if (child.name.includes("DJ9")) {
 
       child.userData.hoverTimeline = tl;
     }
-
+switchTheme("day");
   });
 
 
 
   scene.add(glb.scene);
 
-  
-  
+
+
 });
-  function playIntroAnimation() {
+function playIntroAnimation() {
 
   workbtn.scale.set(0, 0, 0);
   contactbtn.scale.set(0, 0, 0);
   aboutbtn.scale.set(0, 0, 0);
-   legalbtn.scale.set(0, 0, 0);
-pcbtn.scale.set(0,0,0);
-sliderMesh.scale.set(0,0,0);
-DJ1.scale.set(0,0,0);
-DJ2.scale.set(0,0,0);
-DJ3.scale.set(0,0,0);
-DJ4.scale.set(0,0,0);
-DJ5.scale.set(0,0,0);
-DJ6.scale.set(0,0,0);
-DJ7.scale.set(0,0,0);
-DJ8.scale.set(0,0,0);
-DJ9.scale.set(0,0,0);
+  legalbtn.scale.set(0, 0, 0);
+  pcbtn.scale.set(0, 0, 0);
+  sliderMesh.scale.set(0, 0, 0);
+  DJ1.scale.set(0, 0, 0);
+  DJ2.scale.set(0, 0, 0);
+  DJ3.scale.set(0, 0, 0);
+  DJ4.scale.set(0, 0, 0);
+  DJ5.scale.set(0, 0, 0);
+  DJ6.scale.set(0, 0, 0);
+  DJ7.scale.set(0, 0, 0);
+  DJ8.scale.set(0, 0, 0);
+  DJ9.scale.set(0, 0, 0);
 
   const t1 = gsap.timeline({
     defaults: {
@@ -849,94 +933,94 @@ DJ9.scale.set(0,0,0);
     y: 1,
     z: 1
   })
-  .to(aboutbtn.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6") 
-  .to(contactbtn.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
-   .to(legalbtn.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6");
+    .to(aboutbtn.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
+    .to(contactbtn.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
+    .to(legalbtn.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6");
 
   t1.then(() => t2.play());
 
-   const t2 = gsap.timeline({
-      paused: true,
+  const t2 = gsap.timeline({
+    paused: true,
     defaults: {
       duration: 0.8,
       ease: "back.out(1.8)"
     }
   });
- 
 
- t2.to(pcbtn.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }) 
-  .to(sliderMesh.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6") 
- .to(DJ1.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
-   .to(DJ2.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
-     .to(DJ3.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
 
-     .to(DJ4.scale, {
+  t2.to(pcbtn.scale, {
     x: 1,
     y: 1,
     z: 1
-  }, "-=0.6")
+  })
+    .to(sliderMesh.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
+    .to(DJ1.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
+    .to(DJ2.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
+    .to(DJ3.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
 
-     .to(DJ5.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
+    .to(DJ4.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
 
-     .to(DJ6.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
+    .to(DJ5.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
 
-     .to(DJ7.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
+    .to(DJ6.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
 
-     .to(DJ8.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
+    .to(DJ7.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
 
-     .to(DJ9.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  }, "-=0.6")
+    .to(DJ8.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
+
+    .to(DJ9.scale, {
+      x: 1,
+      y: 1,
+      z: 1
+    }, "-=0.6")
 
 
 }
@@ -950,7 +1034,8 @@ const gridmaterial = new THREE.ShaderMaterial({
   transparent: true,
   /*  side: THREE.DoubleSide, */
   uniforms: {
-    uSize: { value: gridSize }
+    uSize: { value: gridSize },
+     uLineColor: { value: new THREE.Color(0.2, 0.2, 0.2) } 
   },
   vertexShader: `
         varying vec2 vUv;
@@ -962,6 +1047,7 @@ const gridmaterial = new THREE.ShaderMaterial({
   fragmentShader: `
   varying vec2 vUv;
   uniform float uSize;
+  uniform vec3 uLineColor;
 
   float gridLine(float coord, float size) {
     float line = abs(fract(coord * size) - 0.5);
@@ -976,7 +1062,7 @@ const gridmaterial = new THREE.ShaderMaterial({
     float yLine = gridLine(vUv.y, uSize);
     float lineStrength = max(xLine, yLine);
 
-    gl_FragColor = vec4(vec3(0.2), alpha * lineStrength * 0.1);
+    gl_FragColor = vec4(uLineColor, alpha * lineStrength * 0.1);
   }
 `
 });
@@ -1058,6 +1144,7 @@ void main() {
 const smokeFragmentShader = `
 uniform float uTime;
 uniform sampler2D uPerlinTexture;
+uniform vec3 uColor;
 
 varying vec2 vUv;
 
@@ -1076,7 +1163,7 @@ void main() {
   smoke *= smoothstep(1.0, 0.4, vUv.y);
 
 /* gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); */
-gl_FragColor = vec4(1, 1, 1, smoke); 
+gl_FragColor = vec4(uColor, smoke);
 }
 `;
 const smokeMaterial = new THREE.ShaderMaterial({
@@ -1085,6 +1172,7 @@ const smokeMaterial = new THREE.ShaderMaterial({
   uniforms: {
     uTime: new THREE.Uniform(0),
     uPerlinTexture: new THREE.Uniform(perlinTexture),
+     uColor: new THREE.Uniform(new THREE.Color(1, 1, 1)),
   },
   side: THREE.DoubleSide,
   transparent: true,
@@ -1099,7 +1187,6 @@ scene.add(smoke);
 
 const clock = new THREE.Clock();
 
-scene.background = new THREE.Color("#c5dba7");
 
 
 
@@ -1177,23 +1264,23 @@ const render = () => {
     }
 
     // Monitor hover visual effect
-if (monitorAnimStarted && monitorMesh?.material?.uniforms) {
-  const uniforms = monitorMesh.material.uniforms;
+    if (monitorAnimStarted && monitorMesh?.material?.uniforms) {
+      const uniforms = monitorMesh.material.uniforms;
 
-  // Animate brightness and contrast up to 1
-  monitorBrightness += (1.0 - monitorBrightness) * 0.05;
-  monitorContrast += (1.0 - monitorContrast) * 0.05;
+      // Animate brightness and contrast up to 1
+      monitorBrightness += (1.0 - monitorBrightness) * 0.05;
+      monitorContrast += (1.0 - monitorContrast) * 0.05;
 
-  uniforms.uBrightness.value = monitorBrightness;
-  uniforms.uContrast.value = monitorContrast;
+      uniforms.uBrightness.value = monitorBrightness;
+      uniforms.uContrast.value = monitorContrast;
 
-  // Stop animation once close enough
-  if (Math.abs(1.0 - monitorBrightness) < 0.01 && Math.abs(1.0 - monitorContrast) < 0.01) {
-    uniforms.uBrightness.value = 1.0;
-    uniforms.uContrast.value = 1.0;
-    monitorAnimStarted = false;
-  }
-}
+      // Stop animation once close enough
+      if (Math.abs(1.0 - monitorBrightness) < 0.01 && Math.abs(1.0 - monitorContrast) < 0.01) {
+        uniforms.uBrightness.value = 1.0;
+        uniforms.uContrast.value = 1.0;
+        monitorAnimStarted = false;
+      }
+    }
 
   }
 
