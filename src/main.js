@@ -67,8 +67,18 @@ const manager = new THREE.LoadingManager();
 
 manager.onProgress = (url, loaded, total) => {
   const percent = Math.floor((loaded / total) * 100);
-  progressBar.value = percent;
-  loadingText.textContent = `Loading ${loaded} of ${total}...`;
+  
+  gsap.to(progressBar, {
+    value: percent,
+    duration: 0.3,
+    ease: "power1.out"
+  });
+
+  gsap.to(loadingText, {
+    textContent: `Loading ${loaded} of ${total}...`,
+    duration: 0.3,
+    ease: "none"
+  });
 };
 
 manager.onLoad = () => {
@@ -80,18 +90,37 @@ manager.onLoad = () => {
 // When button is clicked, hide loading screen and start experience
 enterButton.addEventListener("click", () => {
   audio.play();
-    audio.volume = 0.5;
+  audio.volume = 0.5;
   musicPlaying = true;
   musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
-  loadingScreen.classList.add("hide");
+  const loadingScreen = document.getElementById("loading-screen");
+  const loadingContainer = document.getElementById("loading-screen-container");
 
-  loadingScreen.addEventListener("transitionend", () => {
-     monitorAnimStarted = true;
-    loadingScreen.remove();
-    playIntroAnimation(); // ✅ animation now starts after fade-out
-    
+  // Optional: add a subtle box-shadow fade
+  gsap.to(loadingScreen, {
+    boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)",
+    duration: 0.5
   });
+
+gsap.to(loadingScreen, {
+  duration: 1.8,
+  rotateX: 180,
+  y: -window.innerHeight * 0,
+  z: -300,
+  scale: 0.6,
+  opacity: 0,
+  ease: "power4.inOut",
+  transformOrigin: "center center",
+  onStart: () => {
+    loadingScreen.style.willChange = "transform, opacity";
+  },
+  onComplete: () => {
+    monitorAnimStarted = true;
+    loadingContainer.remove();
+    playIntroAnimation();
+  }
+});
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -157,9 +186,7 @@ const showModal = (modal) => {
   controls.enabled = false;
 
   experience.classList.add("blur");
-
   toggleBtn.classList.add("hidden");
-
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -170,8 +197,20 @@ const showModal = (modal) => {
   document.body.style.cursor = "default";
   currentIntersects = [];
 
-  gsap.set(modal, { opacity: 0 });
-  gsap.to(modal, { opacity: 1, duration: 0.5 });
+  // Start collapsed vertically
+  gsap.set(modal, {
+    scaleY: 0,
+    scaleX: 1,
+    opacity: 0,
+    transformOrigin: "center center"
+  });
+
+  gsap.to(modal, {
+    scaleY: 1,
+    opacity: 1,
+    duration: 0.5,
+    ease: "power3.out"
+  });
 };
 
 const hideModal = (modal) => {
@@ -179,9 +218,7 @@ const hideModal = (modal) => {
   controls.enabled = true;
 
   experience.classList.remove("blur");
-
   toggleBtn.classList.remove("hidden");
-
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -190,8 +227,10 @@ const hideModal = (modal) => {
   });
 
   gsap.to(modal, {
+    scaleY: 0,
     opacity: 0,
-    duration: 0.5,
+    duration: 0.4,
+    ease: "power2.in",
     onComplete: () => {
       modal.classList.add("hidden");
     }
