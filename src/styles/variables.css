@@ -13,6 +13,21 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root[data-theme="night"] {
+  --color-bg: #1a1a1a;
+  --color-accent-pink: #c77493;
+  --color-accent-yellow: #d3cd7d;
+  --color-device-blue: #324a6f;
+  --color-rock-brown: #7f6244;
+  --color-base-white: #c2c2c2;
+  --color-base-black: #ffffff;
+
+    font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 h1 {
   font-family: 'Pixellari', sans-serif;
   color: var(--color-base-black);

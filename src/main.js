@@ -99,6 +99,20 @@ enterButton.addEventListener("click", () => {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
+
+    const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "night") {
+    isDarkMode = true;
+    document.documentElement.setAttribute("data-theme", "night");
+    themeIcon.src = "/icon/dark_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+    switchTheme("night");
+  } else {
+    isDarkMode = false;
+    document.documentElement.removeAttribute("data-theme");
+    themeIcon.src = "/icon/light_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+    switchTheme("day");
+  }
+
   const tipText = document.getElementById("tip-text");
 
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -115,19 +129,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /**  -------------------------- theme toggle -------------------------- */
 
-let isDarkMode = false;
 
 const themeToggleButton = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
+
+let isDarkMode = false;
 
 themeToggleButton.addEventListener("click", () => {
   isDarkMode = !isDarkMode;
-
   switchTheme(isDarkMode ? "night" : "day");
 
-  // Optional: update button icon/text
-  themeToggleButton.textContent = isDarkMode ? "☀️ Light Mode" : "🌙 Dark Mode";
-});
 
+  // 👇 Use attribute-based theming
+  if (isDarkMode) {
+    document.documentElement.setAttribute("data-theme", "night");
+    themeIcon.src = "/icon/dark_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    themeIcon.src = "/icon/light_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+  }
+  localStorage.setItem("theme", isDarkMode ? "night" : "day");
+});
 
 
 /**  -------------------------- music -------------------------- */
@@ -147,16 +169,16 @@ const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmatio
 const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
 const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
-const toggleBtn = document.getElementById("music-toggle");
+const MusictoggleBtn = document.getElementById("music-toggle");
 
 let musicPlaying = false;
 
-toggleBtn.addEventListener("click", () => {
+MusictoggleBtn.addEventListener("click", () => {
 
   musicPlaying = !musicPlaying;
   if (musicPlaying) {
     audio.play();
-    audio.volume = 0.5
+    audio.volume = 0.5;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
   } else {
@@ -181,7 +203,8 @@ const showModal = (modal) => {
   controls.enabled = false;
 
   experience.classList.add("blur");
-  toggleBtn.classList.add("hidden");
+  MusictoggleBtn.classList.add("hidden");
+  themeToggleButton.classList.add("hidden");
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -213,7 +236,8 @@ const hideModal = (modal) => {
   controls.enabled = true;
 
   experience.classList.remove("blur");
-  toggleBtn.classList.remove("hidden");
+  MusictoggleBtn.classList.remove("hidden");
+  themeToggleButton.classList.remove("hidden");
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -892,7 +916,7 @@ void main() {
 
       child.userData.hoverTimeline = tl;
     }
-    switchTheme("day");
+    switchTheme(isDarkMode ? "night" : "day");// important for default texture mode!
   });
 
 

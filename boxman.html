@@ -5,6 +5,12 @@
   <meta charset="UTF-8">
   <title>My Work - Boxman</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+  const theme = localStorage.getItem("theme");
+  if (theme === "night") {
+    document.documentElement.setAttribute("data-theme", "night");
+  }
+</script>
   <link rel="stylesheet" href="src/styles/projects.css">
 </head>
 
@@ -56,7 +62,7 @@
     </div>
     <p style="text-align:center; margin-top: 1rem;">&copy; 2025 Xianyao Wei</p>
   </footer>
-
+  <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>
