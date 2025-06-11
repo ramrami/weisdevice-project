@@ -524,16 +524,16 @@ function switchTheme(theme) {
 
 
   gridmaterial.uniforms.uLineColor.value.set(
-  theme === "night" ? 1 : 0.2,
-  theme === "night" ? 1 : 0.2,
-  theme === "night" ? 1 : 0.2
-);
-// Smoke color: red in night mode, white in day
-smokeMaterial.uniforms.uColor.value.set(
-  theme === "night" ? 0.7 : 1,
-  theme === "night" ? 0.3 : 1,
-  theme === "night" ? 0.1 : 1
-);
+    theme === "night" ? 1 : 0.2,
+    theme === "night" ? 1 : 0.2,
+    theme === "night" ? 1 : 0.2
+  );
+  // Smoke color: red in night mode, white in day
+  smokeMaterial.uniforms.uColor.value.set(
+    theme === "night" ? 0.7 : 1,
+    theme === "night" ? 0.3 : 1,
+    theme === "night" ? 0.1 : 1
+  );
   modelRoot.traverse((child) => {
     if (!child.isMesh) return;
 
@@ -547,7 +547,7 @@ smokeMaterial.uniforms.uColor.value.set(
     }
   });
 
-scene.background = new THREE.Color(theme === "night" ? "#1a1a1a" : "#c5dba7");
+  scene.background = new THREE.Color(theme === "night" ? "#1a1a1a" : "#c5dba7");
 }
 /**  -------------------------- Model Loader -------------------------- */
 
@@ -892,7 +892,7 @@ void main() {
 
       child.userData.hoverTimeline = tl;
     }
-switchTheme("day");
+    switchTheme("day");
   });
 
 
@@ -1035,7 +1035,7 @@ const gridmaterial = new THREE.ShaderMaterial({
   /*  side: THREE.DoubleSide, */
   uniforms: {
     uSize: { value: gridSize },
-     uLineColor: { value: new THREE.Color(0.2, 0.2, 0.2) } 
+    uLineColor: { value: new THREE.Color(0.2, 0.2, 0.2) }
   },
   vertexShader: `
         varying vec2 vUv;
@@ -1078,7 +1078,7 @@ const xPlane = new THREE.Mesh(
   new THREE.MeshBasicMaterial({
     color: 0xff0000,
     transparent: true,
-    opacity: 0.3, // adjust as needed
+    opacity: 0.2,
     depthWrite: false // prevents z-fighting if needed
   })
 );
@@ -1092,7 +1092,7 @@ const yPlane = new THREE.Mesh(
   new THREE.MeshBasicMaterial({
     color: 0x00ff00,
     transparent: true,
-    opacity: 0.3,
+    opacity: 0.2,
     depthWrite: false
   })
 );
@@ -1172,7 +1172,7 @@ const smokeMaterial = new THREE.ShaderMaterial({
   uniforms: {
     uTime: new THREE.Uniform(0),
     uPerlinTexture: new THREE.Uniform(perlinTexture),
-     uColor: new THREE.Uniform(new THREE.Color(1, 1, 1)),
+    uColor: new THREE.Uniform(new THREE.Color(1, 1, 1)),
   },
   side: THREE.DoubleSide,
   transparent: true,
