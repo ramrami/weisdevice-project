@@ -457,7 +457,8 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
 /**  -------------------------- Texture Setup -------------------------- */
 const textureLoader = new THREE.TextureLoader(manager);
 const textureMap = {
-  terrain: { day: "/textures/terrain_texture.webp" },
+  terrain: { day: "/textures/terrain_texture.webp"
+   },
   other: { day: "/textures/other_texture.webp" },
   pcwei: { day: "/textures/pcwei_texture.webp" },
 };
