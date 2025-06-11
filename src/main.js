@@ -80,7 +80,6 @@ manager.onProgress = (url, loaded, total) => {
     ease: "none"
   });
 };
-
 manager.onLoad = () => {
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
@@ -94,33 +93,9 @@ enterButton.addEventListener("click", () => {
   musicPlaying = true;
   musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
-  const loadingScreen = document.getElementById("loading-screen");
-  const loadingContainer = document.getElementById("loading-screen-container");
-
-  // Optional: add a subtle box-shadow fade
-  gsap.to(loadingScreen, {
-    boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)",
-    duration: 0.5
-  });
-
-gsap.to(loadingScreen, {
-  duration: 1.8,
-  rotateX: 180,
-  y: -window.innerHeight * 0,
-  z: -300,
-  scale: 0.6,
-  opacity: 0,
-  ease: "power4.inOut",
-  transformOrigin: "center center",
-  onStart: () => {
-    loadingScreen.style.willChange = "transform, opacity";
-  },
-  onComplete: () => {
-    monitorAnimStarted = true;
-    loadingContainer.remove();
-    playIntroAnimation();
-  }
-});
+  monitorAnimStarted = true;
+  loadingScreen.remove(); // Instantly remove it
+  playIntroAnimation();   // Start animation right away
 });
 
 document.addEventListener("DOMContentLoaded", function () {
