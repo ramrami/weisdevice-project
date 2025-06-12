@@ -6,26 +6,16 @@
   --color-rock-brown: #c49a6c;
   --color-base-white: #FAFCF7;
   --color-base-black: #3b3935;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 :root[data-theme="night"] {
-  --color-bg: #1a1a1a;
-  --color-accent-pink: #c77493;
-  --color-accent-yellow: #d3cd7d;
-  --color-device-blue: #324a6f;
-  --color-rock-brown: #7f6244;
-  --color-base-white: #c2c2c2;
-  --color-base-black: #ffffff;
-
-    font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-bg: rgb(20, 20, 20);
+  --color-accent-pink: #4B8725;
+  --color-accent-yellow: #527326;
+  --color-device-blue: #8CCD5F;
+  --color-rock-brown: #1958be;
+  --color-base-white: #1A1A1A;
+  --color-base-black: #8CCD5F;
 }
 
 h1 {

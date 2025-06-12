@@ -255,6 +255,22 @@ const hideModal = (modal) => {
     }
   });
 };
+
+function handleOutsideModalClick(e) {
+  if (!isModalOpen) return;
+
+  const openModal = document.querySelector(".modal:not(.hidden)");
+  if (!openModal) return;
+
+  if (!openModal.contains(e.target)) {
+    hideModal(openModal);
+  }
+}
+
+window.addEventListener("click", handleOutsideModalClick, { passive: false });
+window.addEventListener("touchend", handleOutsideModalClick, { passive: false });
+
+
 /**  -------------------------- Camera & Renderer -------------------------- */
 const camera = new THREE.PerspectiveCamera(
   35,
@@ -548,9 +564,9 @@ function switchTheme(theme) {
 
 
   gridmaterial.uniforms.uLineColor.value.set(
-    theme === "night" ? 1 : 0.2,
-    theme === "night" ? 1 : 0.2,
-    theme === "night" ? 1 : 0.2
+    theme === "night" ? 0.4 : 0.2,
+    theme === "night" ? 0.4 : 0.2,
+    theme === "night" ? 0.4 : 0.2
   );
   // Smoke color: red in night mode, white in day
   smokeMaterial.uniforms.uColor.value.set(

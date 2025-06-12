@@ -26,7 +26,7 @@ header, main, footer {
 .nav-back {
     font-family: 'VT323', monospace;
   font-size: 1.375rem;
-  background-color: var(--color-bg);
+  background-color: var(--color-accent-pink);
   color: var(--color-base-black);
 }
 
@@ -39,6 +39,8 @@ header, main, footer {
   background-color: var(--color-accent-pink);
   color: var(--color-base-black);
 }
+
+
 
 .project-type {
   color: var( --color-rock-brown);
