@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Three.js Audio Plane Visualizer</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    #controls { position: absolute; top: 10px; left: 10px; z-index: 10; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <input type="file" id="fileInput" accept="audio/*" />
+    <button onclick="audio.play()">Play</button>
+    <button onclick="audio.pause()">Pause</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    // Three.js scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 8;
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Off-screen canvas for visualization
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+
+    // Create texture and apply to plane
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.5), material);
+
+// You can fully control this:
+    plane.position.set(0, 1, 0);
+    plane.rotation.set(-Math.PI / 8, -Math.PI / 8, -Math.PI / 8); // e.g., slight Y-rotation
+    plane.scale.set(1, 1, 1);
+
+    scene.add(plane);
+
+    // Audio setup
+    let audio = new Audio();
+    let audioCtx, analyser, dataArray;
+
+    document.getElementById('fileInput').addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      audio.src = URL.createObjectURL(file);
+      audio.load();
+
+      audio.onplay = () => {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioCtx.createMediaElementSource(audio);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 128;
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          source.connect(analyser);
+          analyser.connect(audioCtx.destination);
+        }
+      };
+    });
+
+    // Draw bars onto the off-screen canvas
+    function drawBars() {
+      if (!analyser) return;
+
+      analyser.getByteFrequencyData(dataArray);
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = canvas.width / dataArray.length;
+      for (let i = 0; i < dataArray.length; i++) {
+        const val = dataArray[i];
+        const barHeight = val / 255 * canvas.height;
+        ctx.fillStyle = `rgb(${val + 100}, 50, 200)`;
+        ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+      }
+
+      texture.needsUpdate = true;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      drawBars();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

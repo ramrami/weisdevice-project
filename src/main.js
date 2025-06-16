@@ -49,6 +49,8 @@ let sliderMesh = null;
 let sliderIsAtOriginal = true;
 const sliderOffset = new THREE.Vector3(0, 0, -0.5); // ← relative movement
 
+let touchHappened = false;
+
 const modals = {
   work: document.querySelector(".modal.work"),
   about: document.querySelector(".modal.about"),
@@ -86,18 +88,41 @@ manager.onLoad = () => {
   enterButton.classList.add("active");
 };
 
-// When button is clicked, hide loading screen and start experience
-enterButton.addEventListener("click", () => {
-  audio.play();
-  audio.volume = 0.5;
-  musicPlaying = true;
-  musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+enterButton.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    e.preventDefault();
 
-  monitorAnimStarted = true;
-  loadingScreen.remove(); // Instantly remove it
-  playIntroAnimation();   // Start animation right away
-});
+    audio.play();
+    audio.volume = 0.5;
+    musicPlaying = true;
+    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
+    monitorAnimStarted = true;
+    loadingScreen.remove(); // Instantly remove it
+    playIntroAnimation();   // Start animation right away
+  },
+  { passive: false }
+);
+
+enterButton.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+
+    audio.play();
+    audio.volume = 0.5;
+    musicPlaying = true;
+    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+
+    monitorAnimStarted = true;
+    loadingScreen.remove(); // Instantly remove it
+    playIntroAnimation();   // Start animation right away
+  },
+  { passive: false }
+);
 document.addEventListener("DOMContentLoaded", function () {
 
     const savedTheme = localStorage.getItem("theme");
@@ -122,10 +147,24 @@ document.addEventListener("DOMContentLoaded", function () {
   } else {
     tipText.textContent = "💡 Tip: Click and drag to explore.";
   }
+
 });
 
 
 
+document.querySelectorAll('.more-button').forEach((button) => {
+  button.addEventListener('touchend', (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    window.location.href = button.href;
+  }, { passive: false });
+
+  button.addEventListener('click', (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+    window.location.href = button.href;
+  }, { passive: false });
+});
 
 /**  -------------------------- theme toggle -------------------------- */
 
@@ -134,22 +173,49 @@ const themeToggleButton = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
 
 let isDarkMode = false;
+themeToggleButton.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    e.preventDefault();
 
-themeToggleButton.addEventListener("click", () => {
-  isDarkMode = !isDarkMode;
-  switchTheme(isDarkMode ? "night" : "day");
+    isDarkMode = !isDarkMode;
+    switchTheme(isDarkMode ? "night" : "day");
 
+    if (isDarkMode) {
+      document.documentElement.setAttribute("data-theme", "night");
+      themeIcon.src = "/icon/dark_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      themeIcon.src = "/icon/light_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+    }
 
-  // 👇 Use attribute-based theming
-  if (isDarkMode) {
-    document.documentElement.setAttribute("data-theme", "night");
-    themeIcon.src = "/icon/dark_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
-  } else {
-    document.documentElement.removeAttribute("data-theme");
-    themeIcon.src = "/icon/light_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
-  }
-  localStorage.setItem("theme", isDarkMode ? "night" : "day");
-});
+    localStorage.setItem("theme", isDarkMode ? "night" : "day");
+  },
+  { passive: false }
+);
+
+themeToggleButton.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+
+    isDarkMode = !isDarkMode;
+    switchTheme(isDarkMode ? "night" : "day");
+
+    if (isDarkMode) {
+      document.documentElement.setAttribute("data-theme", "night");
+      themeIcon.src = "/icon/dark_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      themeIcon.src = "/icon/light_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
+    }
+
+    localStorage.setItem("theme", isDarkMode ? "night" : "day");
+  },
+  { passive: false }
+);
 
 
 /**  -------------------------- music -------------------------- */
@@ -173,27 +239,55 @@ const MusictoggleBtn = document.getElementById("music-toggle");
 
 let musicPlaying = false;
 
-MusictoggleBtn.addEventListener("click", () => {
+MusictoggleBtn.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    e.preventDefault();
 
-  musicPlaying = !musicPlaying;
-  if (musicPlaying) {
-    audio.play();
-    audio.volume = 0.5;
-    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    musicPlaying = !musicPlaying;
 
-  } else {
-    audio.pause();
-    musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    if (musicPlaying) {
+      audio.play();
+      audio.volume = 0.5;
+      musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    } else {
+      audio.pause();
+      musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    }
 
-  }
+    Object.values(djAudioMap).forEach((dj) => {
+      dj.muted = !musicPlaying;
+      if (!musicPlaying) dj.pause();
+    });
+  },
+  { passive: false }
+);
 
+MusictoggleBtn.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
 
-  Object.values(djAudioMap).forEach(dj => {
-    dj.muted = !musicPlaying;
-    if (!musicPlaying) dj.pause();
-  });
+    musicPlaying = !musicPlaying;
 
-});
+    if (musicPlaying) {
+      audio.play();
+      audio.volume = 0.5;
+      musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    } else {
+      audio.pause();
+      musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+    }
+
+    Object.values(djAudioMap).forEach((dj) => {
+      dj.muted = !musicPlaying;
+      if (!musicPlaying) dj.pause();
+    });
+  },
+  { passive: false }
+);
 /**  -------------------------- modal -------------------------- */
 const experience = document.getElementById("experience");
 
@@ -267,8 +361,25 @@ function handleOutsideModalClick(e) {
   }
 }
 
-window.addEventListener("click", handleOutsideModalClick, { passive: false });
-window.addEventListener("touchend", handleOutsideModalClick, { passive: false });
+window.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    handleOutsideModalClick(e);
+  },
+  { passive: false }
+);
+
+window.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+    handleOutsideModalClick(e);
+  },
+  { passive: false }
+);
 
 
 /**  -------------------------- Camera & Renderer -------------------------- */
@@ -327,11 +438,15 @@ window.addEventListener("mousemove", (e) => {
 }
 );
 
-window.addEventListener("touchstart", (e) => {
-  pointer.x = (e.touches[0].clientX / sizes.width) * 2 - 1;
-  pointer.y = -(e.touches[0].clientY / sizes.height) * 2 + 1;
-},
-  { passive: false }//important for mobile 
+window.addEventListener(
+  "touchstart",
+  (e) => {
+    if (isModalOpen) return;
+    e.preventDefault();
+    pointer.x = (e.touches[0].clientX / sizes.width) * 2 - 1;
+    pointer.y = -(e.touches[0].clientY / sizes.height) * 2 + 1;
+  },
+  { passive: false }
 );
 
 function handleRaycasterInteraction() {
@@ -484,17 +599,29 @@ function handleRaycasterInteraction() {
     });
   }
 };
-/* 
-window.addEventListener("click", handleRaycasterInteraction);
-window.addEventListener("touchend", handleRaycasterInteraction); */
-function isTouchDevice() {
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-}
 
-const eventType = isTouchDevice() ? 'touchend' : 'click';
-window.addEventListener(eventType, handleRaycasterInteraction);
+window.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    handleRaycasterInteraction(e);
+  },
+  { passive: false }
+);
 
-let touchHappened = false;
+window.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+    handleRaycasterInteraction(e);
+  },
+  { passive: false }
+);
+
+
+
 document.querySelectorAll(".modal-exit-button").forEach((button) => {
   button.addEventListener("touchend", (e) => {
     touchHappened = true;
@@ -1332,6 +1459,3 @@ render();
 
 
 
-window.addEventListener("click", () => {
-
-});
