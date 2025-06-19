@@ -1,14 +1,11 @@
 /**  -------------------------- Imports -------------------------- */
-/* import { compileString } from "sass"; */
+
 import * as THREE from 'three';
 import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import gsap from "gsap";
 
-
-/* import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
-import { workgroupArray } from "three/tsl";
 
 /**  -------------------------- Global Variables -------------------------- */
 const canvas = document.querySelector("#experience-canvas");
@@ -64,6 +61,7 @@ const loadingText = document.getElementById("loading-text");
 const progressBar = document.getElementById("progress-bar");
 const enterButton = document.getElementById("enter-button");
 const loadingScreen = document.getElementById("loading-screen");
+const enterButtonMute = document.getElementById("enter-button-mute");
 
 const manager = new THREE.LoadingManager();
 
@@ -85,7 +83,10 @@ manager.onProgress = (url, loaded, total) => {
 manager.onLoad = () => {
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
+  enterButtonMute.disabled = false;
+
   enterButton.classList.add("active");
+  enterButtonMute.classList.add("active");
 };
 
 enterButton.addEventListener(
@@ -123,6 +124,35 @@ enterButton.addEventListener(
   },
   { passive: false }
 );
+
+enterButtonMute.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    e.preventDefault();
+
+    musicPlaying = false; // Optional: just for tracking
+    monitorAnimStarted = true;
+    loadingScreen.remove();
+    playIntroAnimation();
+  },
+  { passive: false }
+);
+
+enterButtonMute.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+
+    musicPlaying = false; 
+    monitorAnimStarted = true;
+    loadingScreen.remove();
+    playIntroAnimation();
+  },
+  { passive: false }
+);
+
 document.addEventListener("DOMContentLoaded", function () {
 
     const savedTheme = localStorage.getItem("theme");
@@ -220,7 +250,6 @@ themeToggleButton.addEventListener(
 
 /**  -------------------------- music -------------------------- */
 
-// DJ audio setup with Howler
 const djAudioMap = {};
 
 for (let i = 1; i <= 9; i++) {
@@ -309,7 +338,6 @@ const showModal = (modal) => {
   document.body.style.cursor = "default";
   currentIntersects = [];
 
-  // Start collapsed vertically
   gsap.set(modal, {
     scaleY: 0,
     scaleX: 1,
@@ -663,7 +691,7 @@ textureLoader.load('/textures/monitor/monitor_B_texture.webp'),
 textureLoader.load('/textures/monitor/monitor_C_texture.webp'),
 textureLoader.load('/textures/monitor/monitor_D_texture.webp')];
 monitor_texture.forEach(tex => {
-  tex.flipY = false; // or true if it was already flipped
+  tex.flipY = false; 
 });
 
 const loadedTextures = { day: {}, night: {} };
@@ -695,7 +723,7 @@ function switchTheme(theme) {
     theme === "night" ? 0.4 : 0.2,
     theme === "night" ? 0.4 : 0.2
   );
-  // Smoke color: red in night mode, white in day
+
   smokeMaterial.uniforms.uColor.value.set(
     theme === "night" ? 0.7 : 1,
     theme === "night" ? 0.3 : 1,
@@ -727,7 +755,7 @@ const hoverVariants = {
   default: {
     scale: [1.3, 1.3, 1.3],
     position: [0.1, -0.1, 0.1],
-    rotation: [0, -Math.PI / 8, 0], // [x, y, z]
+    rotation: [0, -Math.PI / 8, 0], 
   },
   v2: {
     scale: [1.1, 1.5, 1.1],
@@ -797,7 +825,7 @@ loader.load("/models/desert.glb", (glb) => {
         });
         child.material.map.minFilter = THREE.LinearFilter;
 
-        // ✅ Set textureKey so switchTheme works
+        // Set textureKey so switchTheme works
         child.userData.textureKey = key;
       }
     });
@@ -805,13 +833,13 @@ loader.load("/models/desert.glb", (glb) => {
 
     if (child.name.includes("slider")) {
       sliderMesh = child;
-      child.userData.originalPosition = child.position.clone(); // store original position
-      raycasterObjects.push(child); // make sure it's interactable
+      child.userData.originalPosition = child.position.clone(); 
+      raycasterObjects.push(child); 
     }
 
     // Clouds
     if (child.name.includes("cloud")) {
-      const key = "other"; // cloud uses the "other" texture set
+      const key = "other"; 
       child.material = new THREE.MeshBasicMaterial({
         map: loadedTextures.day[key],
         transparent: true,
@@ -830,19 +858,16 @@ loader.load("/models/desert.glb", (glb) => {
       });
     }
 
-    // Animate parts
     if (child.name.includes("roA")) {
       rotAObjects.push({ mesh: child });
     } else if (name.includes("raB")) {
       rotBObjects.push({ mesh: child });
     }
 
-    // Raycaster targets
     if (child.name.includes("raycaster")) {
       raycasterObjects.push(child);
     }
 
-    // Special metallic material for pcwei
     if (child.name.includes("pcwei")) {
       const key = "pcwei";
       child.material = new THREE.MeshStandardMaterial({
@@ -856,9 +881,8 @@ loader.load("/models/desert.glb", (glb) => {
       child.userData.textureKey = key;
     }
 
-
     if (child.name.includes("monitor")) {
-      monitorMesh = child; // store reference for later updates
+      monitorMesh = child; 
       child.material = new THREE.ShaderMaterial({
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
@@ -1239,7 +1263,6 @@ grid.rotation.x = -Math.PI / 2;
 grid.position.set(0.5, -2.01, 0.5);
 scene.add(grid);
 
-// X-axis "fat line" (red)
 const xPlane = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 0.1),
   new THREE.MeshBasicMaterial({
@@ -1253,7 +1276,6 @@ xPlane.rotation.x = -Math.PI / 2;
 xPlane.position.set(0, -2, 0);
 scene.add(xPlane);
 
-// Y-axis "fat line" (green)
 const yPlane = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 0.1),
   new THREE.MeshBasicMaterial({
@@ -1271,7 +1293,7 @@ scene.add(yPlane);
 
 /**  -------------------------- smoke -------------------------- */
 const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
-smokeGeometry.translate(-0.5, 5, -2); // slight upward offset
+smokeGeometry.translate(-0.5, 5, -2); 
 smokeGeometry.scale(0.5, 0.5, 0.5);
 smokeGeometry.rotateY(-Math.PI / 2.2);
 
@@ -1361,7 +1383,6 @@ const render = () => {
   controls.update();
   const time = clock.getElapsedTime();
 
-  // Animate rotation and clouds
   const startDeg = 180;
   const rangeDeg = 10;
   const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
@@ -1421,7 +1442,7 @@ const render = () => {
         currentHoveredObject = null;
       }
     }
-    // Cursor style
+
     if (isMonitor && currentIndex === 3) {
       document.body.style.cursor = "not-allowed";
     } else if (isPointer || isMonitor) {
@@ -1430,18 +1451,16 @@ const render = () => {
       document.body.style.cursor = "default";
     }
 
-    // Monitor hover visual effect
     if (monitorAnimStarted && monitorMesh?.material?.uniforms) {
       const uniforms = monitorMesh.material.uniforms;
 
-      // Animate brightness and contrast up to 1
       monitorBrightness += (1.0 - monitorBrightness) * 0.05;
       monitorContrast += (1.0 - monitorContrast) * 0.05;
 
       uniforms.uBrightness.value = monitorBrightness;
       uniforms.uContrast.value = monitorContrast;
 
-      // Stop animation once close enough
+      // define when the animation is completed
       if (Math.abs(1.0 - monitorBrightness) < 0.01 && Math.abs(1.0 - monitorContrast) < 0.01) {
         uniforms.uBrightness.value = 1.0;
         uniforms.uContrast.value = 1.0;
