@@ -5,8 +5,11 @@ import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import gsap from "gsap";
+import Stats from 'stats.js'
 
-
+const stats = new Stats()
+stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom)
 /**  -------------------------- Global Variables -------------------------- */
 const canvas = document.querySelector("#experience-canvas");
 
@@ -39,6 +42,7 @@ const pointer = new THREE.Vector2();
 const scene = new THREE.Scene();
 
 let currentIndex = 0;
+let previousIndex = 0;
 let nextIndex = 1;
 let monitorMesh = null;
 
@@ -47,6 +51,8 @@ let sliderIsAtOriginal = true;
 const sliderOffset = new THREE.Vector3(0, 0, -0.5); // ← relative movement
 
 let touchHappened = false;
+
+
 
 const modals = {
   work: document.querySelector(".modal.work"),
@@ -261,7 +267,7 @@ for (let i = 1; i <= 9; i++) {
 // UI button sounds
 const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
 
-const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
+const sliderMusic = new Audio('/audio/sound/458867__raclure__damage-sound-effect (1).ogg');
 const audio = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const MusictoggleBtn = document.getElementById("music-toggle");
@@ -534,21 +540,78 @@ function handleRaycasterInteraction() {
 
   }
 
-  // Play a DJ track
+
   const match = clickedObj.name.match(/DJ[1-9]/);
-  if (match) {
-    const djKey = match[0]; // e.g., "DJ3"
+if (match) {
+  const djKey = match[0];
 
-    // Stop all DJ audios if you want one at a time
-    Object.values(djAudioMap).forEach(a => a.pause());
+  Object.values(djAudioMap).forEach(a => a.pause());
 
-    const audio = djAudioMap[djKey];
-    if (audio) {
-      audio.currentTime = 0; // restart from beginning
-      audio.play();
+  const audio = djAudioMap[djKey];
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play();
+
+    // Save current index only if not already showing DJ screen
+    if (currentIndex !== 4) previousIndex = currentIndex;
+
+    if (monitorMesh && monitorMesh.material?.uniforms && musicPlaying) {
+      const uniforms = monitorMesh.material.uniforms;
+
+      uniforms.uTextureA.value = monitor_texture[currentIndex];
+      uniforms.uTextureB.value = monitor_texture[4];
+      uniforms.uMix.value = 0.0;
+
+      gsap.to(uniforms.uMix, {
+        value: 1.0,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onComplete: () => {
+          currentIndex = 4;
+          uniforms.uTextureA.value = monitor_texture[4];
+          uniforms.uTextureB.value = monitor_texture[4];
+          uniforms.uMix.value = 0.0;
+        }
+      });
+
+      monitorBrightness = 1.0;
+      monitorContrast = 1.0;
+      uniforms.uBrightness.value = 1.0;
+      uniforms.uContrast.value = 1.0;
     }
-    if (!musicPlaying) audio.pause();
+
+    // When this audio ends, check if we can revert
+    audio.onended = () => {
+      checkAllDJStoppedAndRevertMonitor();
+    };
   }
+
+  if (!musicPlaying) audio.pause();
+}
+
+function checkAllDJStoppedAndRevertMonitor() {
+  const anyPlaying = Object.values(djAudioMap).some(audio => !audio.paused && !audio.ended);
+
+  if (!anyPlaying && monitorMesh?.material?.uniforms && currentIndex === 4) {
+    const uniforms = monitorMesh.material.uniforms;
+
+    uniforms.uTextureA.value = monitor_texture[4];
+    uniforms.uTextureB.value = monitor_texture[previousIndex];
+    uniforms.uMix.value = 0.0;
+
+    gsap.to(uniforms.uMix, {
+      value: 1.0,
+      duration: 0.5,
+      ease: "power2.inOut",
+      onComplete: () => {
+        currentIndex = previousIndex;
+        uniforms.uTextureA.value = monitor_texture[currentIndex];
+        uniforms.uTextureB.value = monitor_texture[currentIndex];
+        uniforms.uMix.value = 0.0;
+      }
+    });
+  }
+}
   //--------------pc btn-----------------//
 
   if (clickedObj.name.includes("pcbtn")) {
@@ -689,7 +752,8 @@ const textureMap = {
 const monitor_texture = [textureLoader.load('/textures/monitor/monitor_A_texture.webp'),
 textureLoader.load('/textures/monitor/monitor_B_texture.webp'),
 textureLoader.load('/textures/monitor/monitor_C_texture.webp'),
-textureLoader.load('/textures/monitor/monitor_D_texture.webp')];
+textureLoader.load('/textures/monitor/monitor_D_texture.webp'),
+textureLoader.load('/textures/monitor/monitor_E_texture.webp'),];
 monitor_texture.forEach(tex => {
   tex.flipY = false; 
 });
@@ -1380,6 +1444,7 @@ const clock = new THREE.Clock();
 
 
 const render = () => {
+  stats.begin();
   controls.update();
   const time = clock.getElapsedTime();
 
@@ -1469,6 +1534,7 @@ const render = () => {
     }
 
   }
+  stats.end();
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
