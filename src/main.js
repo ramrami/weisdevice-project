@@ -523,7 +523,6 @@ function handleRaycasterInteraction() {
       uniforms.uTextureB.value = monitor_texture[nextIndex];
       uniforms.uMix.value = 0.0;
 
-      // Animate mix from 0 to 1
       gsap.to(uniforms.uMix, {
         value: 1.0,
         duration: 0.5,
@@ -541,62 +540,19 @@ function handleRaycasterInteraction() {
   }
 
 
-  const match = clickedObj.name.match(/DJ[1-9]/);
+const match = clickedObj.name.match(/DJ[1-9]/);
 if (match) {
   const djKey = match[0];
 
-  Object.values(djAudioMap).forEach(a => a.pause());
+  // Save previous screen only if we're not already on DJ screen
+  if (currentIndex !== 4) previousIndex = currentIndex;
 
-  const audio = djAudioMap[djKey];
-  if (audio) {
-    audio.currentTime = 0;
-    audio.play();
-
-    // Save current index only if not already showing DJ screen
-    if (currentIndex !== 4) previousIndex = currentIndex;
-
-    if (monitorMesh && monitorMesh.material?.uniforms && musicPlaying) {
-      const uniforms = monitorMesh.material.uniforms;
-
-      uniforms.uTextureA.value = monitor_texture[currentIndex];
-      uniforms.uTextureB.value = monitor_texture[4];
-      uniforms.uMix.value = 0.0;
-
-      gsap.to(uniforms.uMix, {
-        value: 1.0,
-        duration: 0.5,
-        ease: "power2.inOut",
-        onComplete: () => {
-          currentIndex = 4;
-          uniforms.uTextureA.value = monitor_texture[4];
-          uniforms.uTextureB.value = monitor_texture[4];
-          uniforms.uMix.value = 0.0;
-        }
-      });
-
-      monitorBrightness = 1.0;
-      monitorContrast = 1.0;
-      uniforms.uBrightness.value = 1.0;
-      uniforms.uContrast.value = 1.0;
-    }
-
-    // When this audio ends, check if we can revert
-    audio.onended = () => {
-      checkAllDJStoppedAndRevertMonitor();
-    };
-  }
-
-  if (!musicPlaying) audio.pause();
-}
-
-function checkAllDJStoppedAndRevertMonitor() {
-  const anyPlaying = Object.values(djAudioMap).some(audio => !audio.paused && !audio.ended);
-
-  if (!anyPlaying && monitorMesh?.material?.uniforms && currentIndex === 4) {
+  // Always transition to DJ screen (texture 4)
+  if (monitorMesh && monitorMesh.material?.uniforms) {
     const uniforms = monitorMesh.material.uniforms;
 
-    uniforms.uTextureA.value = monitor_texture[4];
-    uniforms.uTextureB.value = monitor_texture[previousIndex];
+    uniforms.uTextureA.value = monitor_texture[currentIndex];
+    uniforms.uTextureB.value = monitor_texture[4];
     uniforms.uMix.value = 0.0;
 
     gsap.to(uniforms.uMix, {
@@ -604,14 +560,51 @@ function checkAllDJStoppedAndRevertMonitor() {
       duration: 0.5,
       ease: "power2.inOut",
       onComplete: () => {
-        currentIndex = previousIndex;
-        uniforms.uTextureA.value = monitor_texture[currentIndex];
-        uniforms.uTextureB.value = monitor_texture[currentIndex];
+        currentIndex = 4;
+        uniforms.uTextureA.value = monitor_texture[4];
+        uniforms.uTextureB.value = monitor_texture[4];
         uniforms.uMix.value = 0.0;
       }
     });
+
+    monitorBrightness = 1.0;
+    monitorContrast = 1.0;
+    uniforms.uBrightness.value = 1.0;
+    uniforms.uContrast.value = 1.0;
   }
+
+  // Optional: Play DJ audio if musicPlaying
+  const audio = djAudioMap[djKey];
+  if (audio) {
+    audio.currentTime = 0;
+    if (musicPlaying) audio.play();
+  }
+
+  // ⏱ Automatically revert after 2 seconds
+  setTimeout(() => {
+    if (monitorMesh && monitorMesh.material?.uniforms) {
+      const uniforms = monitorMesh.material.uniforms;
+
+      uniforms.uTextureA.value = monitor_texture[4];
+      uniforms.uTextureB.value = monitor_texture[previousIndex];
+      uniforms.uMix.value = 0.0;
+
+      gsap.to(uniforms.uMix, {
+        value: 1.0,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onComplete: () => {
+          currentIndex = previousIndex;
+          uniforms.uTextureA.value = monitor_texture[currentIndex];
+          uniforms.uTextureB.value = monitor_texture[currentIndex];
+          uniforms.uMix.value = 0.0;
+        }
+      });
+    }
+  }, 3000);
 }
+
+
   //--------------pc btn-----------------//
 
   if (clickedObj.name.includes("pcbtn")) {
