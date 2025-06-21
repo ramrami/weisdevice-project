@@ -57,6 +57,7 @@ let analyser, analyserDataArray;
 let audioCtx;
 
 const audioAnalyserMap = {}; // Store analyser per DJ
+let visualizerTimeoutID = null;
 
 const modals = {
   work: document.querySelector(".modal.work"),
@@ -608,26 +609,29 @@ analyserDataArray = dataArray;
   audio.currentTime = 0;
   if (musicPlaying) audio.play();
 
-  // ⏱️ Revert monitor & hide visualizer after 2s
-  setTimeout(() => {
-    const uniforms = monitorMesh.material.uniforms;
-    uniforms.uTextureA.value = monitor_texture[4];
-    uniforms.uTextureB.value = monitor_texture[previousIndex];
-    uniforms.uMix.value = 0.0;
+if (visualizerTimeoutID) clearTimeout(visualizerTimeoutID);
 
-    gsap.to(uniforms.uMix, {
-      value: 1.0,
-      duration: 0.5,
-      ease: "power2.inOut",
-      onComplete: () => {
-        currentIndex = previousIndex;
-        uniforms.uTextureA.value = monitor_texture[currentIndex];
-        uniforms.uTextureB.value = monitor_texture[currentIndex];
-        uniforms.uMix.value = 0.0;
-        visualizerPlane.visible = false; // 👁️ Hide visualizer
-      }
-    });
-  }, 2000);
+visualizerTimeoutID = setTimeout(() => {
+  const uniforms = monitorMesh.material.uniforms;
+  uniforms.uTextureA.value = monitor_texture[4];
+  uniforms.uTextureB.value = monitor_texture[previousIndex];
+  uniforms.uMix.value = 0.0;
+
+  gsap.to(uniforms.uMix, {
+    value: 1.0,
+    duration: 0.5,
+    ease: "power2.inOut",
+    onComplete: () => {
+      currentIndex = previousIndex;
+      uniforms.uTextureA.value = monitor_texture[currentIndex];
+      uniforms.uTextureB.value = monitor_texture[currentIndex];
+      uniforms.uMix.value = 0.0;
+      visualizerPlane.visible = false; // 👁️ Hide visualizer
+    }
+  });
+}, 2000);
+
+
 }
 
 
@@ -966,29 +970,42 @@ loader.load("/models/desert.glb", (glb) => {
 
     if (child.name.includes("monitor")) {
       monitorMesh = child; 
+// Inside monitorMesh setup after assigning to monitorMesh
+const box = new THREE.Box3().setFromObject(monitorMesh);
+const size = new THREE.Vector3();
+const center = new THREE.Vector3();
+box.getSize(size);
+box.getCenter(center);
 
-  // 🎛️ Create canvas
-  visualizerCanvas = document.createElement("canvas");
-  visualizerCanvas.width = 512;
-  visualizerCanvas.height = 128;
-  visualizerCtx = visualizerCanvas.getContext("2d");
+// 🎛️ Create canvas and texture
+visualizerCanvas = document.createElement("canvas");
+visualizerCanvas.width = 512;
+visualizerCanvas.height = 128;
+visualizerCtx = visualizerCanvas.getContext("2d");
 
-  // 🎨 Create texture
-  visualizerTexture = new THREE.CanvasTexture(visualizerCanvas);
-  const visMaterial = new THREE.MeshBasicMaterial({ 
-    map: visualizerTexture, 
-    transparent: true, 
-    depthTest: false 
-  });
+visualizerTexture = new THREE.CanvasTexture(visualizerCanvas);
 
-  // 🖼️ Create plane
-  visualizerPlane = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.5), visMaterial);
-  visualizerPlane.visible = false;
+const visMaterial = new THREE.MeshBasicMaterial({
+  map: visualizerTexture,
+  transparent: true,
+  depthTest: false
+});
 
-  // 🧲 Attach to monitor
-  monitorMesh.add(visualizerPlane);
-  visualizerPlane.position.set(0, 0, 0.01); // Slightly in front
-  visualizerPlane.scale.set(1, 1, 1); // Adjust as needed
+// Create a plane and attach it to the monitor
+visualizerPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), visMaterial);
+visualizerPlane.visible = false;
+
+// Position and scale to match monitor's front face
+visualizerPlane.scale.set(size.x * 0.8, size.y * 0.4, 0.9); // Adjust size % here
+visualizerPlane.position.set(0.24, 0.45, 0); // Slightly in front
+visualizerPlane.rotation.set(0,  Math.PI / 2, 0); // Facing forward
+const additionalRotation = new THREE.Quaternion();
+additionalRotation.setFromEuler(new THREE.Euler(Math.PI / 7, 0, 0)); // rotate 45° on Y
+
+visualizerPlane.quaternion.multiply(additionalRotation); // apply after initial rotation
+
+// Add to monitor (so it rotates with it)
+monitorMesh.add(visualizerPlane);
 
 
       child.material = new THREE.ShaderMaterial({
@@ -1057,7 +1074,7 @@ void main() {
 
       const [sx, sy, sz] = config.scale;
       const [dx, dy, dz] = config.position;
-      const originalPosition = { ...child.position };
+      const originalPosition = child.position.clone();
 
       const tl = gsap.timeline({ paused: true });
 
@@ -1500,15 +1517,14 @@ const render = () => {
 
   if (analyser && visualizerCtx) {
   analyser.getByteFrequencyData(analyserDataArray);
-  visualizerCtx.fillStyle = "black";
-  visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
 
   const barWidth = visualizerCanvas.width / analyserDataArray.length;
 
   for (let i = 0; i < analyserDataArray.length; i++) {
     const val = analyserDataArray[i];
     const height = (val / 255) * visualizerCanvas.height;
-    visualizerCtx.fillStyle = `rgb(${val + 100}, 50, 200)`;
+    visualizerCtx.fillStyle = `rgba(${val *10 + 10}, 255, 255, 0.5)`;
     visualizerCtx.fillRect(i * barWidth, visualizerCanvas.height - height, barWidth - 1, height);
   }
 
