@@ -52,7 +52,11 @@ const sliderOffset = new THREE.Vector3(0, 0, -0.5); // ← relative movement
 
 let touchHappened = false;
 
+let visualizerPlane, visualizerTexture, visualizerCanvas, visualizerCtx;
+let analyser, analyserDataArray;
+let audioCtx;
 
+const audioAnalyserMap = {}; // Store analyser per DJ
 
 const modals = {
   work: document.querySelector(".modal.work"),
@@ -543,16 +547,72 @@ function handleRaycasterInteraction() {
 const match = clickedObj.name.match(/DJ[1-9]/);
 if (match) {
   const djKey = match[0];
+  const audio = djAudioMap[djKey];
 
-  // Save previous screen only if we're not already on DJ screen
+  if (!audio) return;
+
+  // Store previous monitor screen
   if (currentIndex !== 4) previousIndex = currentIndex;
 
-  // Always transition to DJ screen (texture 4)
-  if (monitorMesh && monitorMesh.material?.uniforms) {
-    const uniforms = monitorMesh.material.uniforms;
+  // 🔊 Setup audio context
+if (!audioCtx) {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
 
-    uniforms.uTextureA.value = monitor_texture[currentIndex];
-    uniforms.uTextureB.value = monitor_texture[4];
+if (!audioAnalyserMap[djKey]) {
+  const source = audioCtx.createMediaElementSource(audio);
+  const newAnalyser = audioCtx.createAnalyser();
+  newAnalyser.fftSize = 128;
+  const dataArray = new Uint8Array(newAnalyser.frequencyBinCount);
+
+  source.connect(newAnalyser);
+  newAnalyser.connect(audioCtx.destination);
+
+  audioAnalyserMap[djKey] = {
+    analyser: newAnalyser,
+    dataArray: dataArray
+  };
+}
+
+const { analyser: currentAnalyser, dataArray } = audioAnalyserMap[djKey];
+analyser = currentAnalyser;
+analyserDataArray = dataArray;
+
+  // 👁️ Show visualizer plane
+  visualizerPlane.visible = true;
+
+  // 🎛️ Switch monitor to DJ screen (texture 4)
+  const uniforms = monitorMesh.material.uniforms;
+  uniforms.uTextureA.value = monitor_texture[currentIndex];
+  uniforms.uTextureB.value = monitor_texture[4];
+  uniforms.uMix.value = 0.0;
+
+  gsap.to(uniforms.uMix, {
+    value: 1.0,
+    duration: 0.5,
+    ease: "power2.inOut",
+    onComplete: () => {
+      currentIndex = 4;
+      uniforms.uTextureA.value = monitor_texture[4];
+      uniforms.uTextureB.value = monitor_texture[4];
+      uniforms.uMix.value = 0.0;
+    }
+  });
+
+  monitorBrightness = 1.0;
+  monitorContrast = 1.0;
+  uniforms.uBrightness.value = 1.0;
+  uniforms.uContrast.value = 1.0;
+
+  // ▶️ Play audio if enabled
+  audio.currentTime = 0;
+  if (musicPlaying) audio.play();
+
+  // ⏱️ Revert monitor & hide visualizer after 2s
+  setTimeout(() => {
+    const uniforms = monitorMesh.material.uniforms;
+    uniforms.uTextureA.value = monitor_texture[4];
+    uniforms.uTextureB.value = monitor_texture[previousIndex];
     uniforms.uMix.value = 0.0;
 
     gsap.to(uniforms.uMix, {
@@ -560,48 +620,14 @@ if (match) {
       duration: 0.5,
       ease: "power2.inOut",
       onComplete: () => {
-        currentIndex = 4;
-        uniforms.uTextureA.value = monitor_texture[4];
-        uniforms.uTextureB.value = monitor_texture[4];
+        currentIndex = previousIndex;
+        uniforms.uTextureA.value = monitor_texture[currentIndex];
+        uniforms.uTextureB.value = monitor_texture[currentIndex];
         uniforms.uMix.value = 0.0;
+        visualizerPlane.visible = false; // 👁️ Hide visualizer
       }
     });
-
-    monitorBrightness = 1.0;
-    monitorContrast = 1.0;
-    uniforms.uBrightness.value = 1.0;
-    uniforms.uContrast.value = 1.0;
-  }
-
-  // Optional: Play DJ audio if musicPlaying
-  const audio = djAudioMap[djKey];
-  if (audio) {
-    audio.currentTime = 0;
-    if (musicPlaying) audio.play();
-  }
-
-  // ⏱ Automatically revert after 2 seconds
-  setTimeout(() => {
-    if (monitorMesh && monitorMesh.material?.uniforms) {
-      const uniforms = monitorMesh.material.uniforms;
-
-      uniforms.uTextureA.value = monitor_texture[4];
-      uniforms.uTextureB.value = monitor_texture[previousIndex];
-      uniforms.uMix.value = 0.0;
-
-      gsap.to(uniforms.uMix, {
-        value: 1.0,
-        duration: 0.5,
-        ease: "power2.inOut",
-        onComplete: () => {
-          currentIndex = previousIndex;
-          uniforms.uTextureA.value = monitor_texture[currentIndex];
-          uniforms.uTextureB.value = monitor_texture[currentIndex];
-          uniforms.uMix.value = 0.0;
-        }
-      });
-    }
-  }, 3000);
+  }, 2000);
 }
 
 
@@ -940,6 +966,31 @@ loader.load("/models/desert.glb", (glb) => {
 
     if (child.name.includes("monitor")) {
       monitorMesh = child; 
+
+  // 🎛️ Create canvas
+  visualizerCanvas = document.createElement("canvas");
+  visualizerCanvas.width = 512;
+  visualizerCanvas.height = 128;
+  visualizerCtx = visualizerCanvas.getContext("2d");
+
+  // 🎨 Create texture
+  visualizerTexture = new THREE.CanvasTexture(visualizerCanvas);
+  const visMaterial = new THREE.MeshBasicMaterial({ 
+    map: visualizerTexture, 
+    transparent: true, 
+    depthTest: false 
+  });
+
+  // 🖼️ Create plane
+  visualizerPlane = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.5), visMaterial);
+  visualizerPlane.visible = false;
+
+  // 🧲 Attach to monitor
+  monitorMesh.add(visualizerPlane);
+  visualizerPlane.position.set(0, 0, 0.01); // Slightly in front
+  visualizerPlane.scale.set(1, 1, 1); // Adjust as needed
+
+
       child.material = new THREE.ShaderMaterial({
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
@@ -1446,6 +1497,23 @@ const render = () => {
   const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
 
   smokeMaterial.uniforms.uTime.value = time;
+
+  if (analyser && visualizerCtx) {
+  analyser.getByteFrequencyData(analyserDataArray);
+  visualizerCtx.fillStyle = "black";
+  visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+  const barWidth = visualizerCanvas.width / analyserDataArray.length;
+
+  for (let i = 0; i < analyserDataArray.length; i++) {
+    const val = analyserDataArray[i];
+    const height = (val / 255) * visualizerCanvas.height;
+    visualizerCtx.fillStyle = `rgb(${val + 100}, 50, 200)`;
+    visualizerCtx.fillRect(i * barWidth, visualizerCanvas.height - height, barWidth - 1, height);
+  }
+
+  visualizerTexture.needsUpdate = true;
+}
 
   cloud.forEach(c => {
     const mesh = c.mesh;
