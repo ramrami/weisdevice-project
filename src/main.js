@@ -19,7 +19,6 @@ const cloud = [];
 const rotAObjects = [];
 const rotBObjects = [];
 
-// single objects, not arrays
 let workbtn = null, contactbtn = null, aboutbtn = null, legalbtn = null, pcbtn = null;
 let DJ1 = null, DJ2 = null, DJ3 = null, DJ4 = null, DJ5 = null, DJ6 = null, DJ7 = null, DJ8 = null, DJ9 = null;
 
@@ -101,8 +100,8 @@ enterButton.addEventListener(
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
     monitorAnimStarted = true;
-    loadingScreen.remove(); // Instantly remove it
-    playIntroAnimation();   // Start animation right away
+    loadingScreen.remove(); 
+    playIntroAnimation();   
   },
   { passive: false }
 );
@@ -119,8 +118,8 @@ enterButton.addEventListener(
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
     monitorAnimStarted = true;
-    loadingScreen.remove(); // Instantly remove it
-    playIntroAnimation();   // Start animation right away
+    loadingScreen.remove(); 
+    playIntroAnimation();  
   },
   { passive: false }
 );
@@ -131,7 +130,7 @@ enterButtonMute.addEventListener(
     touchHappened = true;
     e.preventDefault();
 
-    musicPlaying = false; // Optional: just for tracking
+    musicPlaying = false; 
     monitorAnimStarted = true;
     loadingScreen.remove();
     playIntroAnimation();
@@ -516,8 +515,7 @@ function handleRaycasterInteraction() {
       uniforms.uTextureA.value = monitor_texture[currentIndex];
       uniforms.uTextureB.value = monitor_texture[nextIndex];
       uniforms.uMix.value = 0.0;
-
-      // Animate mix from 0 to 1
+ 
       gsap.to(uniforms.uMix, {
         value: 1.0,
         duration: 0.5,
@@ -534,26 +532,21 @@ function handleRaycasterInteraction() {
 
   }
 
-  // Play a DJ track
   const match = clickedObj.name.match(/DJ[1-9]/);
   if (match) {
-    const djKey = match[0]; // e.g., "DJ3"
+    const djKey = match[0]; 
 
-    // Stop all DJ audios if you want one at a time
     Object.values(djAudioMap).forEach(a => a.pause());
 
     const audio = djAudioMap[djKey];
-    if (audio) {
-      audio.currentTime = 0; // restart from beginning
+    if (audio && musicPlaying) {
+      audio.currentTime = 0; 
       audio.play();
     }
-    if (!musicPlaying) audio.pause();
   }
   //--------------pc btn-----------------//
 
   if (clickedObj.name.includes("pcbtn")) {
-
-
 
     if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
       currentIndex = 0;
@@ -614,7 +607,6 @@ function handleRaycasterInteraction() {
       clickedObj.userData.originalColor = clickedObj.material.color.clone();
     }
 
-    // Light-up animation using GSAP
     gsap.to(clickedObj.material.color, {
       r: 1, g: 3, b: 1,
       duration: 0.2,
@@ -1421,10 +1413,9 @@ const render = () => {
       isHoverA = hoveredObject.name.includes("hover");
     }
 
-    // Handle hoverA animation
     if (isHoverA && !hoveredObject.userData.hoverDisabled) {
       if (hoveredObject !== currentHoveredObject) {
-        // Stop previous
+
         if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
           currentHoveredObject.userData.hoverTimeline.reverse();
         }
