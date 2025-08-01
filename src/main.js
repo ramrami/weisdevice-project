@@ -65,6 +65,7 @@ const loadingScreen = document.getElementById("loading-screen");
 const enterButtonMute = document.getElementById("enter-button-mute");
 
 const manager = new THREE.LoadingManager();
+let assetsReady = false;
 
 manager.onProgress = (url, loaded, total) => {
   const percent = Math.floor((loaded / total) * 100);
@@ -82,6 +83,7 @@ manager.onProgress = (url, loaded, total) => {
   });
 };
 /* manager.onLoad = () => {
+  assetsReady = true;
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
   enterButtonMute.disabled = false;
@@ -92,6 +94,7 @@ manager.onProgress = (url, loaded, total) => {
 
 manager.onLoad = () => {
   // Skip loading screen completely
+  assetsReady = true;
   loadingScreen.remove();
   monitorAnimStarted = true;
   playIntroAnimation(); // Start scene directly
@@ -109,8 +112,8 @@ enterButton.addEventListener(
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
     monitorAnimStarted = true;
-    loadingScreen.remove(); 
-    playIntroAnimation();   
+    loadingScreen.remove();
+    playIntroAnimation();
   },
   { passive: false }
 );
@@ -127,8 +130,8 @@ enterButton.addEventListener(
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
     monitorAnimStarted = true;
-    loadingScreen.remove(); 
-    playIntroAnimation();  
+    loadingScreen.remove();
+    playIntroAnimation();
   },
   { passive: false }
 );
@@ -139,7 +142,7 @@ enterButtonMute.addEventListener(
     touchHappened = true;
     e.preventDefault();
 
-    musicPlaying = false; 
+    musicPlaying = false;
     monitorAnimStarted = true;
     loadingScreen.remove();
     playIntroAnimation();
@@ -153,7 +156,7 @@ enterButtonMute.addEventListener(
     if (touchHappened) return;
     e.preventDefault();
 
-    musicPlaying = false; 
+    musicPlaying = false;
     monitorAnimStarted = true;
     loadingScreen.remove();
     playIntroAnimation();
@@ -163,7 +166,7 @@ enterButtonMute.addEventListener(
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    const savedTheme = localStorage.getItem("theme");
+  const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "night") {
     isDarkMode = true;
     document.documentElement.setAttribute("data-theme", "night");
@@ -252,13 +255,9 @@ themeToggleButton.addEventListener(
 );
 
 /**  -------------------------- music -------------------------- */
-const djAudioMap = {};
-
-for (let i = 1; i <= 9; i++) {
-  const audio = new Audio(`/audio/DJ/DJ${i}.ogg`);
-  /*   audio.volume = 0.7; */
-  djAudioMap[`DJ${i}`] = audio;
-}
+const djAudio = new Audio();
+djAudio.volume = 0.7;
+djAudio.preload = "auto"; // optional, helps on slower networks
 
 // UI button sounds
 const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
@@ -287,10 +286,8 @@ musicToggleBtn.addEventListener(
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
 
-    Object.values(djAudioMap).forEach((dj) => {
-      dj.muted = !musicPlaying;
-      if (!musicPlaying) dj.pause();
-    });
+    djAudio.muted = !musicPlaying;
+    if (!musicPlaying) djAudio.pause();
   },
   { passive: false }
 );
@@ -312,10 +309,8 @@ musicToggleBtn.addEventListener(
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
 
-    Object.values(djAudioMap).forEach((dj) => {
-      dj.muted = !musicPlaying;
-      if (!musicPlaying) dj.pause();
-    });
+    djAudio.muted = !musicPlaying;
+    if (!musicPlaying) djAudio.pause();
   },
   { passive: false }
 );
@@ -517,7 +512,7 @@ function handleRaycasterInteraction() {
       uniforms.uTextureA.value = monitor_texture[currentIndex];
       uniforms.uTextureB.value = monitor_texture[nextIndex];
       uniforms.uMix.value = 0.0;
- 
+
       gsap.to(uniforms.uMix, {
         value: 1.0,
         duration: 0.5,
@@ -535,14 +530,17 @@ function handleRaycasterInteraction() {
 
   const match = clickedObj.name.match(/DJ[1-9]/);
   if (match) {
-    const djKey = match[0]; 
+    const djKey = match[0];
+    const src = `/audio/DJ/${djKey}.ogg`;
 
-    Object.values(djAudioMap).forEach(a => a.pause());
+    if (musicPlaying) {
+      // Only change src if needed
+      if (!djAudio.src.endsWith(src)) {
+        djAudio.src = src;
+      }
 
-    const audio = djAudioMap[djKey];
-    if (audio && musicPlaying) {
-      audio.currentTime = 0; 
-      audio.play();
+      djAudio.currentTime = 0;
+      djAudio.play();
     }
   }
   //--------------pc btn-----------------//
@@ -678,7 +676,7 @@ textureLoader.load('/textures/monitor/monitor_B_texture.webp'),
 textureLoader.load('/textures/monitor/monitor_C_texture.webp'),
 textureLoader.load('/textures/monitor/monitor_D_texture.webp')];
 monitor_texture.forEach(tex => {
-  tex.flipY = false; 
+  tex.flipY = false;
 });
 
 const loadedTextures = { day: {}, night: {} };
@@ -711,7 +709,7 @@ const hoverVariants = {
   default: {
     scale: [1.3, 1.3, 1.3],
     position: [0.1, -0.1, 0.1],
-    rotation: [0, -Math.PI / 8, 0], 
+    rotation: [0, -Math.PI / 8, 0],
   },
   v2: {
     scale: [1.1, 1.5, 1.1],
@@ -789,13 +787,13 @@ loader.load("/models/desert.glb", (glb) => {
 
     if (child.name.includes("slider")) {
       sliderMesh = child;
-      child.userData.originalPosition = child.position.clone(); 
-      raycasterObjects.push(child); 
+      child.userData.originalPosition = child.position.clone();
+      raycasterObjects.push(child);
     }
 
     // Clouds
     if (child.name.includes("cloud")) {
-      const key = "other"; 
+      const key = "other";
       child.material = new THREE.MeshBasicMaterial({
         map: loadedTextures.day[key],
         transparent: true,
@@ -838,7 +836,7 @@ loader.load("/models/desert.glb", (glb) => {
     }
 
     if (child.name.includes("monitor")) {
-      monitorMesh = child; 
+      monitorMesh = child;
       child.material = new THREE.ShaderMaterial({
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
@@ -996,7 +994,7 @@ loader.load("/models/desert.glb", (glb) => {
     }
     switchTheme(isDarkMode ? "night" : "day");// important for default texture mode!
   });
-/*   scene.add(glb.scene); */
+  /*   scene.add(glb.scene); */
 });
 
 function playIntroAnimation() {
@@ -1045,7 +1043,7 @@ function playIntroAnimation() {
       z: 1
     }, "-=0.6");
 
- t1.eventCallback("onComplete", () => t2.play());
+  t1.eventCallback("onComplete", () => t2.play());
 
   const t2 = gsap.timeline({
     paused: true,
@@ -1170,7 +1168,7 @@ scene.add(yPlane);
 
 /**  -------------------------- smoke -------------------------- */
 const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
-smokeGeometry.translate(-0.5, 5, -2); 
+smokeGeometry.translate(-0.5, 5, -2);
 smokeGeometry.scale(0.5, 0.5, 0.5);
 smokeGeometry.rotateY(-Math.PI / 2.2);
 
@@ -1187,7 +1185,7 @@ const smokeMaterial = new THREE.ShaderMaterial({
   },
   vertexShader: smokeVertexShader,
   fragmentShader: smokeFragmentShader,
-  
+
   side: THREE.DoubleSide,
   transparent: true,
   depthWrite: false,
@@ -1231,6 +1229,15 @@ function switchTheme(theme) {
 
 const clock = new THREE.Clock();
 
+let currentCursor = "default";
+
+function setCursor(style) {
+  if (style !== currentCursor) {
+    document.body.style.cursor = style;
+    currentCursor = style;
+  }
+}
+
 const render = () => {
   controls.update();
   const time = clock.getElapsedTime();
@@ -1254,7 +1261,7 @@ const render = () => {
     obj.mesh.rotation.x = -angle;
   });
 
-  if (!isModalOpen) {
+  if (assetsReady && !isModalOpen) {
     // Raycaster
     raycaster.setFromCamera(pointer, camera);
     currentIntersects = raycaster.intersectObjects(raycasterObjects);
@@ -1293,11 +1300,11 @@ const render = () => {
     }
 
     if (isMonitor && currentIndex === 3) {
-      document.body.style.cursor = "not-allowed";
+      setCursor("not-allowed");
     } else if (isPointer || isMonitor) {
-      document.body.style.cursor = "pointer";
+      setCursor("pointer");
     } else {
-      document.body.style.cursor = "default";
+      setCursor("default");
     }
 
     if (monitorAnimStarted && monitorMesh?.material?.uniforms) {
