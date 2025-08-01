@@ -1,11 +1,15 @@
-/**  -------------------------- Imports -------------------------- */
-
 import * as THREE from 'three';
 import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import gsap from "gsap";
 
+import monitorVertexShader from "./shaders/monitorVertexShader.glsl?raw";
+import monitorFragmentShader from "./shaders/monitorFragmentShader.glsl?raw";
+import gridVertexShader from "./shaders/gridVertexShader.glsl?raw";
+import gridFragmentShader from "./shaders/gridFragmentShader.glsl?raw";
+import smokeVertexShader from "./shaders/smokeVertexShader.glsl?raw";
+import smokeFragmentShader from "./shaders/smokeFragmentShader.glsl?raw";
 
 /**  -------------------------- Global Variables -------------------------- */
 const canvas = document.querySelector("#experience-canvas");
@@ -19,7 +23,7 @@ const cloud = [];
 const rotAObjects = [];
 const rotBObjects = [];
 
-let workbtn = null, contactbtn = null, aboutbtn = null, legalbtn = null, pcbtn = null;
+let workBtn = null, contactBtn = null, aboutBtn = null, legalBtn = null, pcBtn = null;
 let DJ1 = null, DJ2 = null, DJ3 = null, DJ4 = null, DJ5 = null, DJ6 = null, DJ7 = null, DJ8 = null, DJ9 = null;
 
 let monitorAnimStarted = false;
@@ -31,7 +35,6 @@ let isModalOpen = false;
 const raycasterObjects = [];
 let currentIntersects = [];
 let currentHoveredObject = null;
-
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -53,7 +56,6 @@ const modals = {
   contact: document.querySelector(".modal.contact"),
   legal: document.querySelector(".modal.legal")
 };
-
 
 /**  -------------------------- loadingscreen -------------------------- */
 const loadingText = document.getElementById("loading-text");
@@ -79,13 +81,20 @@ manager.onProgress = (url, loaded, total) => {
     ease: "none"
   });
 };
-manager.onLoad = () => {
+/* manager.onLoad = () => {
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
   enterButtonMute.disabled = false;
 
   enterButton.classList.add("active");
   enterButtonMute.classList.add("active");
+}; */
+
+manager.onLoad = () => {
+  // Skip loading screen completely
+  loadingScreen.remove();
+  monitorAnimStarted = true;
+  playIntroAnimation(); // Start scene directly
 };
 
 enterButton.addEventListener(
@@ -94,8 +103,8 @@ enterButton.addEventListener(
     touchHappened = true;
     e.preventDefault();
 
-    audio.play();
-    audio.volume = 0.5;
+    backgroundMusic.play();
+    backgroundMusic.volume = 0.5;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
@@ -112,8 +121,8 @@ enterButton.addEventListener(
     if (touchHappened) return;
     e.preventDefault();
 
-    audio.play();
-    audio.volume = 0.5;
+    backgroundMusic.play();
+    backgroundMusic.volume = 0.5;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
@@ -179,8 +188,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-
-
 document.querySelectorAll('.more-button').forEach((button) => {
   button.addEventListener('touchend', (e) => {
     touchHappened = true;
@@ -196,8 +203,6 @@ document.querySelectorAll('.more-button').forEach((button) => {
 });
 
 /**  -------------------------- theme toggle -------------------------- */
-
-
 const themeToggleButton = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
 
@@ -246,9 +251,7 @@ themeToggleButton.addEventListener(
   { passive: false }
 );
 
-
 /**  -------------------------- music -------------------------- */
-
 const djAudioMap = {};
 
 for (let i = 1; i <= 9; i++) {
@@ -261,13 +264,13 @@ for (let i = 1; i <= 9; i++) {
 const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
 
 const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
-const audio = document.getElementById("bg-music");
+const backgroundMusic = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
-const MusictoggleBtn = document.getElementById("music-toggle");
+const musicToggleBtn = document.getElementById("music-toggle");
 
 let musicPlaying = false;
 
-MusictoggleBtn.addEventListener(
+musicToggleBtn.addEventListener(
   "touchend",
   (e) => {
     touchHappened = true;
@@ -276,11 +279,11 @@ MusictoggleBtn.addEventListener(
     musicPlaying = !musicPlaying;
 
     if (musicPlaying) {
-      audio.play();
-      audio.volume = 0.5;
+      backgroundMusic.play();
+      backgroundMusic.volume = 0.5;
       musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     } else {
-      audio.pause();
+      backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
 
@@ -292,7 +295,7 @@ MusictoggleBtn.addEventListener(
   { passive: false }
 );
 
-MusictoggleBtn.addEventListener(
+musicToggleBtn.addEventListener(
   "click",
   (e) => {
     if (touchHappened) return;
@@ -301,11 +304,11 @@ MusictoggleBtn.addEventListener(
     musicPlaying = !musicPlaying;
 
     if (musicPlaying) {
-      audio.play();
-      audio.volume = 0.5;
+      backgroundMusic.play();
+      backgroundMusic.volume = 0.5;
       musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     } else {
-      audio.pause();
+      backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
 
@@ -325,7 +328,7 @@ const showModal = (modal) => {
   controls.enabled = false;
 
   experience.classList.add("blur");
-  MusictoggleBtn.classList.add("hidden");
+  musicToggleBtn.classList.add("hidden");
   themeToggleButton.classList.add("hidden");
 
   raycasterObjects.forEach(obj => {
@@ -357,7 +360,7 @@ const hideModal = (modal) => {
   controls.enabled = true;
 
   experience.classList.remove("blur");
-  MusictoggleBtn.classList.remove("hidden");
+  musicToggleBtn.classList.remove("hidden");
   themeToggleButton.classList.remove("hidden");
 
   raycasterObjects.forEach(obj => {
@@ -407,7 +410,6 @@ window.addEventListener(
   },
   { passive: false }
 );
-
 
 /**  -------------------------- Camera & Renderer -------------------------- */
 const camera = new THREE.PerspectiveCamera(
@@ -509,7 +511,7 @@ function handleRaycasterInteraction() {
     nextIndex = currentIndex + 1;
 
     // Prepare new textures for blending
-    if (monitorMesh.material.uniforms) {
+    if (monitorMesh?.material?.uniforms) {
       const uniforms = monitorMesh.material.uniforms;
 
       uniforms.uTextureA.value = monitor_texture[currentIndex];
@@ -529,7 +531,6 @@ function handleRaycasterInteraction() {
         }
       });
     }
-
   }
 
   const match = clickedObj.name.match(/DJ[1-9]/);
@@ -545,7 +546,6 @@ function handleRaycasterInteraction() {
     }
   }
   //--------------pc btn-----------------//
-
   if (clickedObj.name.includes("pcbtn")) {
 
     if (monitorMesh && monitorMesh.material && monitorMesh.material.uniforms) {
@@ -566,14 +566,11 @@ function handleRaycasterInteraction() {
     }
   }
   //------------slider------------//
-
-
   if (clickedObj.name.includes("slider") && sliderMesh) {
     if (musicPlaying) {
       sliderMusic.currentTime = 0;
       sliderMusic.play();
     }
-
 
     const orig = sliderMesh.userData.originalPosition;
 
@@ -640,8 +637,6 @@ window.addEventListener(
   { passive: false }
 );
 
-
-
 document.querySelectorAll(".modal-exit-button").forEach((button) => {
   button.addEventListener("touchend", (e) => {
     touchHappened = true;
@@ -705,39 +700,8 @@ Object.entries(textureMap).forEach(([key, paths]) => {
   nightTexture.magFilter = THREE.LinearFilter;
   loadedTextures.night[key] = nightTexture;
 });
-function switchTheme(theme) {
-  const modelRoot = scene.userData.modelRoot;
-  if (!modelRoot) return;
 
-
-  gridmaterial.uniforms.uLineColor.value.set(
-    theme === "night" ? 0.4 : 0.2,
-    theme === "night" ? 0.4 : 0.2,
-    theme === "night" ? 0.4 : 0.2
-  );
-
-  smokeMaterial.uniforms.uColor.value.set(
-    theme === "night" ? 0.7 : 1,
-    theme === "night" ? 0.3 : 1,
-    theme === "night" ? 0.1 : 1
-  );
-  modelRoot.traverse((child) => {
-    if (!child.isMesh) return;
-
-    const key = child.userData.textureKey;
-    if (key && loadedTextures[theme]?.[key]) {
-      const newTexture = loadedTextures[theme][key];
-      if (child.material.map !== newTexture) {
-        child.material.map = newTexture;
-        child.material.needsUpdate = true;
-      }
-    }
-  });
-
-  scene.background = new THREE.Color(theme === "night" ? "#1a1a1a" : "#c5dba7");
-}
 /**  -------------------------- Model Loader -------------------------- */
-
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 const loader = new GLTFLoader(manager);
@@ -884,53 +848,10 @@ loader.load("/models/desert.glb", (glb) => {
           uMix: { value: 0.0 },
           uAberrationAmount: { value: 0.01 }
         },
-        vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-        fragmentShader: `
-uniform sampler2D uTextureA;
-uniform sampler2D uTextureB;
-uniform float uBrightness;
-uniform float uContrast;
-uniform float uMix;
-uniform float uAberrationAmount; // Add this uniform in JS
-varying vec2 vUv;
-
-void main() {
-  // Chromatic offset vector (can be radial, here it's a fixed offset)
-  vec2 offset = vec2(uAberrationAmount);
-
-  // Sample each channel at slightly different UVs
-  vec4 texA = vec4(
-    texture2D(uTextureA, vUv + offset).r,   // Red
-    texture2D(uTextureA, vUv).g,            // Green
-    texture2D(uTextureA, vUv - offset).b,   // Blue
-    1.0
-  );
-
-  vec4 texB = vec4(
-    texture2D(uTextureB, vUv + offset).r,
-    texture2D(uTextureB, vUv).g,
-    texture2D(uTextureB, vUv - offset).b,
-    1.0
-  );
-
-  vec4 mixed = mix(texA, texB, uMix);
-
-  // Apply brightness and contrast
-  mixed.rgb = (mixed.rgb - 0.5) * uContrast + 0.5;
-  mixed.rgb *= uBrightness;
-
-  gl_FragColor = mixed;
-}
-      `,
+        vertexShader: monitorVertexShader,
+        fragmentShader: monitorFragmentShader,
       });
     }
-
 
     if (child.name.includes("DJ") || child.name.includes("pcbtn")) {//just so
       let variantKey = null;
@@ -983,19 +904,19 @@ void main() {
     }
 
     if (child.name.includes("workbtn")) {
-      workbtn = child;
+      workBtn = child;
     }
     if (child.name.includes("contactbtn")) {
-      contactbtn = child;
+      contactBtn = child;
     }
     if (child.name.includes("aboutbtn")) {
-      aboutbtn = child;
+      aboutBtn = child;
     }
     if (child.name.includes("legalbtn")) {
-      legalbtn = child;
+      legalBtn = child;
     }
     if (child.name.includes("pcbtn")) {
-      pcbtn = child;
+      pcBtn = child;
     }
     if (child.name.includes("DJ1")) {
       DJ1 = child;
@@ -1024,8 +945,6 @@ void main() {
     if (child.name.includes("DJ9")) {
       DJ9 = child;
     }
-
-
 
     if (child.name.includes("hover")) {//that is alway hoverA in blender
 
@@ -1077,21 +996,15 @@ void main() {
     }
     switchTheme(isDarkMode ? "night" : "day");// important for default texture mode!
   });
-
-
-
-  scene.add(glb.scene);
-
-
-
+/*   scene.add(glb.scene); */
 });
-function playIntroAnimation() {
 
-  workbtn.scale.set(0, 0, 0);
-  contactbtn.scale.set(0, 0, 0);
-  aboutbtn.scale.set(0, 0, 0);
-  legalbtn.scale.set(0, 0, 0);
-  pcbtn.scale.set(0, 0, 0);
+function playIntroAnimation() {
+  workBtn.scale.set(0, 0, 0);
+  contactBtn.scale.set(0, 0, 0);
+  aboutBtn.scale.set(0, 0, 0);
+  legalBtn.scale.set(0, 0, 0);
+  pcBtn.scale.set(0, 0, 0);
   sliderMesh.scale.set(0, 0, 0);
   DJ1.scale.set(0, 0, 0);
   DJ2.scale.set(0, 0, 0);
@@ -1111,28 +1024,28 @@ function playIntroAnimation() {
   });
 
 
-  t1.to(workbtn.scale, {
+  t1.to(workBtn.scale, {
     x: 1,
     y: 1,
     z: 1
   })
-    .to(aboutbtn.scale, {
+    .to(aboutBtn.scale, {
       x: 1,
       y: 1,
       z: 1
     }, "-=0.6")
-    .to(contactbtn.scale, {
+    .to(contactBtn.scale, {
       x: 1,
       y: 1,
       z: 1
     }, "-=0.6")
-    .to(legalbtn.scale, {
+    .to(legalBtn.scale, {
       x: 1,
       y: 1,
       z: 1
     }, "-=0.6");
 
-  t1.then(() => t2.play());
+ t1.eventCallback("onComplete", () => t2.play());
 
   const t2 = gsap.timeline({
     paused: true,
@@ -1143,7 +1056,7 @@ function playIntroAnimation() {
   });
 
 
-  t2.to(pcbtn.scale, {
+  t2.to(pcBtn.scale, {
     x: 1,
     y: 1,
     z: 1
@@ -1204,8 +1117,6 @@ function playIntroAnimation() {
       y: 1,
       z: 1
     }, "-=0.6")
-
-
 }
 
 const gridSize = 100;
@@ -1220,34 +1131,8 @@ const gridmaterial = new THREE.ShaderMaterial({
     uSize: { value: gridSize },
     uLineColor: { value: new THREE.Color(0.2, 0.2, 0.2) }
   },
-  vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv - 0.5;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-  fragmentShader: `
-  varying vec2 vUv;
-  uniform float uSize;
-  uniform vec3 uLineColor;
-
-  float gridLine(float coord, float size) {
-    float line = abs(fract(coord * size) - 0.5);
-    return smoothstep(0.1, 0.0, line); // smooth lines
-  }
-
-  void main() {
-    float dist = length(vUv) * 2.0;
-    float alpha = smoothstep(1.0, 0.5, dist);
-
-    float xLine = gridLine(vUv.x, uSize);
-    float yLine = gridLine(vUv.y, uSize);
-    float lineStrength = max(xLine, yLine);
-
-    gl_FragColor = vec4(uLineColor, alpha * lineStrength * 0.1);
-  }
-`
+  vertexShader: gridVertexShader,
+  fragmentShader: gridFragmentShader,
 });
 
 const grid = new THREE.Mesh(gridgeometry, gridmaterial);
@@ -1292,69 +1177,17 @@ smokeGeometry.rotateY(-Math.PI / 2.2);
 const perlinTexture = textureLoader.load("/shaders/perlin.png");
 perlinTexture.wrapS = THREE.RepeatWrapping;
 perlinTexture.wrapT = THREE.RepeatWrapping;
-const smokeVertexShader = `
-uniform float uTime;
-uniform sampler2D uPerlinTexture;
 
-varying vec2 vUv;
-
-vec2 rotate2D(vec2 pos, float angle) {
-  float s = sin(angle);
-  float c = cos(angle);
-  return mat2(c, -s, s, c) * pos;
-}
-
-void main() {
-  vec3 newPosition = position;
-
-  float twistPerlin = texture(uPerlinTexture, vec2(0.5, uv.y * 0.2 - uTime * 0.01)).r;
-  float angle = twistPerlin * 3.0;
-  newPosition.xz = rotate2D(newPosition.xz, angle);
-
-  vec2 windOffset = vec2(
-    texture(uPerlinTexture, vec2(0.25, uTime * 0.01)).r - 0.5,
-    texture(uPerlinTexture, vec2(0.75, uTime * 0.01)).r - 0.5
-  );
-  windOffset *= pow(uv.y, 2.0) * 1.5;
-  newPosition.xz += windOffset;
-
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-  vUv = uv;
-}
-`;
-const smokeFragmentShader = `
-uniform float uTime;
-uniform sampler2D uPerlinTexture;
-uniform vec3 uColor;
-
-varying vec2 vUv;
-
-void main() {
-  vec2 smokeUv = vUv;
-  smokeUv.x *= 0.5;
-  smokeUv.y *= 0.3;
-  smokeUv.y -= uTime * 0.04;
-
-  float smoke = texture(uPerlinTexture, smokeUv).r;
-  smoke = smoothstep(0.5, 1.0, smoke);
-
-  smoke *= smoothstep(0.0, 0.1, vUv.x);
-  smoke *= smoothstep(1.0, 0.9, vUv.x);
-  smoke *= smoothstep(0.0, 0.1, vUv.y);
-  smoke *= smoothstep(1.0, 0.4, vUv.y);
-
-/* gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); */
-gl_FragColor = vec4(uColor, smoke);
-}
-`;
 const smokeMaterial = new THREE.ShaderMaterial({
-  vertexShader: smokeVertexShader,
-  fragmentShader: smokeFragmentShader,
+
   uniforms: {
     uTime: new THREE.Uniform(0),
     uPerlinTexture: new THREE.Uniform(perlinTexture),
     uColor: new THREE.Uniform(new THREE.Color(1, 1, 1)),
   },
+  vertexShader: smokeVertexShader,
+  fragmentShader: smokeFragmentShader,
+  
   side: THREE.DoubleSide,
   transparent: true,
   depthWrite: false,
@@ -1364,12 +1197,39 @@ const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
 smoke.position.set(0, 2, 0);
 scene.add(smoke);
 
+function switchTheme(theme) {
+  const modelRoot = scene.userData.modelRoot;
+  if (!modelRoot) return;
 
+
+  gridmaterial.uniforms.uLineColor.value.set(
+    theme === "night" ? 0.4 : 0.2,
+    theme === "night" ? 0.4 : 0.2,
+    theme === "night" ? 0.4 : 0.2
+  );
+
+  smokeMaterial.uniforms.uColor.value.set(
+    theme === "night" ? 0.7 : 1,
+    theme === "night" ? 0.3 : 1,
+    theme === "night" ? 0.1 : 1
+  );
+  modelRoot.traverse((child) => {
+    if (!child.isMesh) return;
+
+    const key = child.userData.textureKey;
+    if (key && loadedTextures[theme]?.[key]) {
+      const newTexture = loadedTextures[theme][key];
+      if (child.material.map !== newTexture) {
+        child.material.map = newTexture;
+        child.material.needsUpdate = true;
+      }
+    }
+  });
+
+  scene.background = new THREE.Color(theme === "night" ? "#1a1a1a" : "#c5dba7");
+}
 
 const clock = new THREE.Clock();
-
-
-
 
 const render = () => {
   controls.update();
@@ -1395,8 +1255,6 @@ const render = () => {
   });
 
   if (!isModalOpen) {
-
-
     // Raycaster
     raycaster.setFromCamera(pointer, camera);
     currentIntersects = raycaster.intersectObjects(raycasterObjects);
@@ -1458,7 +1316,6 @@ const render = () => {
         monitorAnimStarted = false;
       }
     }
-
   }
 
   renderer.render(scene, camera);
