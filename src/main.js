@@ -165,7 +165,6 @@ enterButtonMute.addEventListener(
 );
 
 document.addEventListener("DOMContentLoaded", function () {
-
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "night") {
     isDarkMode = true;
@@ -188,7 +187,6 @@ document.addEventListener("DOMContentLoaded", function () {
   } else {
     tipText.textContent = "💡 Tip: Click and drag to explore.";
   }
-
 });
 
 document.querySelectorAll('.more-button').forEach((button) => {
@@ -210,6 +208,7 @@ const themeToggleButton = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
 
 let isDarkMode = false;
+
 themeToggleButton.addEventListener(
   "touchend",
   (e) => {
