@@ -752,7 +752,6 @@ const clickVariants = {
   },
   pcbtn: {
     scale: [1.0, 1.0, 1.0],
-
     position: [0, 0, -0.02],
     duration: 0.3,
     easeOut: "elastic.out(1, 0.3)"
