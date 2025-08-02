@@ -19,36 +19,34 @@ const sizes = {
   height: window.innerHeight,
 };
 
-const cloud = [];
-const rotAObjects = [];
-const rotBObjects = [];
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const scene = new THREE.Scene();
+
+let touchHappened = false;
+let isModalOpen = false;
+let musicPlaying = false;
+let monitorAnimStarted = false;
+
+const cloud = [], rotAObjects = [], rotBObjects = [];
 
 let workBtn = null, contactBtn = null, aboutBtn = null, legalBtn = null, pcBtn = null;
 let DJ1 = null, DJ2 = null, DJ3 = null, DJ4 = null, DJ5 = null, DJ6 = null, DJ7 = null, DJ8 = null, DJ9 = null;
 
-let monitorAnimStarted = false;
 let monitorBrightness = 0;
 let monitorContrast = 0;
-
-let isModalOpen = false;
 
 const raycasterObjects = [];
 let currentIntersects = [];
 let currentHoveredObject = null;
 
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-const scene = new THREE.Scene();
-
 let currentIndex = 0;
 let nextIndex = 1;
-let monitorMesh = null;
 
-let sliderMesh = null;
+let monitorMesh, sliderMesh;
+
 let sliderIsAtOriginal = true;
 const sliderOffset = new THREE.Vector3(0, 0, -0.5); // ← relative movement
-
-let touchHappened = false;
 
 const modals = {
   work: document.querySelector(".modal.work"),
@@ -65,6 +63,7 @@ const loadingScreen = document.getElementById("loading-screen");
 const enterButtonMute = document.getElementById("enter-button-mute");
 
 const manager = new THREE.LoadingManager();
+
 let assetsReady = false;
 
 manager.onProgress = (url, loaded, total) => {
@@ -265,8 +264,6 @@ const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg'
 const backgroundMusic = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const musicToggleBtn = document.getElementById("music-toggle");
-
-let musicPlaying = false;
 
 musicToggleBtn.addEventListener(
   "touchend",
@@ -651,7 +648,6 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
     { passive: false }
   );
 },
-
 );
 /**  -------------------------- Texture Setup -------------------------- */
 const textureLoader = new THREE.TextureLoader(manager);
@@ -782,7 +778,6 @@ loader.load("/models/desert.glb", (glb) => {
       }
     });
 
-
     if (child.name.includes("slider")) {
       sliderMesh = child;
       child.userData.originalPosition = child.position.clone();
@@ -877,7 +872,6 @@ loader.load("/models/desert.glb", (glb) => {
         duration: config.duration * 0.5,
         ease: "power2.out"
       }, 0);
-
 
       tl.to(child.scale, {
         x: child.scale.x,
@@ -1019,7 +1013,6 @@ function playIntroAnimation() {
     }
   });
 
-
   t1.to(workBtn.scale, {
     x: 1,
     y: 1,
@@ -1050,7 +1043,6 @@ function playIntroAnimation() {
       ease: "back.out(1.8)"
     }
   });
-
 
   t2.to(pcBtn.scale, {
     x: 1,
@@ -1163,7 +1155,6 @@ yPlane.rotation.x = -Math.PI / 2;
 yPlane.position.set(0, -2, 0);
 scene.add(yPlane);
 
-
 /**  -------------------------- smoke -------------------------- */
 const smokeGeometry = new THREE.PlaneGeometry(2.5, 8, 16, 64);
 smokeGeometry.translate(-0.5, 5, -2);
@@ -1196,7 +1187,6 @@ scene.add(smoke);
 function switchTheme(theme) {
   const modelRoot = scene.userData.modelRoot;
   if (!modelRoot) return;
-
 
   gridmaterial.uniforms.uLineColor.value.set(
     theme === "night" ? 0.4 : 0.2,
@@ -1328,6 +1318,3 @@ const render = () => {
 };
 
 render();
-
-
-
