@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-document.querySelectorAll('.more-button, .social-button').forEach((button) => {
+document.querySelectorAll('.more-button').forEach((button) => {
   button.addEventListener('touchend', (e) => {
     touchHappened = true;
     e.preventDefault();
@@ -200,6 +200,22 @@ document.querySelectorAll('.more-button, .social-button').forEach((button) => {
     if (touchHappened) return;
     e.preventDefault();
     window.location.href = button.href;
+  }, { passive: false });
+});
+
+document.querySelectorAll('.social-button').forEach((button) => {
+  const url = button.getAttribute('href');
+
+  button.addEventListener('touchend', (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    if (url) window.open(url, '_blank');
+  }, { passive: false });
+
+  button.addEventListener('click', (e) => {
+    if (touchHappened) return;
+    e.preventDefault();
+    if (url) window.open(url, '_blank');
   }, { passive: false });
 });
 
