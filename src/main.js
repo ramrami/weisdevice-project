@@ -323,6 +323,7 @@ const showModal = (modal) => {
   experience.classList.add("blur");
   musicToggleBtn.classList.add("hidden");
   themeToggleButton.classList.add("hidden");
+  cameraToggleBtn.classList.add("hidden");
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -355,6 +356,7 @@ const hideModal = (modal) => {
   experience.classList.remove("blur");
   musicToggleBtn.classList.remove("hidden");
   themeToggleButton.classList.remove("hidden");
+  cameraToggleBtn.classList.remove("hidden");
 
   raycasterObjects.forEach(obj => {
     if (obj.userData && obj.userData.hoverTimeline) {
@@ -1390,8 +1392,8 @@ const render = () => {
     // Animate monitor brightness
     if (monitorMesh?.material?.uniforms) {
       gsap.to(monitorMesh.material.uniforms.uBrightness, {
-        value: 1.25,
-        duration: 0.5,
+        value: 1.15,
+        duration: 0.7,
         yoyo: true,
         repeat: 1,
         ease: "power1.inOut"
@@ -1399,35 +1401,35 @@ const render = () => {
     }
 
     // Target DJ, pcbtn, slider by name
-raycasterObjects.forEach(obj => {
-  if (
-    obj.name.includes("DJ") ||
-    obj.name.includes("pcbtn") ||
-    obj.name.includes("slider")
-  ) {
-    if (!obj.userData.originalColor) {
-      obj.userData.originalColor = obj.material.color.clone();
-    }
+    raycasterObjects.forEach(obj => {
+      if (
+        obj.name.includes("DJ") ||
+        obj.name.includes("pcbtn") ||
+        obj.name.includes("slider")
+      ) {
+        if (!obj.userData.originalColor) {
+          obj.userData.originalColor = obj.material.color.clone();
+        }
 
-    let targetColor;
+        let targetColor;
 
-    if (obj.name.includes("slider")) {
-      targetColor = { r: 1, g: 4, b: 1 }; // custom glow for slider
-    } else {
-      targetColor = { r: 1, g: 1.7, b: 1 }; // default glow for DJ & pcbtn
-    }
+        if (obj.name.includes("slider")) {
+          targetColor = { r: 1, g: 3, b: 1 }; // custom glow for slider
+        } else {
+          targetColor = { r: 1, g: 1.4, b: 1 }; // default glow for DJ & pcbtn
+        }
 
-    gsap.to(obj.material.color, {
-      ...targetColor,
-      duration: 0.5,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => {
-        obj.material.color.copy(obj.userData.originalColor);
+        gsap.to(obj.material.color, {
+          ...targetColor,
+          duration: 0.7,
+          yoyo: true,
+          repeat: 1,
+          onComplete: () => {
+            obj.material.color.copy(obj.userData.originalColor);
+          }
+        });
       }
     });
-  }
-});
 
     // Reset the trigger after ~1s to allow reactivation if desired (optional)
     setTimeout(() => {
@@ -1435,49 +1437,49 @@ raycasterObjects.forEach(obj => {
     }, 1500);
   }
 
-if (currentCameraIndex === 0) {
-  if (!isLoopingGlowActive) {
-    isLoopingGlowActive = true;
+  if (currentCameraIndex === 0) {
+    if (!isLoopingGlowActive) {
+      isLoopingGlowActive = true;
 
-    const buttons = [workBtn, contactBtn, aboutBtn, legalBtn];
+      const buttons = [workBtn, contactBtn, aboutBtn, legalBtn];
 
-    loopGlowTimeline = gsap.timeline({ repeat: -1, paused: false });
+      loopGlowTimeline = gsap.timeline({ repeat: -1, paused: false });
 
-    buttons.forEach((btn, index) => {
-      if (!btn?.material) return;
+      buttons.forEach((btn, index) => {
+        if (!btn?.material) return;
 
-      if (!btn.userData.originalColor) {
-        btn.userData.originalColor = btn.material.color.clone();
-      }
+        if (!btn.userData.originalColor) {
+          btn.userData.originalColor = btn.material.color.clone();
+        }
 
-      loopGlowTimeline.to(btn.material.color, {
-        r: 1.4,
-        g: 1.4,
-        b: 1.4,
-        duration: 0.3,
-        yoyo: true,
-        repeat: 1,
-        ease: "power1.inOut",
-        onComplete: () => {
+        loopGlowTimeline.to(btn.material.color, {
+          r: 1.4,
+          g: 1.4,
+          b: 1.4,
+          duration: 0.7,
+          yoyo: true,
+          repeat: 1,
+          ease: "power1.inOut",
+          onComplete: () => {
+            btn.material.color.copy(btn.userData.originalColor);
+          }
+        }, index * 0.3); // stagger timing
+      });
+    }
+  } else {
+    if (isLoopingGlowActive && loopGlowTimeline) {
+      loopGlowTimeline.kill();
+      loopGlowTimeline = null;
+      isLoopingGlowActive = false;
+
+      // Reset colors just in case
+      [workBtn, contactBtn, aboutBtn, legalBtn].forEach(btn => {
+        if (btn?.userData?.originalColor) {
           btn.material.color.copy(btn.userData.originalColor);
         }
-      }, index * 0.3); // stagger timing
-    });
+      });
+    }
   }
-} else {
-  if (isLoopingGlowActive && loopGlowTimeline) {
-    loopGlowTimeline.kill();
-    loopGlowTimeline = null;
-    isLoopingGlowActive = false;
-
-    // Reset colors just in case
-    [workBtn, contactBtn, aboutBtn, legalBtn].forEach(btn => {
-      if (btn?.userData?.originalColor) {
-        btn.material.color.copy(btn.userData.originalColor);
-      }
-    });
-  }
-}
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);

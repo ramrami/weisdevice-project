@@ -286,6 +286,10 @@ body {
   transform: translateX(-50%) scale(0.9);
 }
 
+#camera-toggle.hidden {
+  display: none !important;
+}
+
 /* Base modal window */
 .modal {
   filter: url(#wobble);
