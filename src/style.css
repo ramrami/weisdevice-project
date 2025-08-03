@@ -486,6 +486,26 @@ body {
   transform: rotate(-4deg) scale(1.05);
 }
 
+.social-icons {
+  display: flex;
+  padding-top: 1.5rem;
+  gap: 1.4rem;
+  z-index: 999;
+}
+
+.social-icons a img {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: var(--color-accent-pink);
+  border-radius: 20%;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.social-icons a:hover img {
+  filter: none;
+  transform: scale(1.1);
+}
+
 .work .modal-content {
   padding-bottom: 5rem;
 }

@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-document.querySelectorAll('.more-button').forEach((button) => {
+document.querySelectorAll('.more-button, .social-button').forEach((button) => {
   button.addEventListener('touchend', (e) => {
     touchHappened = true;
     e.preventDefault();
