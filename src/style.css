@@ -251,7 +251,8 @@ body {
   border-radius: 50%;
   z-index: 10;
   border: 0.125rem solid var(--color-base-black);
-  box-shadow: 0.125rem 0.125rem 0 var(--color-base-black);
+  box-shadow: 0.125rem 0.125rem 0 var(--color-base-black),
+             0 0 35px 1px var(--color-bg);     
   background: var(--color-accent-pink);
   cursor: pointer;
   filter: url(#wobble);

@@ -418,7 +418,7 @@ const cameraPositionsDesktop = [
 
 const cameraPositionsMobile = [
   { position: new THREE.Vector3(-12.9, 8.5, 20.5), target: new THREE.Vector3(0.3, 2.6, -0.5) },
-  { position: new THREE.Vector3(1.3, 4.5, 6.0), target: new THREE.Vector3(-0.4, 2.2, -0.8) },
+  { position: new THREE.Vector3(1.0, 4.7, 6.3), target: new THREE.Vector3(-0.3, 1.6, -0.6) },
   { position: new THREE.Vector3(-1.1, 3.6, 6.6), target: new THREE.Vector3(1.8, 3.6, 2.6) }
 ];
 
@@ -428,7 +428,6 @@ const cameraPositions = isMobile ? cameraPositionsMobile : cameraPositionsDeskto
 let currentCameraIndex = 1;
 
 const cameraToggleBtn = document.getElementById("camera-toggle");
-
 
 function switchCameraView() {
   const { position, target } = cameraPositions[currentCameraIndex];
@@ -467,6 +466,12 @@ function moveCameraTo(position, target) {
     onUpdate: () => controls.update()
   });
 }
+
+let cameraIndex2Effect = false;
+
+let loopGlowTimeline = null;
+let isLoopingGlowActive = false;
+
 /**  -------------------------- Camera & Renderer -------------------------- */
 const camera = new THREE.PerspectiveCamera(
   35,
@@ -1379,11 +1384,106 @@ const render = () => {
     }
   }
 
+  if (currentCameraIndex === 2 && !cameraIndex2Effect) {
+    cameraIndex2Effect = true;
+
+    // Animate monitor brightness
+    if (monitorMesh?.material?.uniforms) {
+      gsap.to(monitorMesh.material.uniforms.uBrightness, {
+        value: 1.25,
+        duration: 0.5,
+        yoyo: true,
+        repeat: 1,
+        ease: "power1.inOut"
+      });
+    }
+
+    // Target DJ, pcbtn, slider by name
+raycasterObjects.forEach(obj => {
+  if (
+    obj.name.includes("DJ") ||
+    obj.name.includes("pcbtn") ||
+    obj.name.includes("slider")
+  ) {
+    if (!obj.userData.originalColor) {
+      obj.userData.originalColor = obj.material.color.clone();
+    }
+
+    let targetColor;
+
+    if (obj.name.includes("slider")) {
+      targetColor = { r: 1, g: 4, b: 1 }; // custom glow for slider
+    } else {
+      targetColor = { r: 1, g: 1.7, b: 1 }; // default glow for DJ & pcbtn
+    }
+
+    gsap.to(obj.material.color, {
+      ...targetColor,
+      duration: 0.5,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => {
+        obj.material.color.copy(obj.userData.originalColor);
+      }
+    });
+  }
+});
+
+    // Reset the trigger after ~1s to allow reactivation if desired (optional)
+    setTimeout(() => {
+      cameraIndex2Effect = false;
+    }, 1500);
+  }
+
+if (currentCameraIndex === 0) {
+  if (!isLoopingGlowActive) {
+    isLoopingGlowActive = true;
+
+    const buttons = [workBtn, contactBtn, aboutBtn, legalBtn];
+
+    loopGlowTimeline = gsap.timeline({ repeat: -1, paused: false });
+
+    buttons.forEach((btn, index) => {
+      if (!btn?.material) return;
+
+      if (!btn.userData.originalColor) {
+        btn.userData.originalColor = btn.material.color.clone();
+      }
+
+      loopGlowTimeline.to(btn.material.color, {
+        r: 2,
+        g: 2,
+        b: 2,
+        duration: 0.3,
+        yoyo: true,
+        repeat: 1,
+        ease: "power1.inOut",
+        onComplete: () => {
+          btn.material.color.copy(btn.userData.originalColor);
+        }
+      }, index * 0.3); // stagger timing
+    });
+  }
+} else {
+  if (isLoopingGlowActive && loopGlowTimeline) {
+    loopGlowTimeline.kill();
+    loopGlowTimeline = null;
+    isLoopingGlowActive = false;
+
+    // Reset colors just in case
+    [workBtn, contactBtn, aboutBtn, legalBtn].forEach(btn => {
+      if (btn?.userData?.originalColor) {
+        btn.material.color.copy(btn.userData.originalColor);
+      }
+    });
+  }
+}
+
   renderer.render(scene, camera);
   requestAnimationFrame(render);
+  /*   console.log('Camera Position:', camera.position);
+    console.log('Controls Target:', controls.target); */
 
-  console.log('Camera Position:', camera.position);
-  console.log('Controls Target:', controls.target);
 };
 
 render();
