@@ -1451,9 +1451,9 @@ if (currentCameraIndex === 0) {
       }
 
       loopGlowTimeline.to(btn.material.color, {
-        r: 2,
-        g: 2,
-        b: 2,
+        r: 1.4,
+        g: 1.4,
+        b: 1.4,
         duration: 0.3,
         yoyo: true,
         repeat: 1,
