@@ -241,6 +241,50 @@ body {
   transform: rotate(14deg) scale(1.05);
 }
 
+#camera-toggle {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2rem;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  z-index: 10;
+  border: 0.125rem solid var(--color-base-black);
+  box-shadow: 0.125rem 0.125rem 0 var(--color-base-black);
+  background: var(--color-accent-pink);
+  cursor: pointer;
+  filter: url(#wobble);
+
+  user-select: none;
+  -webkit-user-select: none;
+  /* Safari */
+  -ms-user-select: none;
+  /* IE/Edge */
+}
+
+#camera-toggle img {
+  width: 80%;
+  height: 80%;
+  transform: translateX(5%) translateY(5%);
+}
+
+
+#camera-toggle:active {
+  /* Mobile and desktop press effect */
+  transform: translateX(-50%) scale(0.9);
+}
+/* Normal hover (desktop only) */
+.no-touch #camera-toggle:hover {
+  background-color: var(--color-accent-yellow);
+  transform: translateX(-50%) rotate(14deg) scale(1.05);
+}
+
+/* Click + hover = override everything */
+.no-touch #camera-toggle:hover:active {
+  transform: translateX(-50%) scale(0.9);
+}
+
 /* Base modal window */
 .modal {
   filter: url(#wobble);

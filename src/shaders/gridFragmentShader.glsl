@@ -4,7 +4,7 @@ uniform vec3 uLineColor;
 
 float gridLine(float coord, float size) {
   float line = abs(fract(coord * size) - 0.5);
-  return smoothstep(0.1, 0.0, line); // smooth lines
+  return smoothstep(0.05, 0.0, line); // smooth lines
 }
 
 void main() {

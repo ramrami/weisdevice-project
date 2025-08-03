@@ -69,6 +69,7 @@ let assetsReady = false;
 manager.onProgress = (url, loaded, total) => {
   const percent = Math.floor((loaded / total) * 100);
 
+
   gsap.to(progressBar, {
     value: percent,
     duration: 0.3,
@@ -310,6 +311,7 @@ musicToggleBtn.addEventListener(
   },
   { passive: false }
 );
+
 /**  -------------------------- modal -------------------------- */
 const experience = document.getElementById("experience");
 
@@ -402,6 +404,69 @@ window.addEventListener(
   { passive: false }
 );
 
+/**  -------------------------- camera-toggle -------------------------- */
+window.addEventListener('DOMContentLoaded', () => {
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  document.body.classList.toggle('no-touch', !isTouch);
+});
+
+const cameraPositionsDesktop = [
+  { position: new THREE.Vector3(-5.5, 8.0, 14.7), target: new THREE.Vector3(-0.0, 2.0, -0.9) },
+  { position: new THREE.Vector3(1.2, 5.1, 6.2), target: new THREE.Vector3(-0.2, 2.0, -0.8) },
+  { position: new THREE.Vector3(-0.8, 6.1, 6.6), target: new THREE.Vector3(2, 5, 2.6) }
+];
+
+const cameraPositionsMobile = [
+  { position: new THREE.Vector3(-12.9, 8.5, 20.5), target: new THREE.Vector3(0.3, 2.6, -0.5) },
+  { position: new THREE.Vector3(1.3, 4.5, 6.0), target: new THREE.Vector3(-0.4, 2.2, -0.8) },
+  { position: new THREE.Vector3(-1.1, 3.6, 6.6), target: new THREE.Vector3(1.8, 3.6, 2.6) }
+];
+
+const isMobile = window.innerWidth < 768;
+const cameraPositions = isMobile ? cameraPositionsMobile : cameraPositionsDesktop;
+
+let currentCameraIndex = 1;
+
+const cameraToggleBtn = document.getElementById("camera-toggle");
+
+
+function switchCameraView() {
+  const { position, target } = cameraPositions[currentCameraIndex];
+  moveCameraTo(position, target);
+
+  // Advance index for next click
+  currentCameraIndex = (currentCameraIndex + 1) % cameraPositions.length;
+}
+
+cameraToggleBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  switchCameraView();
+});
+
+cameraToggleBtn.addEventListener("touchend", (e) => {
+  touchHappened = true;
+  e.preventDefault();
+  switchCameraView();
+}, { passive: false });
+
+function moveCameraTo(position, target) {
+  gsap.to(camera.position, {
+    x: position.x,
+    y: position.y,
+    z: position.z,
+    duration: 2,
+    ease: "power2.inOut"
+  });
+
+  gsap.to(controls.target, {
+    x: target.x,
+    y: target.y,
+    z: target.z,
+    duration: 2,
+    ease: "power2.inOut",
+    onUpdate: () => controls.update()
+  });
+}
 /**  -------------------------- Camera & Renderer -------------------------- */
 const camera = new THREE.PerspectiveCamera(
   35,
@@ -432,11 +497,11 @@ controls.update();
 
 /**  -------------------------- Responsive Camera -------------------------- */
 if (window.innerWidth < 768) {
-  camera.position.set(-12.909337086928565, 8.550931829236296, 20.598656336120253);
-  controls.target.set(0.3329815555892619, 2.654559498384689, -0.5054645533440316);
+  camera.position.set(-12.9, 8.5, 20.5);
+  controls.target.set(0.3, 2.6, -0.5);
 } else {
-  camera.position.set(-5.522436315597833, 8.036417974169375, 14.73025582438407);
-  controls.target.set(-0.03621834906034986, 2.0794669599639444, -0.9874727502508671);
+  camera.position.set(-5.5, 8.0, 14.7);
+  controls.target.set(-0.0, 2.0, -0.9);
 }
 
 window.addEventListener("resize", () => {
@@ -1184,6 +1249,7 @@ const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
 smoke.position.set(0, 2, 0);
 scene.add(smoke);
 
+/**  -------------------------- switchTheme -------------------------- */
 function switchTheme(theme) {
   const modelRoot = scene.userData.modelRoot;
   if (!modelRoot) return;
@@ -1315,6 +1381,9 @@ const render = () => {
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
+
+  console.log('Camera Position:', camera.position);
+  console.log('Controls Target:', controls.target);
 };
 
 render();
