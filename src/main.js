@@ -30,8 +30,8 @@ let monitorAnimStarted = false;
 
 const cloud = [], rotAObjects = [], rotBObjects = [];
 
-let workBtn = null, contactBtn = null, aboutBtn = null, legalBtn = null, pcBtn = null;
-let DJ1 = null, DJ2 = null, DJ3 = null, DJ4 = null, DJ5 = null, DJ6 = null, DJ7 = null, DJ8 = null, DJ9 = null;
+let workBtn, contactBtn, aboutBtn, legalBtn, pcBtn;
+let DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9;
 
 let monitorBrightness = 0;
 let monitorContrast = 0;

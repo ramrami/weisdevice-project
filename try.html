@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Folder Explorer Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    #explorer {
+      max-width: 600px;
+      margin: auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      padding: 1rem;
+    }
+
+    .explorer-view {
+      display: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .explorer-view.active {
+      display: block;
+    }
+
+    .folder-icon, .file {
+      cursor: pointer;
+      padding: 0.5rem;
+      margin: 0.3rem 0;
+      background: #e0e0e0;
+      border-radius: 4px;
+    }
+
+    .folder-icon:hover, .file:hover {
+      background: #d0d0d0;
+    }
+
+    .back-button {
+      margin-bottom: 1rem;
+      padding: 0.4rem 1rem;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .back-button:hover {
+      background: #1565c0;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="explorer">
+    <!-- Home View -->
+    <div id="explorer-home" class="explorer-view active">
+      <h2>Home</h2>
+      <div class="folder-icon" data-folder="projectA">📁 Project A</div>
+      <div class="folder-icon" data-folder="projectB">📁 Project B</div>
+    </div>
+
+    <!-- Project A View -->
+    <div id="explorer-projectA" class="explorer-view">
+      <button class="back-button">⬅ Back</button>
+      <h2>Project A</h2>
+      <div class="file">📝 Readme.txt</div>
+      <div class="file">📷 Preview.png</div>
+    </div>
+
+    <!-- Project B View -->
+    <div id="explorer-projectB" class="explorer-view">
+      <button class="back-button">⬅ Back</button>
+      <h2>Project B</h2>
+      <div class="file">🗂️ Assets.zip</div>
+    </div>
+  </div>
+
+  <script>
+    const views = document.querySelectorAll(".explorer-view");
+
+    function showView(id) {
+      views.forEach(v => v.classList.remove("active"));
+      const target = document.getElementById(id);
+      if (target) target.classList.add("active");
+    }
+
+    document.querySelectorAll(".folder-icon").forEach(icon => {
+      icon.addEventListener("click", () => {
+        const folder = icon.dataset.folder;
+        showView(`explorer-${folder}`);
+      });
+    });
+
+    document.querySelectorAll(".back-button").forEach(button => {
+      button.addEventListener("click", () => {
+        showView("explorer-home");
+      });
+    });
+  </script>
+
+</body>
+</html>
