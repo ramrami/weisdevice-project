@@ -82,7 +82,7 @@ manager.onProgress = (url, loaded, total) => {
     ease: "none"
   });
 };
-/* manager.onLoad = () => {
+manager.onLoad = () => {
   assetsReady = true;
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
@@ -90,15 +90,15 @@ manager.onProgress = (url, loaded, total) => {
 
   enterButton.classList.add("active");
   enterButtonMute.classList.add("active");
-}; */
+};
 
-manager.onLoad = () => {
+/* manager.onLoad = () => {
   // Skip loading screen completely
   assetsReady = true;
   loadingScreen.remove();
   monitorAnimStarted = true;
   playIntroAnimation(); // Start scene directly
-};
+}; */
 
 enterButton.addEventListener(
   "touchend",
@@ -188,37 +188,6 @@ document.addEventListener("DOMContentLoaded", function () {
     tipText.textContent = "💡 Tip: Click and drag to explore.";
   }
 });
-
-document.querySelectorAll('.more-button').forEach((button) => {
-  button.addEventListener('touchend', (e) => {
-    touchHappened = true;
-    e.preventDefault();
-    window.location.href = button.href;
-  }, { passive: false });
-
-  button.addEventListener('click', (e) => {
-    if (touchHappened) return;
-    e.preventDefault();
-    window.location.href = button.href;
-  }, { passive: false });
-});
-
-document.querySelectorAll('.social-button').forEach((button) => {
-  const url = button.getAttribute('href');
-
-  button.addEventListener('touchend', (e) => {
-    touchHappened = true;
-    e.preventDefault();
-    if (url) window.open(url, '_blank');
-  }, { passive: false });
-
-  button.addEventListener('click', (e) => {
-    if (touchHappened) return;
-    e.preventDefault();
-    if (url) window.open(url, '_blank');
-  }, { passive: false });
-});
-
 /**  -------------------------- theme toggle -------------------------- */
 const themeToggleButton = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
@@ -337,6 +306,7 @@ const showModal = (modal) => {
   controls.enabled = false;
 
   experience.classList.add("blur");
+  overlay.style.display = "block";
   musicToggleBtn.classList.add("hidden");
   themeToggleButton.classList.add("hidden");
   cameraToggleBtn.classList.add("hidden");
@@ -368,8 +338,8 @@ const showModal = (modal) => {
 const hideModal = (modal) => {
   isModalOpen = false;
   controls.enabled = true;
-
   experience.classList.remove("blur");
+  overlay.style.display = "none";
   musicToggleBtn.classList.remove("hidden");
   themeToggleButton.classList.remove("hidden");
   cameraToggleBtn.classList.remove("hidden");
@@ -391,37 +361,29 @@ const hideModal = (modal) => {
   });
 };
 
-function handleOutsideModalClick(e) {
-  if (!isModalOpen) return;
+const overlay = document.querySelector(".overlay");
 
-  const openModal = document.querySelector(".modal:not(.hidden)");
-  if (!openModal) return;
-
-  if (!openModal.contains(e.target)) {
-    hideModal(openModal);
-  }
-}
-
-window.addEventListener(
+overlay.addEventListener(
   "touchend",
   (e) => {
     touchHappened = true;
     e.preventDefault();
-    handleOutsideModalClick(e);
+    const modal = document.querySelector('.modal:not(.hidden)');
+    if (isModalOpen && modal) hideModal(modal);
   },
   { passive: false }
 );
 
-window.addEventListener(
+overlay.addEventListener(
   "click",
   (e) => {
     if (touchHappened) return;
     e.preventDefault();
-    handleOutsideModalClick(e);
+    const modal = document.querySelector('.modal:not(.hidden)');
+    if (isModalOpen && modal) hideModal(modal);
   },
   { passive: false }
 );
-
 /**  -------------------------- camera-toggle -------------------------- */
 window.addEventListener('DOMContentLoaded', () => {
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -702,22 +664,14 @@ function handleRaycasterInteraction() {
 window.addEventListener(
   "touchend",
   (e) => {
-    touchHappened = true;
+    if (isModalOpen) return;
     e.preventDefault();
-    handleRaycasterInteraction(e);
+    handleRaycasterInteraction();
   },
   { passive: false }
 );
 
-window.addEventListener(
-  "click",
-  (e) => {
-    if (touchHappened) return;
-    e.preventDefault();
-    handleRaycasterInteraction(e);
-  },
-  { passive: false }
-);
+window.addEventListener("click", handleRaycasterInteraction);
 
 document.querySelectorAll(".modal-exit-button").forEach((button) => {
   button.addEventListener("touchend", (e) => {
