@@ -10,6 +10,8 @@ import gridVertexShader from "./shaders/gridVertexShader.glsl?raw";
 import gridFragmentShader from "./shaders/gridFragmentShader.glsl?raw";
 import smokeVertexShader from "./shaders/smokeVertexShader.glsl?raw";
 import smokeFragmentShader from "./shaders/smokeFragmentShader.glsl?raw";
+import fadePlaneVertexShader from "./shaders/fadePlaneVertexShader.glsl?raw";
+import fadePlaneFragmentShader from "./shaders/fadePlaneFragementShader.glsl?raw"
 
 /**  -------------------------- Global Variables -------------------------- */
 const canvas = document.querySelector("#experience-canvas");
@@ -107,7 +109,7 @@ enterButton.addEventListener(
     e.preventDefault();
 
     backgroundMusic.play();
-    backgroundMusic.volume = 0.5;
+    backgroundMusic.volume = 0.4;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
@@ -125,7 +127,7 @@ enterButton.addEventListener(
     e.preventDefault();
 
     backgroundMusic.play();
-    backgroundMusic.volume = 0.5;
+    backgroundMusic.volume = 0.4;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
@@ -261,7 +263,7 @@ musicToggleBtn.addEventListener(
 
     if (musicPlaying) {
       backgroundMusic.play();
-      backgroundMusic.volume = 0.5;
+      backgroundMusic.volume = 0.4;
       musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     } else {
       backgroundMusic.pause();
@@ -284,7 +286,7 @@ musicToggleBtn.addEventListener(
 
     if (musicPlaying) {
       backgroundMusic.play();
-      backgroundMusic.volume = 0.5;
+      backgroundMusic.volume = 0.4;
       musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     } else {
       backgroundMusic.pause();
@@ -1170,28 +1172,30 @@ grid.rotation.x = -Math.PI / 2;
 grid.position.set(0.5, -2.01, 0.5);
 scene.add(grid);
 
+const fadePlaneMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uColor: { value: new THREE.Color(0xff0000) } // Change for yPlane
+  },
+  vertexShader: fadePlaneVertexShader,
+  fragmentShader: fadePlaneFragmentShader,
+  transparent: true,
+  depthWrite: false
+});
+
 const xPlane = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 0.1),
-  new THREE.MeshBasicMaterial({
-    color: 0xff0000,
-    transparent: true,
-    opacity: 0.2,
-    depthWrite: false // prevents z-fighting if needed
-  })
+  fadePlaneMaterial.clone()
 );
+xPlane.material.uniforms.uColor.value.set(0xff0000);
 xPlane.rotation.x = -Math.PI / 2;
 xPlane.position.set(0, -2, 0);
 scene.add(xPlane);
 
 const yPlane = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 0.1),
-  new THREE.MeshBasicMaterial({
-    color: 0x00ff00,
-    transparent: true,
-    opacity: 0.2,
-    depthWrite: false
-  })
+  fadePlaneMaterial.clone()
 );
+yPlane.material.uniforms.uColor.value.set(0x00ff00);
 yPlane.rotation.z = Math.PI / 2;
 yPlane.rotation.x = -Math.PI / 2;
 yPlane.position.set(0, -2, 0);
@@ -1362,7 +1366,7 @@ const render = () => {
     // Animate monitor brightness
     if (monitorMesh?.material?.uniforms) {
       gsap.to(monitorMesh.material.uniforms.uBrightness, {
-        value: 1.15,
+        value: 1.18,
         duration: 0.7,
         yoyo: true,
         repeat: 1,
@@ -1384,9 +1388,9 @@ const render = () => {
         let targetColor;
 
         if (obj.name.includes("slider")) {
-          targetColor = { r: 1, g: 3, b: 1 }; // custom glow for slider
+          targetColor = { r: 3, g: 3, b: 3 }; // custom glow for slider
         } else {
-          targetColor = { r: 1, g: 1.4, b: 1 }; // default glow for DJ & pcbtn
+          targetColor = { r: 1.5, g: 1.5, b: 1.5 }; // default glow for DJ & pcbtn
         }
 
         gsap.to(obj.material.color, {
@@ -1423,9 +1427,9 @@ const render = () => {
         }
 
         loopGlowTimeline.to(btn.material.color, {
-          r: 1.4,
-          g: 1.4,
-          b: 1.4,
+          r: 1.7,
+          g: 1.7,
+          b: 1.7,
           duration: 0.7,
           yoyo: true,
           repeat: 1,
