@@ -1340,7 +1340,8 @@ const render = () => {
       lastHoveredObject = hoveredObject;
     }
 
-    /** Cursor state **/
+    /** Cursor state — only when hovered object changes **/
+    if (hoveredObject !== lastHoveredObject) {
       if (currentIndex === 3 && hoveredObject && (hoveredObject.name.includes("slider") || hoveredObject.name.includes("DJ"))) {
         setCursor("not-allowed");
       } else if (isMonitor && currentIndex === 3) {
@@ -1350,7 +1351,7 @@ const render = () => {
       } else {
         setCursor("default");
       }
-    
+    }
 
     /** Glow state for pcBtn — only if currentIndex changes **/
     if (currentIndex !== lastCurrentIndex) {
