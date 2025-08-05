@@ -746,8 +746,8 @@ loader.setDRACOLoader(dracoLoader);
 
 const hoverVariants = {
   default: {
-    scale: [1.3, 1.3, 1.3],
-    position: [0.1, -0.1, 0.1],
+    scale: [1.2, 1.2, 1.2],
+    position: [0, 0, 0],
     rotation: [0, -Math.PI / 8, 0],
   },
   v2: {
