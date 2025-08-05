@@ -246,9 +246,9 @@ djAudio.volume = 0.7;
 djAudio.preload = "auto"; // optional, helps on slower networks
 
 // UI button sounds
-const pcButtonMusic = new Audio('/audio/sound/264447__kickhat__open-button-2.ogg');
+const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
 
-const sliderMusic = new Audio('/audio/sound/770169__j1cr0wav3__itemcollect.ogg');
+const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
 const backgroundMusic = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const musicToggleBtn = document.getElementById("music-toggle");
@@ -522,16 +522,6 @@ window.addEventListener(
 );
 
 function handleRaycasterInteraction() {
-
-  // Disable slider & DJ click if monitor is on texture 3
-  if (currentIndex === 3) {
-    if (currentIntersects.length > 0) {
-      const name = currentIntersects[0].object.name;
-      if (name.includes("slider") || name.includes("DJ")) {
-        return; // block click
-      }
-    }
-  }
   if (currentIntersects && currentIntersects.length > 0) {
     const object = currentIntersects[0].object;
 
@@ -1283,108 +1273,85 @@ function setCursor(style) {
   }
 }
 
-// Track last pointer position for raycast optimization
-let lastPointerX = null;
-let lastPointerY = null;
-
-// Track last hovered object for cursor optimization
-let lastHoveredObject = null;
-
-// Track last currentIndex for glow state changes
-let lastCurrentIndex = null;
-
 const render = () => {
   controls.update();
   const time = clock.getElapsedTime();
 
-  /** Animate clouds & rotators **/
   const startDeg = 180;
   const rangeDeg = 10;
-  const angle = THREE.MathUtils.degToRad(startDeg) +
-                Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
+  const angle = THREE.MathUtils.degToRad(startDeg) + Math.sin(time * 1.5) * THREE.MathUtils.degToRad(rangeDeg / 2);
 
   smokeMaterial.uniforms.uTime.value = time;
 
   cloud.forEach(c => {
-    c.mesh.position.y = c.baseY + Math.sin(time * c.floatSpeed + c.floatOffset) * 0.5;
-    c.mesh.rotation.y += c.rotationSpeed;
+    const mesh = c.mesh;
+    mesh.position.y = c.baseY + Math.sin(time * c.floatSpeed + c.floatOffset) * 0.5;
+    mesh.rotation.y += c.rotationSpeed;
   });
 
-  rotAObjects.forEach(obj => obj.mesh.rotation.x = angle);
-  rotBObjects.forEach(obj => obj.mesh.rotation.x = -angle);
+  rotAObjects.forEach(obj => {
+    obj.mesh.rotation.x = angle;
+  });
+  rotBObjects.forEach(obj => {
+    obj.mesh.rotation.x = -angle;
+  });
 
   if (assetsReady && !isModalOpen) {
-    /** Run raycaster only if pointer moved **/
-    if (pointer.x !== lastPointerX || pointer.y !== lastPointerY) {
-      lastPointerX = pointer.x;
-      lastPointerY = pointer.y;
-      raycaster.setFromCamera(pointer, camera);
-      currentIntersects = raycaster.intersectObjects(raycasterObjects);
+    // Raycaster
+    raycaster.setFromCamera(pointer, camera);
+    currentIntersects = raycaster.intersectObjects(raycasterObjects);
+
+    let hoveredObject = null;
+    let isMonitor = false;
+    let isPointer = false;
+    let isHoverA = false;
+
+    if (currentIntersects.length > 0) {
+      hoveredObject = currentIntersects[0].object;
+      isMonitor = hoveredObject.name.includes("monitor");
+      isPointer = hoveredObject.name.includes("pointer");
+      isHoverA = hoveredObject.name.includes("hover");
     }
 
-    let hoveredObject = currentIntersects.length > 0 ? currentIntersects[0].object : null;
-    let isMonitor = hoveredObject?.name.includes("monitor");
-    let isPointer = hoveredObject?.name.includes("pointer");
-    let isHoverA = hoveredObject?.name.includes("hover");
+    if (isHoverA && !hoveredObject.userData.hoverDisabled) {
+      if (hoveredObject !== currentHoveredObject) {
 
-    /** Hover animation — only when hovered object changes **/
-    if (hoveredObject !== lastHoveredObject) {
-      // Reverse last hover
-      if (lastHoveredObject?.userData.hoverTimeline) {
-        lastHoveredObject.userData.hoverTimeline.reverse();
-      }
-      // Play new hover
-      if (isHoverA && !hoveredObject?.userData.hoverDisabled && hoveredObject?.userData.hoverTimeline) {
-        hoveredObject.userData.hoverTimeline.play();
-      }
-      lastHoveredObject = hoveredObject;
-    }
-
-    /** Cursor state **/
-      if (currentIndex === 3 && hoveredObject && (hoveredObject.name.includes("slider") || hoveredObject.name.includes("DJ"))) {
-        setCursor("not-allowed");
-      } else if (isMonitor && currentIndex === 3) {
-        setCursor("not-allowed");
-      } else if (isPointer || isMonitor) {
-        setCursor("pointer");
-      } else {
-        setCursor("default");
-      }
-    
-
-    /** Glow state for pcBtn — only if currentIndex changes **/
-    if (currentIndex !== lastCurrentIndex) {
-      if (pcBtn && pcBtn.material) {
-        if (currentIndex === 3) {
-          if (!pcBtn.userData.originalColor) {
-            pcBtn.userData.originalColor = pcBtn.material.color.clone();
-          }
-          pcBtn.userData.glowActive = true;
-          gsap.to(pcBtn.material.color, {
-            r: 4, g: 2, b: 2,
-            duration: 0.5,
-            yoyo: true,
-            repeat: -1,
-            ease: "sine.inOut"
-          });
-        } else {
-          if (pcBtn.userData.glowActive) {
-            pcBtn.userData.glowActive = false;
-            gsap.killTweensOf(pcBtn.material.color);
-            pcBtn.material.color.copy(pcBtn.userData.originalColor);
-          }
+        if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
+          currentHoveredObject.userData.hoverTimeline.reverse();
         }
+
+        // Play new
+        if (hoveredObject.userData.hoverTimeline) {
+          hoveredObject.userData.hoverTimeline.play();
+        }
+
+        currentHoveredObject = hoveredObject;
       }
-      lastCurrentIndex = currentIndex;
+    } else {
+      if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
+        currentHoveredObject.userData.hoverTimeline.reverse();
+        currentHoveredObject = null;
+      }
     }
 
-    /** Monitor intro animation update **/
+    if (isMonitor && currentIndex === 3) {
+      setCursor("not-allowed");
+    } else if (isPointer || isMonitor) {
+      setCursor("pointer");
+    } else {
+      setCursor("default");
+    }
+
     if (monitorAnimStarted && monitorMesh?.material?.uniforms) {
       const uniforms = monitorMesh.material.uniforms;
+
       monitorBrightness += (1.0 - monitorBrightness) * 0.05;
       monitorContrast += (1.0 - monitorContrast) * 0.05;
+
       uniforms.uBrightness.value = monitorBrightness;
       uniforms.uContrast.value = monitorContrast;
+
+      // define when the animation is completed
       if (Math.abs(1.0 - monitorBrightness) < 0.01 && Math.abs(1.0 - monitorContrast) < 0.01) {
         uniforms.uBrightness.value = 1.0;
         uniforms.uContrast.value = 1.0;
@@ -1393,10 +1360,10 @@ const render = () => {
     }
   }
 
-  /** Camera index 2 special glow — skip if pcBtn is already glowing **/
   if (currentCameraIndex === 2 && !cameraIndex2Effect) {
     cameraIndex2Effect = true;
 
+    // Animate monitor brightness
     if (monitorMesh?.material?.uniforms) {
       gsap.to(monitorMesh.material.uniforms.uBrightness, {
         value: 1.18,
@@ -1407,14 +1374,25 @@ const render = () => {
       });
     }
 
+    // Target DJ, pcbtn, slider by name
     raycasterObjects.forEach(obj => {
-      if (obj === pcBtn && pcBtn.userData.glowActive) return; // skip if already glowing
-
-      if (obj.name.includes("DJ") || obj.name.includes("pcbtn") || obj.name.includes("slider")) {
+      if (
+        obj.name.includes("DJ") ||
+        obj.name.includes("pcbtn") ||
+        obj.name.includes("slider")
+      ) {
         if (!obj.userData.originalColor) {
           obj.userData.originalColor = obj.material.color.clone();
         }
-        let targetColor = obj.name.includes("slider") ? { r: 3, g: 3, b: 3 } : { r: 1.5, g: 1.5, b: 1.5 };
+
+        let targetColor;
+
+        if (obj.name.includes("slider")) {
+          targetColor = { r: 3, g: 3, b: 3 }; // custom glow for slider
+        } else {
+          targetColor = { r: 1.5, g: 1.5, b: 1.5 }; // default glow for DJ & pcbtn
+        }
+
         gsap.to(obj.material.color, {
           ...targetColor,
           duration: 0.7,
@@ -1427,42 +1405,61 @@ const render = () => {
       }
     });
 
-    setTimeout(() => cameraIndex2Effect = false, 1500);
+    // Reset the trigger after ~1s to allow reactivation if desired (optional)
+    setTimeout(() => {
+      cameraIndex2Effect = false;
+    }, 1500);
   }
 
-  /** Camera index 0 loop glow **/
-  if (currentCameraIndex === 0 && !isLoopingGlowActive) {
-    isLoopingGlowActive = true;
-    const buttons = [workBtn, contactBtn, aboutBtn, legalBtn];
-    loopGlowTimeline = gsap.timeline({ repeat: -1, paused: false });
-    buttons.forEach((btn, index) => {
-      if (!btn?.material) return;
-      if (!btn.userData.originalColor) {
-        btn.userData.originalColor = btn.material.color.clone();
-      }
-      loopGlowTimeline.to(btn.material.color, {
-        r: 1.7, g: 1.7, b: 1.7,
-        duration: 0.7,
-        yoyo: true,
-        repeat: 1,
-        ease: "power1.inOut",
-        onComplete: () => {
+  if (currentCameraIndex === 0) {
+    if (!isLoopingGlowActive) {
+      isLoopingGlowActive = true;
+
+      const buttons = [workBtn, contactBtn, aboutBtn, legalBtn];
+
+      loopGlowTimeline = gsap.timeline({ repeat: -1, paused: false });
+
+      buttons.forEach((btn, index) => {
+        if (!btn?.material) return;
+
+        if (!btn.userData.originalColor) {
+          btn.userData.originalColor = btn.material.color.clone();
+        }
+
+        loopGlowTimeline.to(btn.material.color, {
+          r: 1.7,
+          g: 1.7,
+          b: 1.7,
+          duration: 0.7,
+          yoyo: true,
+          repeat: 1,
+          ease: "power1.inOut",
+          onComplete: () => {
+            btn.material.color.copy(btn.userData.originalColor);
+          }
+        }, index * 0.3); // stagger timing
+      });
+    }
+  } else {
+    if (isLoopingGlowActive && loopGlowTimeline) {
+      loopGlowTimeline.kill();
+      loopGlowTimeline = null;
+      isLoopingGlowActive = false;
+
+      // Reset colors just in case
+      [workBtn, contactBtn, aboutBtn, legalBtn].forEach(btn => {
+        if (btn?.userData?.originalColor) {
           btn.material.color.copy(btn.userData.originalColor);
         }
-      }, index * 0.3);
-    });
-  } else if (currentCameraIndex !== 0 && isLoopingGlowActive) {
-    loopGlowTimeline.kill();
-    loopGlowTimeline = null;
-    isLoopingGlowActive = false;
-    [workBtn, contactBtn, aboutBtn, legalBtn].forEach(btn => {
-      if (btn?.userData?.originalColor) {
-        btn.material.color.copy(btn.userData.originalColor);
-      }
-    });
+      });
+    }
   }
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
+  /*   console.log('Camera Position:', camera.position);
+    console.log('Controls Target:', controls.target); */
+
 };
+
 render();
