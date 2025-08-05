@@ -27,11 +27,31 @@
   </header>
 
   <main>
-    <div class="iframe-wrapper">
-      <iframe width="560" height="315"
-        src="https://www.youtube.com/embed/B_yMrFRvIrg?rel=0&modestbranding=1&autohide=1&showinfo=0&controls=1&vq=hd1080"
-        title="YouTube video" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-    </div>
+<div style="position: relative; display: inline-block; width: 560px; height: 315px;">
+  <!-- YouTube iframe -->
+  <iframe width="560" height="315"
+    src="https://www.youtube.com/embed/B_yMrFRvIrg?rel=0&modestbranding=1&controls=1&vq=hd1080"
+    title="YouTube video" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+  </iframe>
+
+  <!-- Transparent overlay to block YouTube logo/link -->
+  <div style="
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;  /* adjust to cover clickable area */
+    height: 40px;
+    background: transparent;
+    z-index: 2;
+  "></div>
+</div>
+
+<!-- Your own link -->
+<p>
+  <a href="https://www.youtube.com/watch?v=B_yMrFRvIrg" target="_self">
+    ▶ Watch on YouTube
+  </a>
+</p>
 
     <p class="project-tag">"Touchdesigner, MIDI controller, face tracking, real-time."</p>
 
