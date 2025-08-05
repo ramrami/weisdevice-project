@@ -248,7 +248,7 @@ djAudio.preload = "auto"; // optional, helps on slower networks
 // UI button sounds
 const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
 
-const sliderMusic = new Audio('/audio/sound/71853__ludvique__record_scratch.ogg');
+const sliderMusic = new Audio('/audio/sound/770169__j1cr0wav3__itemcollect.ogg');
 const backgroundMusic = document.getElementById("bg-music");
 const musicIcon = document.getElementById("music-icon");
 const musicToggleBtn = document.getElementById("music-toggle");
@@ -1360,6 +1360,19 @@ const render = () => {
     }
   }
 
+  // If monitor is showing texture index 3, make pcBtn red
+if (pcBtn && pcBtn.material) {
+  if (currentIndex === 3) {
+    pcBtn.material.color.setRGB(4, 2, 2); // red
+  } else {
+    // Store original color if not stored yet
+    if (!pcBtn.userData.originalColor) {
+      pcBtn.userData.originalColor = pcBtn.material.color.clone();
+    }
+    pcBtn.material.color.copy(pcBtn.userData.originalColor);
+  }
+}
+
   if (currentCameraIndex === 2 && !cameraIndex2Effect) {
     cameraIndex2Effect = true;
 
@@ -1374,36 +1387,34 @@ const render = () => {
       });
     }
 
-    // Target DJ, pcbtn, slider by name
-    raycasterObjects.forEach(obj => {
-      if (
-        obj.name.includes("DJ") ||
-        obj.name.includes("pcbtn") ||
-        obj.name.includes("slider")
-      ) {
-        if (!obj.userData.originalColor) {
-          obj.userData.originalColor = obj.material.color.clone();
-        }
+// Glow for camera index 2 (skip pcBtn if already glowing from currentIndex 3)
+const glowTargets = [
+  sliderMesh,
+  pcBtn.userData.glowActive ? null : pcBtn, // skip if already glowing
+  DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9
+].filter(Boolean); // remove null
 
-        let targetColor;
+glowTargets.forEach(obj => {
+  if (!obj?.material) return;
 
-        if (obj.name.includes("slider")) {
-          targetColor = { r: 3, g: 3, b: 3 }; // custom glow for slider
-        } else {
-          targetColor = { r: 1.5, g: 1.5, b: 1.5 }; // default glow for DJ & pcbtn
-        }
+  if (!obj.userData.originalColor) {
+    obj.userData.originalColor = obj.material.color.clone();
+  }
 
-        gsap.to(obj.material.color, {
-          ...targetColor,
-          duration: 0.7,
-          yoyo: true,
-          repeat: 1,
-          onComplete: () => {
-            obj.material.color.copy(obj.userData.originalColor);
-          }
-        });
-      }
-    });
+  let targetColor = obj.name.includes("slider")
+    ? { r: 3, g: 3, b: 3 }
+    : { r: 1.5, g: 1.5, b: 1.5 };
+
+  gsap.to(obj.material.color, {
+    ...targetColor,
+    duration: 0.7,
+    yoyo: true,
+    repeat: 1,
+    onComplete: () => {
+      obj.material.color.copy(obj.userData.originalColor);
+    }
+  });
+});
 
     // Reset the trigger after ~1s to allow reactivation if desired (optional)
     setTimeout(() => {
