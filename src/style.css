@@ -68,11 +68,10 @@ body {
   align-items: center;
   z-index: 9999;
   background-color: var(--color-bg);
-  opacity: 1;
+
   transition: opacity 1s ease-in-out; 
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
+  transform: perspective(1000px);
+  
 
   border: 0.125rem solid var(--color-base-black);
   box-shadow: 0.125rem 0.125rem 0 var(--color-base-black);

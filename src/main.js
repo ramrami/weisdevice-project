@@ -102,6 +102,58 @@ manager.onLoad = () => {
   playIntroAnimation(); // Start scene directly
 }; */
 
+function playLoadingScreenExit(withSound = true) {
+  const tl = gsap.timeline({
+    onComplete: () => {
+      monitorAnimStarted = true; // start monitor glow
+      loadingScreen.remove();
+      playIntroAnimation();
+    }
+  });
+
+  tl.to(loadingScreen, {
+    transformOrigin: "center center",
+    rotationX: 10,
+    rotationY: -5,
+    scale: 1.02, // tiny overshoot first
+    y: "-2vh",
+    duration: 0.4,
+    ease: "power2.out"
+  })
+  .to(loadingScreen, {
+    rotationX: -5,
+    rotationY: 5,
+    scale: 0.95,
+    y: "1vh",
+    duration: 0.3,
+    ease: "power1.inOut"
+  })
+  .to(loadingScreen, {
+    rotationX: 70,
+    rotationY: -25,
+    scale: 0.05,
+    x: "20vw", // give it a nice curve to the side
+    y: "-250vh",
+    opacity: 0,
+    duration: 1.2,
+    ease: "expo.in"
+  })
+  .to(".white-overlay", { // soft iris-like flash
+    opacity: 0.7,
+    duration: 0.35,
+    ease: "sine.inOut",
+    yoyo: true,
+    repeat: 1
+  }, "-=0.8");
+
+  if (withSound) {
+    backgroundMusic.play();
+    backgroundMusic.volume = 0.4;
+    musicPlaying = true;
+    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+  }
+}
+
 enterButton.addEventListener(
   "touchend",
   (e) => {
@@ -114,8 +166,8 @@ enterButton.addEventListener(
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
     monitorAnimStarted = true;
-    loadingScreen.remove();
-    playIntroAnimation();
+
+    playLoadingScreenExit(true);
   },
   { passive: false }
 );
@@ -132,8 +184,8 @@ enterButton.addEventListener(
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
 
     monitorAnimStarted = true;
-    loadingScreen.remove();
-    playIntroAnimation();
+
+    playLoadingScreenExit(true);
   },
   { passive: false }
 );
@@ -146,8 +198,8 @@ enterButtonMute.addEventListener(
 
     musicPlaying = false;
     monitorAnimStarted = true;
-    loadingScreen.remove();
-    playIntroAnimation();
+
+        playLoadingScreenExit(false);
   },
   { passive: false }
 );
@@ -160,8 +212,9 @@ enterButtonMute.addEventListener(
 
     musicPlaying = false;
     monitorAnimStarted = true;
-    loadingScreen.remove();
-    playIntroAnimation();
+
+
+        playLoadingScreenExit(false);
   },
   { passive: false }
 );
@@ -799,356 +852,254 @@ const clickVariants = {
 
 loader.load("/models/desert.glb", (glb) => {
   const modelRoot = glb.scene;
-  scene.add(modelRoot);
+  
   scene.userData.modelRoot = modelRoot;
   const envMap = new THREE.CubeTextureLoader()
     .setPath('/textures/skymap/')
     .load(['px.webp', 'nx.webp', 'py.webp', 'ny.webp', 'pz.webp', 'nz.webp']);
   scene.environment = envMap;
 
-  glb.scene.traverse((child) => {
+glb.scene.traverse((child) => {
     if (!child.isMesh) return;
     const name = child.name;
 
+    /** ------------------ TEXTURE SETUP ------------------ **/
     Object.keys(textureMap).forEach((key) => {
-      if (child.name.includes(key)) {
-        child.material = new THREE.MeshBasicMaterial({
-          map: loadedTextures.day[key],
-        });
-        child.material.map.minFilter = THREE.LinearFilter;
-
-        // Set textureKey so switchTheme works
-        child.userData.textureKey = key;
-      }
+        if (name.includes(key)) {
+            child.material = new THREE.MeshBasicMaterial({
+                map: loadedTextures.day[key],
+            });
+            child.material.map.minFilter = THREE.LinearFilter;
+            child.userData.textureKey = key;
+        }
     });
 
-    if (child.name.includes("slider")) {
-      sliderMesh = child;
-      child.userData.originalPosition = child.position.clone();
-      raycasterObjects.push(child);
+    if (name.includes("pcwei")) {
+        const key = "pcwei";
+        child.material = new THREE.MeshStandardMaterial({
+            map: loadedTextures.day[key],
+            metalness: 0.9,
+            roughness: 0.2,
+            envMap: envMap,
+            envMapIntensity: 3.0,
+        });
+        child.userData.textureKey = key;
     }
 
-    // Clouds
-    if (child.name.includes("cloud")) {
-      const key = "other";
-      child.material = new THREE.MeshBasicMaterial({
-        map: loadedTextures.day[key],
-        transparent: true,
-        opacity: 0.7,
-        depthWrite: false
-      });
-
-      child.userData.textureKey = key;
-
-      cloud.push({
-        mesh: child,
-        baseY: child.position.y,
-        floatSpeed: Math.random() * 0.1 + 0.05,
-        floatOffset: Math.random() * Math.PI * 2,
-        rotationSpeed: Math.random() * 0.0002 + 0.00005
-      });
+    /** ------------------ SLIDER ------------------ **/
+    if (name.includes("slider")) {
+        sliderMesh = child;
+        child.userData.originalPosition = child.position.clone();
+        raycasterObjects.push(child);
     }
 
-    if (child.name.includes("roA")) {
-      rotAObjects.push({ mesh: child });
-    } else if (name.includes("raB")) {
-      rotBObjects.push({ mesh: child });
+    /** ------------------ ENV + CLOUDS ------------------ **/
+    if (name.includes("cloud")) {
+        const key = "other";
+        child.material = new THREE.MeshBasicMaterial({
+            map: loadedTextures.day[key],
+            transparent: true,
+            opacity: 0.7,
+            depthWrite: false
+        });
+        child.userData.textureKey = key;
+        cloud.push({
+            mesh: child,
+            baseY: child.position.y,
+            floatSpeed: Math.random() * 0.1 + 0.05,
+            floatOffset: Math.random() * Math.PI * 2,
+            rotationSpeed: Math.random() * 0.0002 + 0.00005
+        });
     }
 
-    if (child.name.includes("raycaster")) {
-      raycasterObjects.push(child);
+    if (name.includes("roA")) rotAObjects.push({ mesh: child });
+    if (name.includes("raB")) rotBObjects.push({ mesh: child });
+    if (name.includes("raycaster")) raycasterObjects.push(child);
+
+    /** ------------------ MONITOR ------------------ **/
+    if (name.includes("monitor")) {
+        monitorMesh = child;
+        child.material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTextureA: { value: monitor_texture[currentIndex] },
+                uTextureB: { value: monitor_texture[nextIndex] },
+                uBrightness: { value: 0.0 },
+                uContrast: { value: 0.0 },
+                uMix: { value: 0.0 },
+                uAberrationAmount: { value: 0.01 }
+            },
+            vertexShader: monitorVertexShader,
+            fragmentShader: monitorFragmentShader,
+        });
     }
 
-    if (child.name.includes("pcwei")) {
-      const key = "pcwei";
-      child.material = new THREE.MeshStandardMaterial({
-        map: loadedTextures.day[key],
-        metalness: 0.9,
-        roughness: 0.2,
-        envMap: envMap,
-        envMapIntensity: 3.0,
-      });
+    /** ------------------ INTRO SCALE FIX ------------------ **/
+    const needsIntroHide =
+        name.includes("DJ") ||
+        name.includes("slider") ||
+        name.includes("pcbtn") ||
+        name.includes("workbtn") ||
+        name.includes("aboutbtn") ||
+        name.includes("contactbtn") ||
+        name.includes("legalbtn");
 
-      child.userData.textureKey = key;
+    if (needsIntroHide) {
+        // Store intended scale before hiding
+        child.userData.initialScaleForIntro = child.scale.clone();
+        // Hide for intro animation
+        child.scale.set(0, 0, 0);
     }
 
-    if (child.name.includes("monitor")) {
-      monitorMesh = child;
-      child.material = new THREE.ShaderMaterial({
-        uniforms: {
-          uTextureA: { value: monitor_texture[currentIndex] },
-          uTextureB: { value: monitor_texture[nextIndex] },
-          uBrightness: { value: 0.0 },
-          uContrast: { value: 0.0 },
-          uMix: { value: 0.0 },
-          uAberrationAmount: { value: 0.01 }
-        },
-        vertexShader: monitorVertexShader,
-        fragmentShader: monitorFragmentShader,
-      });
+    /** ------------------ CLICK TIMELINES ------------------ **/
+    if (name.includes("DJ") || name.includes("pcbtn")) {
+        let variantKey = name.includes("DJ") ? "DJ" : "pcbtn";
+        const config = clickVariants[variantKey];
+        const baseScale = child.userData.initialScaleForIntro || child.scale;
+        const [sx, sy, sz] = config.scale;
+        const [dx, dy, dz] = config.position;
+        const originalPosition = child.position.clone();
+
+        const tl = gsap.timeline({ paused: true });
+        tl.to(child.scale, {
+            x: baseScale.x * sx,
+            y: baseScale.y * sy,
+            z: baseScale.z * sz,
+            duration: config.duration * 0.5,
+            ease: "power2.in"
+        });
+        tl.to(child.position, {
+            x: originalPosition.x + dx,
+            y: originalPosition.y + dy,
+            z: originalPosition.z + dz,
+            duration: config.duration * 0.5,
+            ease: "power2.out"
+        }, 0);
+        tl.to(child.scale, {
+            x: baseScale.x,
+            y: baseScale.y,
+            z: baseScale.z,
+            duration: config.duration,
+            ease: config.easeOut
+        });
+        tl.to(child.position, {
+            x: originalPosition.x,
+            y: originalPosition.y,
+            z: originalPosition.z,
+            duration: config.duration,
+            ease: config.easeOut
+        }, `-=${config.duration}`);
+
+        child.userData.clickTimeline = tl;
+        raycasterObjects.push(child);
     }
 
-    if (child.name.includes("DJ") || child.name.includes("pcbtn")) {//just so
-      let variantKey = null;
-      if (child.name.includes("DJ")) variantKey = "DJ";
-      else if (child.name.includes("pcbtn")) variantKey = "pcbtn";
+    /** ------------------ BUTTON REFERENCES ------------------ **/
+    if (name.includes("workbtn")) workBtn = child;
+    if (name.includes("contactbtn")) contactBtn = child;
+    if (name.includes("aboutbtn")) aboutBtn = child;
+    if (name.includes("legalbtn")) legalBtn = child;
+    if (name.includes("pcbtn")) pcBtn = child;
+    if (name.includes("DJ1")) DJ1 = child;
+    if (name.includes("DJ2")) DJ2 = child;
+    if (name.includes("DJ3")) DJ3 = child;
+    if (name.includes("DJ4")) DJ4 = child;
+    if (name.includes("DJ5")) DJ5 = child;
+    if (name.includes("DJ6")) DJ6 = child;
+    if (name.includes("DJ7")) DJ7 = child;
+    if (name.includes("DJ8")) DJ8 = child;
+    if (name.includes("DJ9")) DJ9 = child;
 
-      const config = clickVariants[variantKey];
+    /** ------------------ HOVER TIMELINES ------------------ **/
+    if (
+        name.includes("DJ") ||
+        name.includes("slider") ||
+        name.includes("pcbtn") ||
+        name.includes("workbtn") ||
+        name.includes("aboutbtn") ||
+        name.includes("contactbtn") ||
+        name.includes("legalbtn") ||
+        name.includes("hover") // keep existing hover triggers
+    ) {
+        // Always use original scale from intro storage if available
+        child.userData.initialScale = child.userData.initialScaleForIntro
+            ? child.userData.initialScaleForIntro.clone()
+            : child.scale.clone();
 
-      const [sx, sy, sz] = config.scale;
-      const [dx, dy, dz] = config.position;
-      const originalPosition = { ...child.position };
+        child.userData.initialPosition = child.position.clone();
+        child.userData.initialRotation = child.rotation.clone();
 
-      const tl = gsap.timeline({ paused: true });
+        let variantKey = "default";
+        if (name.includes("v2")) variantKey = "v2";
+        else if (name.includes("v3")) variantKey = "v3";
+        else if (name.includes("DJ")) variantKey = "DJ";
+        else if (name.includes("Tthings")) variantKey = "Tthings";
+        else if (name.includes("slider")) variantKey = "slider";
+        else if (name.includes("pcbtn")) variantKey = "pcbtn";
 
-      tl.to(child.scale, {
-        x: child.scale.x * sx,
-        y: child.scale.y * sy,
-        z: child.scale.z * sz,
-        duration: config.duration * 0.5,
-        ease: "power2.in"
-      });
+        const config = hoverVariants[variantKey];
+        const [sx, sy, sz] = config.scale;
+        const [px, py, pz] = config.position;
+        const [rx, ry, rz] = config.rotation;
 
-      tl.to(child.position, {
-        x: originalPosition.x + dx,
-        y: originalPosition.y + dy,
-        z: originalPosition.z + dz,
-        duration: config.duration * 0.5,
-        ease: "power2.out"
-      }, 0);
+        const tl = gsap.timeline({ paused: true });
+        tl.to(child.scale, {
+            x: child.userData.initialScale.x * sx,
+            y: child.userData.initialScale.y * sy,
+            z: child.userData.initialScale.z * sz,
+            duration: 0.3,
+            ease: "power2.out"
+        }, 0);
+        tl.to(child.position, {
+            x: child.userData.initialPosition.x + px,
+            y: child.userData.initialPosition.y + py,
+            z: child.userData.initialPosition.z + pz,
+            duration: 0.3,
+            ease: "power2.out"
+        }, 0);
+        tl.to(child.rotation, {
+            x: child.userData.initialRotation.x + rx,
+            y: child.userData.initialRotation.y + ry,
+            z: child.userData.initialRotation.z + rz,
+            duration: 0.3,
+            ease: "power2.out"
+        }, 0);
 
-      tl.to(child.scale, {
-        x: child.scale.x,
-        y: child.scale.y,
-        z: child.scale.z,
-        duration: config.duration,
-        ease: config.easeOut
-      });
-
-      tl.to(child.position, {
-        x: originalPosition.x,
-        y: originalPosition.y,
-        z: originalPosition.z,
-        duration: config.duration,
-        ease: config.easeOut
-      }, `-=${config.duration}`);
-
-      child.userData.clickTimeline = tl;
-      raycasterObjects.push(child);
+        child.userData.hoverTimeline = tl;
     }
 
-    if (child.name.includes("workbtn")) {
-      workBtn = child;
-    }
-    if (child.name.includes("contactbtn")) {
-      contactBtn = child;
-    }
-    if (child.name.includes("aboutbtn")) {
-      aboutBtn = child;
-    }
-    if (child.name.includes("legalbtn")) {
-      legalBtn = child;
-    }
-    if (child.name.includes("pcbtn")) {
-      pcBtn = child;
-    }
-    if (child.name.includes("DJ1")) {
-      DJ1 = child;
-    }
-    if (child.name.includes("DJ2")) {
-      DJ2 = child;
-    }
-    if (child.name.includes("DJ3")) {
-      DJ3 = child;
-    }
-    if (child.name.includes("DJ4")) {
-      DJ4 = child;
-    }
-    if (child.name.includes("DJ5")) {
-      DJ5 = child;
-    }
-    if (child.name.includes("DJ6")) {
-      DJ6 = child;
-    }
-    if (child.name.includes("DJ7")) {
-      DJ7 = child;
-    }
-    if (child.name.includes("DJ8")) {
-      DJ8 = child;
-    }
-    if (child.name.includes("DJ9")) {
-      DJ9 = child;
-    }
-
-    if (child.name.includes("hover")) {//that is alway hoverA in blender
-
-      child.userData.initialScale = child.scale.clone();
-      child.userData.initialPosition = child.position.clone();
-      child.userData.initialRotation = child.rotation.clone();
-
-      // Determine which variant to use
-      let variantKey = "default";
-      if (child.name.includes("v2")) variantKey = "v2";
-      else if (child.name.includes("v3")) variantKey = "v3";
-      else if (child.name.includes("DJ")) variantKey = "DJ";
-      else if (child.name.includes("Tthings")) variantKey = "Tthings";
-      else if (child.name.includes("slider")) variantKey = "slider";
-      else if (child.name.includes("pcbtn")) variantKey = "pcbtn";
-
-      const config = hoverVariants[variantKey];
-      const [sx, sy, sz] = config.scale;
-      const [px, py, pz] = config.position;
-      const [rx, ry, rz] = config.rotation;
-
-      const tl = gsap.timeline({ paused: true });
-
-      tl.to(child.scale, {
-        x: child.userData.initialScale.x * sx,
-        y: child.userData.initialScale.y * sy,
-        z: child.userData.initialScale.z * sz,
-        duration: 0.3,
-        ease: "power2.out"
-      }, 0);
-
-      tl.to(child.position, {
-        x: child.userData.initialPosition.x + px,
-        y: child.userData.initialPosition.y + py,
-        z: child.userData.initialPosition.z + pz,
-        duration: 0.3,
-        ease: "power2.out"
-      }, 0);
-
-      tl.to(child.rotation, {
-        x: child.userData.initialRotation.x + rx,
-        y: child.userData.initialRotation.y + ry,
-        z: child.userData.initialRotation.z + rz,
-        duration: 0.3,
-        ease: "power2.out"
-      }, 0);
-
-      child.userData.hoverTimeline = tl;
-    }
-    switchTheme(isDarkMode ? "night" : "day");// important for default texture mode!
-  });
-  /*   scene.add(glb.scene); */
+    /** ------------------ THEME INIT ------------------ **/
+    switchTheme(isDarkMode ? "night" : "day");
+});
+scene.add(modelRoot);
 });
 
 function playIntroAnimation() {
-  workBtn.scale.set(0, 0, 0);
-  contactBtn.scale.set(0, 0, 0);
-  aboutBtn.scale.set(0, 0, 0);
-  legalBtn.scale.set(0, 0, 0);
-  pcBtn.scale.set(0, 0, 0);
-  sliderMesh.scale.set(0, 0, 0);
-  DJ1.scale.set(0, 0, 0);
-  DJ2.scale.set(0, 0, 0);
-  DJ3.scale.set(0, 0, 0);
-  DJ4.scale.set(0, 0, 0);
-  DJ5.scale.set(0, 0, 0);
-  DJ6.scale.set(0, 0, 0);
-  DJ7.scale.set(0, 0, 0);
-  DJ8.scale.set(0, 0, 0);
-  DJ9.scale.set(0, 0, 0);
-
   const t1 = gsap.timeline({
-    defaults: {
-      duration: 0.8,
-      ease: "back.out(1.8)"
-    }
+    defaults: { duration: 0.8, ease: "back.out(1.8)" }
   });
 
-  t1.to(workBtn.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  })
-    .to(aboutBtn.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-    .to(contactBtn.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-    .to(legalBtn.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6");
-
-  t1.eventCallback("onComplete", () => t2.play());
+  t1.to(workBtn.scale, { x: 1, y: 1, z: 1 })
+    .to(aboutBtn.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(contactBtn.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(legalBtn.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .eventCallback("onComplete", () => t2.play());
 
   const t2 = gsap.timeline({
     paused: true,
-    defaults: {
-      duration: 0.8,
-      ease: "back.out(1.8)"
-    }
+    defaults: { duration: 0.8, ease: "back.out(1.8)" }
   });
 
-  t2.to(pcBtn.scale, {
-    x: 1,
-    y: 1,
-    z: 1
-  })
-    .to(sliderMesh.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-    .to(DJ1.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-    .to(DJ2.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-    .to(DJ3.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-
-    .to(DJ4.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-
-    .to(DJ5.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-
-    .to(DJ6.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-
-    .to(DJ7.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-
-    .to(DJ8.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
-
-    .to(DJ9.scale, {
-      x: 1,
-      y: 1,
-      z: 1
-    }, "-=0.6")
+  t2.to(pcBtn.scale, { x: 1, y: 1, z: 1 })
+    .to(sliderMesh.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ1.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ2.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ3.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ4.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ5.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ6.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ7.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ8.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+    .to(DJ9.scale, { x: 1, y: 1, z: 1 }, "-=0.6");
 }
 
 const gridSize = 100;
@@ -1361,17 +1312,17 @@ const render = () => {
   }
 
   // If monitor is showing texture index 3, make pcBtn red
-if (pcBtn && pcBtn.material) {
-  if (currentIndex === 3) {
-    pcBtn.material.color.setRGB(4, 2, 2); // red
-  } else {
-    // Store original color if not stored yet
-    if (!pcBtn.userData.originalColor) {
-      pcBtn.userData.originalColor = pcBtn.material.color.clone();
+  if (pcBtn && pcBtn.material) {
+    if (currentIndex === 3) {
+      pcBtn.material.color.setRGB(4, 2, 2); // red
+    } else {
+      // Store original color if not stored yet
+      if (!pcBtn.userData.originalColor) {
+        pcBtn.userData.originalColor = pcBtn.material.color.clone();
+      }
+      pcBtn.material.color.copy(pcBtn.userData.originalColor);
     }
-    pcBtn.material.color.copy(pcBtn.userData.originalColor);
   }
-}
 
   if (currentCameraIndex === 2 && !cameraIndex2Effect) {
     cameraIndex2Effect = true;
@@ -1387,34 +1338,34 @@ if (pcBtn && pcBtn.material) {
       });
     }
 
-// Glow for camera index 2 (skip pcBtn if already glowing from currentIndex 3)
-const glowTargets = [
-  sliderMesh,
-  pcBtn.userData.glowActive ? null : pcBtn, // skip if already glowing
-  DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9
-].filter(Boolean); // remove null
+    // Glow for camera index 2 (skip pcBtn if already glowing from currentIndex 3)
+    const glowTargets = [
+      sliderMesh,
+      pcBtn.userData.glowActive ? null : pcBtn, // skip if already glowing
+      DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9
+    ].filter(Boolean); // remove null
 
-glowTargets.forEach(obj => {
-  if (!obj?.material) return;
+    glowTargets.forEach(obj => {
+      if (!obj?.material) return;
 
-  if (!obj.userData.originalColor) {
-    obj.userData.originalColor = obj.material.color.clone();
-  }
+      if (!obj.userData.originalColor) {
+        obj.userData.originalColor = obj.material.color.clone();
+      }
 
-  let targetColor = obj.name.includes("slider")
-    ? { r: 3, g: 3, b: 3 }
-    : { r: 1.5, g: 1.5, b: 1.5 };
+      let targetColor = obj.name.includes("slider")
+        ? { r: 3, g: 3, b: 3 }
+        : { r: 1.5, g: 1.5, b: 1.5 };
 
-  gsap.to(obj.material.color, {
-    ...targetColor,
-    duration: 0.7,
-    yoyo: true,
-    repeat: 1,
-    onComplete: () => {
-      obj.material.color.copy(obj.userData.originalColor);
-    }
-  });
-});
+      gsap.to(obj.material.color, {
+        ...targetColor,
+        duration: 0.7,
+        yoyo: true,
+        repeat: 1,
+        onComplete: () => {
+          obj.material.color.copy(obj.userData.originalColor);
+        }
+      });
+    });
 
     // Reset the trigger after ~1s to allow reactivation if desired (optional)
     setTimeout(() => {
