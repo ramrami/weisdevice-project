@@ -144,6 +144,13 @@ body {
 
 .nt-button-mute {
   cursor: pointer;
+  background-color: transparent;
+  color: var(--color-base-black);
+  border: none;
+  font-family: 'Pixellari', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  opacity: 80%;
 }
 
 
