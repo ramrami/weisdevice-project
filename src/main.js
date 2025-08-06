@@ -3,6 +3,7 @@ import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import gsap from "gsap";
+import { Howl } from 'howler';
 
 import monitorVertexShader from "./shaders/monitorVertexShader.glsl?raw";
 import monitorFragmentShader from "./shaders/monitorFragmentShader.glsl?raw";
@@ -159,14 +160,9 @@ enterButton.addEventListener(
   (e) => {
     touchHappened = true;
     e.preventDefault();
-
     backgroundMusic.play();
-    backgroundMusic.volume = 0.4;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-
-    monitorAnimStarted = true;
-
     playLoadingScreenExit(true);
   },
   { passive: false }
@@ -177,14 +173,9 @@ enterButton.addEventListener(
   (e) => {
     if (touchHappened) return;
     e.preventDefault();
-
     backgroundMusic.play();
-    backgroundMusic.volume = 0.4;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-
-    monitorAnimStarted = true;
-
     playLoadingScreenExit(true);
   },
   { passive: false }
@@ -195,11 +186,8 @@ enterButtonMute.addEventListener(
   (e) => {
     touchHappened = true;
     e.preventDefault();
-
     musicPlaying = false;
-    monitorAnimStarted = true;
-
-        playLoadingScreenExit(false);
+    playLoadingScreenExit(false);
   },
   { passive: false }
 );
@@ -209,12 +197,8 @@ enterButtonMute.addEventListener(
   (e) => {
     if (touchHappened) return;
     e.preventDefault();
-
     musicPlaying = false;
-    monitorAnimStarted = true;
-
-
-        playLoadingScreenExit(false);
+    playLoadingScreenExit(false);
   },
   { passive: false }
 );
@@ -294,15 +278,46 @@ themeToggleButton.addEventListener(
 );
 
 /**  -------------------------- music -------------------------- */
-const djAudio = new Audio();
-djAudio.volume = 0.7;
-djAudio.preload = "auto"; // optional, helps on slower networks
+const djKeyMap = {
+  DJ1: "DJ1",
+  DJ2: "DJ2",
+  DJ3: "DJ3",
+  DJ4: "DJ4",
+  DJ5: "DJ5",
+  DJ6: "DJ6",
+  DJ7: "DJ7",
+  DJ8: "DJ8",
+  DJ9: "DJ9",
+};
 
+const djSounds = {};
+
+Object.values(djKeyMap).forEach((soundKey) => {
+  djSounds[soundKey] = new Howl({
+    src: [`/audio/DJ/${soundKey}.ogg`],
+    preload: true,
+    volume: 0.7,
+  });
+});
 // UI button sounds
-const pcButtonMusic = new Audio('/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg');
+const pcButtonMusic = new Howl({
+  src: ['/audio/sound/403007__inspectorj__ui-confirmation-alert-a2.ogg'],
+  volume: 0.7,
+  preload: true
+});
 
-const sliderMusic = new Audio('/audio/sound/770169__j1cr0wav3__itemcollect.ogg');
-const backgroundMusic = document.getElementById("bg-music");
+const sliderMusic = new Howl({
+  src: ['/audio/sound/770169__j1cr0wav3__itemcollect.ogg'],
+  volume: 0.7,
+  preload: true
+});
+
+const backgroundMusic = new Howl ({
+  src: ["/audio/falselyclaimed-bit-beats-3-168873.ogg"],
+  loop: true,
+  volume: 0.4
+});
+
 const musicIcon = document.getElementById("music-icon");
 const musicToggleBtn = document.getElementById("music-toggle");
 
@@ -316,7 +331,6 @@ musicToggleBtn.addEventListener(
 
     if (musicPlaying) {
       backgroundMusic.play();
-      backgroundMusic.volume = 0.4;
       musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     } else {
       backgroundMusic.pause();
@@ -339,7 +353,6 @@ musicToggleBtn.addEventListener(
 
     if (musicPlaying) {
       backgroundMusic.play();
-      backgroundMusic.volume = 0.4;
       musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     } else {
       backgroundMusic.pause();
@@ -630,20 +643,9 @@ function handleRaycasterInteraction() {
   }
 
   const match = clickedObj.name.match(/DJ[1-9]/);
-  if (match) {
-    const djKey = match[0];
-    const src = `/audio/DJ/${djKey}.ogg`;
-
-    if (musicPlaying) {
-      // Only change src if needed
-      if (!djAudio.src.endsWith(src)) {
-        djAudio.src = src;
-      }
-
-      djAudio.currentTime = 0;
-      djAudio.play();
-    }
-  }
+if (match && musicPlaying) {
+  djSounds[match[0]].play();
+}
   //--------------pc btn-----------------//
   if (clickedObj.name.includes("pcbtn")) {
 
