@@ -149,7 +149,6 @@ function playLoadingScreenExit(withSound = true) {
 
   if (withSound) {
     backgroundMusic.play();
-    backgroundMusic.volume = 0.4;
     musicPlaying = true;
     musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
   }
@@ -160,9 +159,6 @@ enterButton.addEventListener(
   (e) => {
     touchHappened = true;
     e.preventDefault();
-    backgroundMusic.play();
-    musicPlaying = true;
-    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     playLoadingScreenExit(true);
   },
   { passive: false }
@@ -173,9 +169,6 @@ enterButton.addEventListener(
   (e) => {
     if (touchHappened) return;
     e.preventDefault();
-    backgroundMusic.play();
-    musicPlaying = true;
-    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     playLoadingScreenExit(true);
   },
   { passive: false }
@@ -228,12 +221,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 /**  -------------------------- theme toggle -------------------------- */
-const themeToggleButton = document.getElementById("theme-toggle");
+const themeToggleBtn = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
 
 let isDarkMode = false;
 
-themeToggleButton.addEventListener(
+themeToggleBtn.addEventListener(
   "touchend",
   (e) => {
     touchHappened = true;
@@ -255,7 +248,7 @@ themeToggleButton.addEventListener(
   { passive: false }
 );
 
-themeToggleButton.addEventListener(
+themeToggleBtn.addEventListener(
   "click",
   (e) => {
     if (touchHappened) return;
@@ -336,9 +329,6 @@ musicToggleBtn.addEventListener(
       backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
-
-    djAudio.muted = !musicPlaying;
-    if (!musicPlaying) djAudio.pause();
   },
   { passive: false }
 );
@@ -358,13 +348,9 @@ musicToggleBtn.addEventListener(
       backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
-
-    djAudio.muted = !musicPlaying;
-    if (!musicPlaying) djAudio.pause();
   },
   { passive: false }
 );
-
 /**  -------------------------- modal -------------------------- */
 const experience = document.getElementById("experience");
 
@@ -376,7 +362,7 @@ const showModal = (modal) => {
   experience.classList.add("blur");
   overlay.style.display = "block";
   musicToggleBtn.classList.add("hidden");
-  themeToggleButton.classList.add("hidden");
+  themeToggleBtn.classList.add("hidden");
   cameraToggleBtn.classList.add("hidden");
 
   raycasterObjects.forEach(obj => {
@@ -409,7 +395,7 @@ const hideModal = (modal) => {
   experience.classList.remove("blur");
   overlay.style.display = "none";
   musicToggleBtn.classList.remove("hidden");
-  themeToggleButton.classList.remove("hidden");
+  themeToggleBtn.classList.remove("hidden");
   cameraToggleBtn.classList.remove("hidden");
 
   raycasterObjects.forEach(obj => {
@@ -514,11 +500,6 @@ function moveCameraTo(position, target) {
     onUpdate: () => controls.update()
   });
 }
-
-let cameraIndex2Effect = false;
-
-let loopGlowTimeline = null;
-let isLoopingGlowActive = false;
 
 /**  -------------------------- Camera & Renderer -------------------------- */
 const camera = new THREE.PerspectiveCamera(
@@ -660,7 +641,6 @@ if (match && musicPlaying) {
       uniforms.uMix.value = 0.0; // Show only Texture A
 
       if (musicPlaying) {
-
         pcButtonMusic.currentTime = 0;
         pcButtonMusic.play();
       }
@@ -673,23 +653,23 @@ if (match && musicPlaying) {
       sliderMusic.play();
     }
 
-    const orig = sliderMesh.userData.originalPosition;
+    const sliderOrigPosition = sliderMesh.userData.originalPosition;
 
     if (sliderIsAtOriginal) {
       // Move to offset position
       gsap.to(sliderMesh.position, {
-        x: orig.x + sliderOffset.x,
-        y: orig.y + sliderOffset.y,
-        z: orig.z + sliderOffset.z,
+        x: sliderOrigPosition.x + sliderOffset.x,
+        y: sliderOrigPosition.y + sliderOffset.y,
+        z: sliderOrigPosition.z + sliderOffset.z,
         duration: 0.8,
         ease: "power2.inOut"
       });
     } else {
       // Move back to original
       gsap.to(sliderMesh.position, {
-        x: orig.x,
-        y: orig.y,
-        z: orig.z,
+        x: sliderOrigPosition.x,
+        y: sliderOrigPosition.y,
+        z: sliderOrigPosition.z,
         duration: 0.8,
         ease: "power2.inOut"
       });
@@ -1225,6 +1205,10 @@ function setCursor(style) {
     currentCursor = style;
   }
 }
+
+let cameraIndex2Effect = false;
+let loopGlowTimeline = null;
+let isLoopingGlowActive = false;
 
 const render = () => {
   controls.update();
