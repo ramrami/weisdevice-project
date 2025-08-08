@@ -308,7 +308,7 @@ const sliderMusic = new Howl({
 const backgroundMusic = new Howl ({
   src: ["/audio/falselyclaimed-bit-beats-3-168873.ogg"],
   loop: true,
-  volume: 0.4
+  volume: 0
 });
 
 const musicIcon = document.getElementById("music-icon");
