@@ -58,6 +58,7 @@ const modals = {
   legal: document.querySelector(".modal.legal")
 };
 
+let introFinished = false;
 /**  -------------------------- loadingscreen -------------------------- */
 const loadingText = document.getElementById("loading-text");
 const progressBar = document.getElementById("progress-bar");
@@ -147,11 +148,13 @@ function playLoadingScreenExit(withSound = true) {
     repeat: 1
   }, "-=0.8");
 
-  if (withSound) {
+if (withSound) {
+  if (!backgroundMusic.playing()) {
     backgroundMusic.play();
-    musicPlaying = true;
-    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
   }
+  musicPlaying = true;
+  musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
+}
 }
 
 enterButton.addEventListener(
@@ -1056,6 +1059,7 @@ scene.add(modelRoot);
 });
 
 function playIntroAnimation() {
+  introFinished = false;
   const t1 = gsap.timeline({
     defaults: { duration: 0.8, ease: "back.out(1.8)" }
   });
@@ -1081,7 +1085,10 @@ function playIntroAnimation() {
     .to(DJ6.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
     .to(DJ7.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
     .to(DJ8.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
-    .to(DJ9.scale, { x: 1, y: 1, z: 1 }, "-=0.6");
+    .to(DJ9.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
+     .eventCallback("onComplete", () => {
+    introFinished = true;
+  });
 }
 
 const gridSize = 100;
@@ -1250,7 +1257,7 @@ const render = () => {
       isHoverA = hoveredObject.name.includes("hover");
     }
 
-    if (isHoverA && !hoveredObject.userData.hoverDisabled) {
+    if (introFinished && isHoverA && !hoveredObject.userData.hoverDisabled) {
       if (hoveredObject !== currentHoveredObject) {
 
         if (currentHoveredObject && currentHoveredObject.userData.hoverTimeline) {
