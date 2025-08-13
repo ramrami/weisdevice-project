@@ -122,39 +122,39 @@ function playLoadingScreenExit(withSound = true) {
     duration: 0.4,
     ease: "power2.out"
   })
-  .to(loadingScreen, {
-    rotationX: -5,
-    rotationY: 5,
-    scale: 0.95,
-    y: "1vh",
-    duration: 0.3,
-    ease: "power1.inOut"
-  })
-  .to(loadingScreen, {
-    rotationX: 70,
-    rotationY: -25,
-    scale: 0.05,
-    x: "20vw", // give it a nice curve to the side
-    y: "-250vh",
-    opacity: 0,
-    duration: 1.2,
-    ease: "expo.in"
-  })
-  .to(".white-overlay", { // soft iris-like flash
-    opacity: 0.7,
-    duration: 0.35,
-    ease: "sine.inOut",
-    yoyo: true,
-    repeat: 1
-  }, "-=0.8");
+    .to(loadingScreen, {
+      rotationX: -5,
+      rotationY: 5,
+      scale: 0.95,
+      y: "1vh",
+      duration: 0.3,
+      ease: "power1.inOut"
+    })
+    .to(loadingScreen, {
+      rotationX: 70,
+      rotationY: -25,
+      scale: 0.05,
+      x: "20vw", // give it a nice curve to the side
+      y: "-250vh",
+      opacity: 0,
+      duration: 1.2,
+      ease: "expo.in"
+    })
+    .to(".white-overlay", { // soft iris-like flash
+      opacity: 0.7,
+      duration: 0.35,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: 1
+    }, "-=0.8");
 
-if (withSound) {
-  if (!backgroundMusic.playing()) {
-    backgroundMusic.play();
+  if (withSound) {
+    if (!backgroundMusic.playing()) {
+      backgroundMusic.play();
+    }
+    musicPlaying = true;
+    musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
   }
-  musicPlaying = true;
-  musicIcon.src = "/icon/music_note_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
-}
 }
 
 enterButton.addEventListener(
@@ -238,6 +238,11 @@ themeToggleBtn.addEventListener(
     isDarkMode = !isDarkMode;
     switchTheme(isDarkMode ? "night" : "day");
 
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
+
     if (isDarkMode) {
       document.documentElement.setAttribute("data-theme", "night");
       themeIcon.src = "/icon/dark_mode_124dp_3B3935_FILL0_wght700_GRAD200_opsz48.svg";
@@ -259,6 +264,11 @@ themeToggleBtn.addEventListener(
 
     isDarkMode = !isDarkMode;
     switchTheme(isDarkMode ? "night" : "day");
+
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
 
     if (isDarkMode) {
       document.documentElement.setAttribute("data-theme", "night");
@@ -303,12 +313,18 @@ const pcButtonMusic = new Howl({
 });
 
 const sliderMusic = new Howl({
-  src: ['/audio/sound/770169__j1cr0wav3__itemcollect.ogg'],
+  src: ['/audio/sound/540478__breviceps__metallic-file-select.ogg'],
   volume: 0.7,
   preload: true
 });
 
-const backgroundMusic = new Howl ({
+const uiMusic = new Howl({
+  src: ['/audio/sound/475188__sheyvan__button-clicking-1.ogg'],
+  volume: 0.7,
+  preload: true
+})
+
+const backgroundMusic = new Howl({
   src: ["/audio/falselyclaimed-bit-beats-3-168873.ogg"],
   loop: true,
   volume: 0.4
@@ -425,6 +441,11 @@ overlay.addEventListener(
   (e) => {
     touchHappened = true;
     e.preventDefault();
+
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
     const modal = document.querySelector('.modal:not(.hidden)');
     if (isModalOpen && modal) hideModal(modal);
   },
@@ -436,6 +457,11 @@ overlay.addEventListener(
   (e) => {
     if (touchHappened) return;
     e.preventDefault();
+
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
     const modal = document.querySelector('.modal:not(.hidden)');
     if (isModalOpen && modal) hideModal(modal);
   },
@@ -469,7 +495,10 @@ const cameraToggleBtn = document.getElementById("camera-toggle");
 function switchCameraView() {
   const { position, target } = cameraPositions[currentCameraIndex];
   moveCameraTo(position, target);
-
+  if (musicPlaying) {
+    uiMusic.currentTime = 0;
+    uiMusic.play();
+  }
   // Advance index for next click
   currentCameraIndex = (currentCameraIndex + 1) % cameraPositions.length;
 }
@@ -582,12 +611,28 @@ function handleRaycasterInteraction() {
 
     if (object.name.includes("workbtn")) {
       showModal(modals.work);
+      if (musicPlaying) {
+        uiMusic.currentTime = 0;
+        uiMusic.play();
+      }
     } else if (object.name.includes("aboutbtn")) {
       showModal(modals.about);
+      if (musicPlaying) {
+        uiMusic.currentTime = 0;
+        uiMusic.play();
+      }
     } else if (object.name.includes("contactbtn")) {
       showModal(modals.contact);
+      if (musicPlaying) {
+        uiMusic.currentTime = 0;
+        uiMusic.play();
+      }
     } else if (object.name.includes("legalbtn")) {
       showModal(modals.legal);
+      if (musicPlaying) {
+        uiMusic.currentTime = 0;
+        uiMusic.play();
+      }
     }
   }
 
@@ -627,9 +672,9 @@ function handleRaycasterInteraction() {
   }
 
   const match = clickedObj.name.match(/DJ[1-9]/);
-if (match && musicPlaying) {
-  djSounds[match[0]].play();
-}
+  if (match && musicPlaying) {
+    djSounds[match[0]].play();
+  }
   //--------------pc btn-----------------//
   if (clickedObj.name.includes("pcbtn")) {
 
@@ -718,6 +763,10 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
     touchHappened = true;
     const modal = e.target.closest(".modal");
     hideModal(modal);
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
   },
     { passive: false }
   );
@@ -726,6 +775,10 @@ document.querySelectorAll(".modal-exit-button").forEach((button) => {
     if (touchHappened) return;
     const modal = e.target.closest(".modal");
     hideModal(modal);
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
   },
     { passive: false }
   );
@@ -837,64 +890,64 @@ const clickVariants = {
 
 loader.load("/models/desert.glb", (glb) => {
   const modelRoot = glb.scene;
-  
+
   scene.userData.modelRoot = modelRoot;
   const envMap = new THREE.CubeTextureLoader()
     .setPath('/textures/skymap/')
     .load(['px.webp', 'nx.webp', 'py.webp', 'ny.webp', 'pz.webp', 'nz.webp']);
   scene.environment = envMap;
 
-glb.scene.traverse((child) => {
+  glb.scene.traverse((child) => {
     if (!child.isMesh) return;
     const name = child.name;
 
     /** ------------------ TEXTURE SETUP ------------------ **/
     Object.keys(textureMap).forEach((key) => {
-        if (name.includes(key)) {
-            child.material = new THREE.MeshBasicMaterial({
-                map: loadedTextures.day[key],
-            });
-            child.material.map.minFilter = THREE.LinearFilter;
-            child.userData.textureKey = key;
-        }
+      if (name.includes(key)) {
+        child.material = new THREE.MeshBasicMaterial({
+          map: loadedTextures.day[key],
+        });
+        child.material.map.minFilter = THREE.LinearFilter;
+        child.userData.textureKey = key;
+      }
     });
 
     if (name.includes("pcwei")) {
-        const key = "pcwei";
-        child.material = new THREE.MeshStandardMaterial({
-            map: loadedTextures.day[key],
-            metalness: 0.9,
-            roughness: 0.2,
-            envMap: envMap,
-            envMapIntensity: 3.0,
-        });
-        child.userData.textureKey = key;
+      const key = "pcwei";
+      child.material = new THREE.MeshStandardMaterial({
+        map: loadedTextures.day[key],
+        metalness: 0.9,
+        roughness: 0.2,
+        envMap: envMap,
+        envMapIntensity: 3.0,
+      });
+      child.userData.textureKey = key;
     }
 
     /** ------------------ SLIDER ------------------ **/
     if (name.includes("slider")) {
-        sliderMesh = child;
-        child.userData.originalPosition = child.position.clone();
-        raycasterObjects.push(child);
+      sliderMesh = child;
+      child.userData.originalPosition = child.position.clone();
+      raycasterObjects.push(child);
     }
 
     /** ------------------ ENV + CLOUDS ------------------ **/
     if (name.includes("cloud")) {
-        const key = "other";
-        child.material = new THREE.MeshBasicMaterial({
-            map: loadedTextures.day[key],
-            transparent: true,
-            opacity: 0.7,
-            depthWrite: false
-        });
-        child.userData.textureKey = key;
-        cloud.push({
-            mesh: child,
-            baseY: child.position.y,
-            floatSpeed: Math.random() * 0.1 + 0.05,
-            floatOffset: Math.random() * Math.PI * 2,
-            rotationSpeed: Math.random() * 0.0002 + 0.00005
-        });
+      const key = "other";
+      child.material = new THREE.MeshBasicMaterial({
+        map: loadedTextures.day[key],
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false
+      });
+      child.userData.textureKey = key;
+      cloud.push({
+        mesh: child,
+        baseY: child.position.y,
+        floatSpeed: Math.random() * 0.1 + 0.05,
+        floatOffset: Math.random() * Math.PI * 2,
+        rotationSpeed: Math.random() * 0.0002 + 0.00005
+      });
     }
 
     if (name.includes("roA")) rotAObjects.push({ mesh: child });
@@ -903,79 +956,79 @@ glb.scene.traverse((child) => {
 
     /** ------------------ MONITOR ------------------ **/
     if (name.includes("monitor")) {
-        monitorMesh = child;
-        child.material = new THREE.ShaderMaterial({
-            uniforms: {
-                uTextureA: { value: monitor_texture[currentIndex] },
-                uTextureB: { value: monitor_texture[nextIndex] },
-                uBrightness: { value: 0.0 },
-                uContrast: { value: 0.0 },
-                uMix: { value: 0.0 },
-                uAberrationAmount: { value: 0.01 }
-            },
-            vertexShader: monitorVertexShader,
-            fragmentShader: monitorFragmentShader,
-        });
+      monitorMesh = child;
+      child.material = new THREE.ShaderMaterial({
+        uniforms: {
+          uTextureA: { value: monitor_texture[currentIndex] },
+          uTextureB: { value: monitor_texture[nextIndex] },
+          uBrightness: { value: 0.0 },
+          uContrast: { value: 0.0 },
+          uMix: { value: 0.0 },
+          uAberrationAmount: { value: 0.01 }
+        },
+        vertexShader: monitorVertexShader,
+        fragmentShader: monitorFragmentShader,
+      });
     }
 
     /** ------------------ INTRO SCALE FIX ------------------ **/
     const needsIntroHide =
-        name.includes("DJ") ||
-        name.includes("slider") ||
-        name.includes("pcbtn") ||
-        name.includes("workbtn") ||
-        name.includes("aboutbtn") ||
-        name.includes("contactbtn") ||
-        name.includes("legalbtn");
+      name.includes("DJ") ||
+      name.includes("slider") ||
+      name.includes("pcbtn") ||
+      name.includes("workbtn") ||
+      name.includes("aboutbtn") ||
+      name.includes("contactbtn") ||
+      name.includes("legalbtn");
 
     if (needsIntroHide) {
-        // Store intended scale before hiding
-        child.userData.initialScaleForIntro = child.scale.clone();
-        // Hide for intro animation
-        child.scale.set(0, 0, 0);
+      // Store intended scale before hiding
+      child.userData.initialScaleForIntro = child.scale.clone();
+      // Hide for intro animation
+      child.scale.set(0, 0, 0);
     }
 
     /** ------------------ CLICK TIMELINES ------------------ **/
     if (name.includes("DJ") || name.includes("pcbtn")) {
-        let variantKey = name.includes("DJ") ? "DJ" : "pcbtn";
-        const config = clickVariants[variantKey];
-        const baseScale = child.userData.initialScaleForIntro || child.scale;
-        const [sx, sy, sz] = config.scale;
-        const [dx, dy, dz] = config.position;
-        const originalPosition = child.position.clone();
+      let variantKey = name.includes("DJ") ? "DJ" : "pcbtn";
+      const config = clickVariants[variantKey];
+      const baseScale = child.userData.initialScaleForIntro || child.scale;
+      const [sx, sy, sz] = config.scale;
+      const [dx, dy, dz] = config.position;
+      const originalPosition = child.position.clone();
 
-        const tl = gsap.timeline({ paused: true });
-        tl.to(child.scale, {
-            x: baseScale.x * sx,
-            y: baseScale.y * sy,
-            z: baseScale.z * sz,
-            duration: config.duration * 0.5,
-            ease: "power2.in"
-        });
-        tl.to(child.position, {
-            x: originalPosition.x + dx,
-            y: originalPosition.y + dy,
-            z: originalPosition.z + dz,
-            duration: config.duration * 0.5,
-            ease: "power2.out"
-        }, 0);
-        tl.to(child.scale, {
-            x: baseScale.x,
-            y: baseScale.y,
-            z: baseScale.z,
-            duration: config.duration,
-            ease: config.easeOut
-        });
-        tl.to(child.position, {
-            x: originalPosition.x,
-            y: originalPosition.y,
-            z: originalPosition.z,
-            duration: config.duration,
-            ease: config.easeOut
-        }, `-=${config.duration}`);
+      const tl = gsap.timeline({ paused: true });
+      tl.to(child.scale, {
+        x: baseScale.x * sx,
+        y: baseScale.y * sy,
+        z: baseScale.z * sz,
+        duration: config.duration * 0.5,
+        ease: "power2.in"
+      });
+      tl.to(child.position, {
+        x: originalPosition.x + dx,
+        y: originalPosition.y + dy,
+        z: originalPosition.z + dz,
+        duration: config.duration * 0.5,
+        ease: "power2.out"
+      }, 0);
+      tl.to(child.scale, {
+        x: baseScale.x,
+        y: baseScale.y,
+        z: baseScale.z,
+        duration: config.duration,
+        ease: config.easeOut
+      });
+      tl.to(child.position, {
+        x: originalPosition.x,
+        y: originalPosition.y,
+        z: originalPosition.z,
+        duration: config.duration,
+        ease: config.easeOut
+      }, `-=${config.duration}`);
 
-        child.userData.clickTimeline = tl;
-        raycasterObjects.push(child);
+      child.userData.clickTimeline = tl;
+      raycasterObjects.push(child);
     }
 
     /** ------------------ BUTTON REFERENCES ------------------ **/
@@ -996,66 +1049,66 @@ glb.scene.traverse((child) => {
 
     /** ------------------ HOVER TIMELINES ------------------ **/
     if (
-        name.includes("DJ") ||
-        name.includes("slider") ||
-        name.includes("pcbtn") ||
-        name.includes("workbtn") ||
-        name.includes("aboutbtn") ||
-        name.includes("contactbtn") ||
-        name.includes("legalbtn") ||
-        name.includes("hover") // keep existing hover triggers
+      name.includes("DJ") ||
+      name.includes("slider") ||
+      name.includes("pcbtn") ||
+      name.includes("workbtn") ||
+      name.includes("aboutbtn") ||
+      name.includes("contactbtn") ||
+      name.includes("legalbtn") ||
+      name.includes("hover") // keep existing hover triggers
     ) {
-        // Always use original scale from intro storage if available
-        child.userData.initialScale = child.userData.initialScaleForIntro
-            ? child.userData.initialScaleForIntro.clone()
-            : child.scale.clone();
+      // Always use original scale from intro storage if available
+      child.userData.initialScale = child.userData.initialScaleForIntro
+        ? child.userData.initialScaleForIntro.clone()
+        : child.scale.clone();
 
-        child.userData.initialPosition = child.position.clone();
-        child.userData.initialRotation = child.rotation.clone();
+      child.userData.initialPosition = child.position.clone();
+      child.userData.initialRotation = child.rotation.clone();
 
-        let variantKey = "default";
-        if (name.includes("v2")) variantKey = "v2";
-        else if (name.includes("v3")) variantKey = "v3";
-        else if (name.includes("DJ")) variantKey = "DJ";
-        else if (name.includes("Tthings")) variantKey = "Tthings";
-        else if (name.includes("slider")) variantKey = "slider";
-        else if (name.includes("pcbtn")) variantKey = "pcbtn";
+      let variantKey = "default";
+      if (name.includes("v2")) variantKey = "v2";
+      else if (name.includes("v3")) variantKey = "v3";
+      else if (name.includes("DJ")) variantKey = "DJ";
+      else if (name.includes("Tthings")) variantKey = "Tthings";
+      else if (name.includes("slider")) variantKey = "slider";
+      else if (name.includes("pcbtn")) variantKey = "pcbtn";
 
-        const config = hoverVariants[variantKey];
-        const [sx, sy, sz] = config.scale;
-        const [px, py, pz] = config.position;
-        const [rx, ry, rz] = config.rotation;
+      const config = hoverVariants[variantKey];
+      const [sx, sy, sz] = config.scale;
+      const [px, py, pz] = config.position;
+      const [rx, ry, rz] = config.rotation;
 
-        const tl = gsap.timeline({ paused: true });
-        tl.to(child.scale, {
-            x: child.userData.initialScale.x * sx,
-            y: child.userData.initialScale.y * sy,
-            z: child.userData.initialScale.z * sz,
-            duration: 0.3,
-            ease: "power2.out"
-        }, 0);
-        tl.to(child.position, {
-            x: child.userData.initialPosition.x + px,
-            y: child.userData.initialPosition.y + py,
-            z: child.userData.initialPosition.z + pz,
-            duration: 0.3,
-            ease: "power2.out"
-        }, 0);
-        tl.to(child.rotation, {
-            x: child.userData.initialRotation.x + rx,
-            y: child.userData.initialRotation.y + ry,
-            z: child.userData.initialRotation.z + rz,
-            duration: 0.3,
-            ease: "power2.out"
-        }, 0);
+      const tl = gsap.timeline({ paused: true });
+      tl.to(child.scale, {
+        x: child.userData.initialScale.x * sx,
+        y: child.userData.initialScale.y * sy,
+        z: child.userData.initialScale.z * sz,
+        duration: 0.3,
+        ease: "power2.out"
+      }, 0);
+      tl.to(child.position, {
+        x: child.userData.initialPosition.x + px,
+        y: child.userData.initialPosition.y + py,
+        z: child.userData.initialPosition.z + pz,
+        duration: 0.3,
+        ease: "power2.out"
+      }, 0);
+      tl.to(child.rotation, {
+        x: child.userData.initialRotation.x + rx,
+        y: child.userData.initialRotation.y + ry,
+        z: child.userData.initialRotation.z + rz,
+        duration: 0.3,
+        ease: "power2.out"
+      }, 0);
 
-        child.userData.hoverTimeline = tl;
+      child.userData.hoverTimeline = tl;
     }
 
     /** ------------------ THEME INIT ------------------ **/
     switchTheme(isDarkMode ? "night" : "day");
-});
-scene.add(modelRoot);
+  });
+  scene.add(modelRoot);
 });
 
 function playIntroAnimation() {
@@ -1086,9 +1139,9 @@ function playIntroAnimation() {
     .to(DJ7.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
     .to(DJ8.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
     .to(DJ9.scale, { x: 1, y: 1, z: 1 }, "-=0.6")
-     .eventCallback("onComplete", () => {
-    introFinished = true;
-  });
+    .eventCallback("onComplete", () => {
+      introFinished = true;
+    });
 }
 
 const gridSize = 100;

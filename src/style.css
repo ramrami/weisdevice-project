@@ -160,6 +160,7 @@ body {
 
 #tip-text {
   margin: 1rem;
+  cursor: auto;
 }
 
 
@@ -423,6 +424,7 @@ body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   max-height: calc(80vh - 3rem);
+  cursor: auto;
 }
 
 .image-list-inner {
