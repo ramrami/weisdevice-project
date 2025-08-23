@@ -1125,7 +1125,7 @@ function playIntroAnimation() {
 
   const t2 = gsap.timeline({
     paused: true,
-    defaults: { duration: 0.8, ease: "back.out(1.8)" }
+    defaults: { duration: 0.7, ease: "back.out(1.8)" }
   });
 
   t2.to(pcBtn.scale, { x: 1, y: 1, z: 1 })
