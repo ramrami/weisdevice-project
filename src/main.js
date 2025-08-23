@@ -1101,14 +1101,12 @@ loader.load("/models/desert.glb", (glb) => {
         duration: 0.3,
         ease: "power2.out"
       }, 0);
-
       child.userData.hoverTimeline = tl;
     }
-
-    /** ------------------ THEME INIT ------------------ **/
-    switchTheme(isDarkMode ? "night" : "day");
   });
   scene.add(modelRoot);
+      /** ------------------ THEME INIT ------------------ **/
+    switchTheme(isDarkMode ? "night" : "day");
 });
 
 function playIntroAnimation() {
