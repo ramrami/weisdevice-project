@@ -541,6 +541,11 @@ const camera = new THREE.PerspectiveCamera(
   200
 );
 
+if (!canvas) {
+  canvas = document.createElement("canvas");
+  document.getElementById("experience")?.appendChild(canvas);
+}
+
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   antialias: true,
@@ -950,7 +955,7 @@ loader.load("/models/desert.glb", (glb) => {
       });
     }
 
-    if (name.includes("roA")) rotAObjects.push({ mesh: child });
+    if (name.includes("roA")) rotAObjects.push({ mesh: child });//yes weird name
     if (name.includes("raB")) rotBObjects.push({ mesh: child });
     if (name.includes("raycaster")) raycasterObjects.push(child);
 
