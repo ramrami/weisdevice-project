@@ -300,6 +300,17 @@ body {
   display: none !important;
 }
 
+/* in your CSS */
+@keyframes glowPulse {
+  0%   { box-shadow: 0 0 5px 2px var(--color-accent-yellow); }
+  50%  { box-shadow: 0 0 15px 4px var(--color-accent-yellow); }
+  100% { box-shadow: 0 0 5px 2px var(--color-accent-yellow); }
+}
+
+.glow {
+  animation: glowPulse 1s infinite ease-in-out;
+}
+
 .overlay {
   height: 100vh;
   width: 100vw;
