@@ -1067,6 +1067,7 @@ loader.load("/models/desert.glb", (glb) => {
     /** ------------------ MONITOR ------------------ **/
     if (name.includes("monitor")) {
       monitorMesh = child;
+      child.userData.isMonitor = true; 
       child.material = new THREE.ShaderMaterial({
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
@@ -1492,6 +1493,31 @@ function leaveHover(obj) {
   obj.userData.hoverTimeline.reverse();
 }
 
+let monitorHoverActive = false;
+let monitorHoverTL = null;
+
+function monitorHoverEnter() {
+  if (!monitorMesh?.material?.uniforms || monitorHoverActive) return;
+  monitorHoverActive = true;
+  const u = monitorMesh.material.uniforms;
+  monitorHoverTL?.kill();
+  monitorHoverTL = gsap.timeline();
+  monitorHoverTL
+    .to(u.uBrightness, { value: 1.18, duration: 0.25, ease: "power2.out" }, 0)
+    .to(u.uContrast,  { value: 1.18, duration: 0.25, ease: "power2.out" }, 0);
+}
+
+function monitorHoverLeave() {
+  if (!monitorMesh?.material?.uniforms) return;
+  monitorHoverActive = false;
+  const u = monitorMesh.material.uniforms;
+  monitorHoverTL?.kill();
+  monitorHoverTL = gsap.timeline();
+  monitorHoverTL
+    .to(u.uBrightness, { value: 1.0, duration: 0.25, ease: "power2.inOut" }, 0)
+    .to(u.uContrast,  { value: 1.0, duration: 0.25, ease: "power2.inOut" }, 0);
+}
+
 const render = () => {
   controls.update();
   const time = clock.getElapsedTime();
@@ -1527,10 +1553,18 @@ const render = () => {
 
       if (currentIntersects.length > 0) {
         hoveredObject = currentIntersects[0].object;
-        isMonitor = hoveredObject.name.includes("monitor");
+       isMonitor = !!hoveredObject.userData?.isMonitor;
         isPointer = hoveredObject.name.includes("pointer");
         isHoverA = hoveredObject.name.includes("hover");
       }
+
+      // after setting hoveredObject & isMonitor
+if (isMonitor) {
+  monitorHoverEnter();
+} else if (monitorHoverActive) {
+  // pointer moved away from monitor
+  monitorHoverLeave();
+}
 
       if (isHoverA && !hoveredObject?.userData?.hoverDisabled) {
         if (hoveredObject !== currentHoveredObject) {
@@ -1550,6 +1584,11 @@ const render = () => {
       } else {
         setCursor(CURSOR.default);
       }
+
+      if (currentIntersects.length === 0) {
+  if (monitorHoverActive) monitorHoverLeave();
+        leaveHover(currentHoveredObject);
+}
     }
   }
 
