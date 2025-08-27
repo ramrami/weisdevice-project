@@ -97,7 +97,7 @@ manager.onProgress = (url, loaded, total) => {
     ease: "none"
   });
 };
-/* manager.onLoad = () => {
+manager.onLoad = () => {
   assetsReady = true;
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
@@ -105,8 +105,8 @@ manager.onProgress = (url, loaded, total) => {
 
   enterButton.classList.add("active");
   enterButtonMute.classList.add("active");
-}; */
-
+};
+/* 
 manager.onLoad = () => {
   // Skip loading screen completely
   assetsReady = true;
@@ -114,7 +114,7 @@ manager.onLoad = () => {
    playLoadingScreenExit(false);
   playIntroAnimation(); // Start scene 
   startMonitorWarmup();
-};
+}; */
 
 function playLoadingScreenExit(withSound = true) {
   const tl = gsap.timeline({
@@ -170,6 +170,38 @@ function playLoadingScreenExit(withSound = true) {
   }
 }
 
+// --- DJ ducking ---
+let djActiveCount = 0;
+const DJ_MUSIC_FADE_TIME = 700;          // ms
+const DJ_TARGET_BGM_VOL = 0.0;           // fade to this while DJ plays
+const DJ_RESTORE_BGM_VOL = 1.0;          
+
+function djFadeOutBG() {
+  if (musicPlaying && backgroundMusic.playing()) {
+    backgroundMusic.fade(backgroundMusic.volume(), DJ_TARGET_BGM_VOL, DJ_MUSIC_FADE_TIME);
+  }
+}
+
+function djFadeInBG() {
+  if (musicPlaying) {
+    backgroundMusic.fade(backgroundMusic.volume(), DJ_RESTORE_BGM_VOL, DJ_MUSIC_FADE_TIME);
+  }
+}
+
+// --- Monitor video ducking ---
+function monitorFadeOutBG() {
+  if (musicPlaying && backgroundMusic.playing()) {
+    backgroundMusic.fade(backgroundMusic.volume(), DJ_TARGET_BGM_VOL, DJ_MUSIC_FADE_TIME);
+  }
+}
+
+function monitorMaybeFadeInBG() {
+  // Only restore if no DJ pads are still ducking the BGM
+  if (musicPlaying && djActiveCount === 0) {
+    backgroundMusic.fade(backgroundMusic.volume(), DJ_RESTORE_BGM_VOL, DJ_MUSIC_FADE_TIME);
+  }
+}
+
 enterButton.addEventListener(
   "touchend",
   (e) => {
@@ -197,6 +229,7 @@ enterButtonMute.addEventListener(
     e.preventDefault();
     musicPlaying = false;
     playLoadingScreenExit(false);
+    updateMonitorVideoMute(); 
   },
   { passive: false }
 );
@@ -208,6 +241,7 @@ enterButtonMute.addEventListener(
     e.preventDefault();
     musicPlaying = false;
     playLoadingScreenExit(false);
+    updateMonitorVideoMute(); 
   },
   { passive: false }
 );
@@ -315,19 +349,19 @@ Object.values(djKeyMap).forEach((soundKey) => {
   djSounds[soundKey] = new Howl({
     src: [`/audio/DJ/${soundKey}.ogg`],
     preload: true,
-    volume: 0.7,
+    volume: 1,
   });
 });
 // UI button sounds
 const pcButtonMusic = new Howl({
   src: ['/audio/sound/444492__breviceps__high-pitched-click.ogg'],
-  volume: 0.7,
+  volume: 1,
   preload: true
 });
 
 const sliderMusic = new Howl({
   src: ['/audio/sound/540478__breviceps__metallic-file-select.ogg'],
-  volume: 0.7,
+  volume: 1,
   preload: true
 });
 
@@ -361,6 +395,7 @@ musicToggleBtn.addEventListener(
       backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
+    updateMonitorVideoMute(); 
   },
   { passive: false }
 );
@@ -380,6 +415,7 @@ musicToggleBtn.addEventListener(
       backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
+    updateMonitorVideoMute(); 
   },
   { passive: false }
 );
@@ -648,9 +684,9 @@ function index0RunInteractiveHint({
     keyframes: [
       { duration: bobDur * 0.35, onStart() {
           const t = this.targets()[0];
-          t.r += 0.5; 
-          t.g += 0.5; 
-          t.b += 0.5; 
+          t.r += 0.9; 
+          t.g += 0.9; 
+          t.b += 0.9; 
           
         }
       },
@@ -940,10 +976,30 @@ function handleRaycasterInteraction() {
     }
   }
 
+function recalcBGMDuck() {
+  if (!musicPlaying) return; // if globally muted, do nothing here
+
+  const shouldDuck = monitorVideoPlaying || djActiveCount > 0;
+  const target = shouldDuck ? DJ_TARGET_BGM_VOL : DJ_RESTORE_BGM_VOL;
+  backgroundMusic.fade(backgroundMusic.volume(), target, DJ_MUSIC_FADE_TIME);
+}
   const match = clickedObj.name.match(/DJ[1-9]/);
-  if (match && musicPlaying) {
-    djSounds[match[0]].play();
-  }
+
+if (match && musicPlaying) {
+  const key = match[0];
+  const howl = djSounds[key];
+
+ // when a DJ pad starts
+const soundId = howl.play();
+djActiveCount++;
+recalcBGMDuck();
+
+// when THIS pad finishes
+howl.once('end', () => {
+  djActiveCount = Math.max(0, djActiveCount - 1);
+  recalcBGMDuck(); // only restores if no video and no other pads
+}, soundId);
+}
   //--------------pc btn-----------------//
   if (clickedObj.name.includes("pcbtn")) {
     if (musicPlaying) {
@@ -1401,7 +1457,7 @@ loader.load("/models/desert.glb", (glb) => {
 let monitorVideo = null;
 let monitorVideoTexture = null;
 let monitorVideoPlaying = false;
-const MONITOR_VIDEO_SRC = "/Sequence 01_2.mp4";
+const MONITOR_VIDEO_SRC = "/MonitorVideo.mp4";
 
 function ensureMonitorVideo() {
   if (monitorVideoTexture) return monitorVideoTexture;
@@ -1411,7 +1467,7 @@ function ensureMonitorVideo() {
   monitorVideo.preload = "auto";
   monitorVideo.crossOrigin = "anonymous";
   monitorVideo.playsInline = true;
-  monitorVideo.muted = true;     // guarantees playback on mobile after a tap
+  monitorVideo.muted = !musicPlaying;  
   monitorVideo.loop = false;
   monitorVideo.controls = false;
 
@@ -1424,13 +1480,18 @@ function ensureMonitorVideo() {
   return monitorVideoTexture;
 }
 
+function updateMonitorVideoMute() {
+  if (monitorVideo) {
+    monitorVideo.muted = !musicPlaying;
+  }
+}
+
 // start (or restart) video and show it on the monitor
 function playMonitorVideoFromStart() {
   if (!monitorMesh?.material?.uniforms) return;
 
   const vTex = ensureMonitorVideo();
 
-  // restart video safely
   try { monitorVideo.pause(); } catch (_) { }
   try { monitorVideo.currentTime = 0; } catch (_) { }
   monitorVideo.playbackRate = 1;
@@ -1439,7 +1500,8 @@ function playMonitorVideoFromStart() {
 
   monitorVideoPlaying = true;
 
-  // set indices so the click handler can blend into it
+   monitorFadeOutBG();
+
   nextIndex = 4;
 
   monitorVideo.onended = () => {
@@ -1450,6 +1512,9 @@ function playMonitorVideoFromStart() {
     u.uTextureA.value = monitor_texture[0];
     u.uTextureB.value = monitor_texture[0];
     u.uMix.value = 0.0;
+
+        // Restore BGM if no DJ is active
+    monitorMaybeFadeInBG();
   };
 }
 
@@ -1472,6 +1537,9 @@ function stopMonitorVideo() {
     u.uTextureB.value = monitor_texture[0];
     u.uMix.value = 0.0;
   }
+
+    // Restore BGM if no DJ is active
+  monitorMaybeFadeInBG();
 }
 
 // --- pcbtn attention when monitor index = 3 ---
