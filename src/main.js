@@ -37,9 +37,6 @@ const cloud = [], rotAObjects = [], rotBObjects = [];
 let workBtn, contactBtn, aboutBtn, legalBtn, pcBtn;
 let DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9;
 
-let monitorBrightness = 0;
-let monitorContrast = 0;
-
 const ROT_START_RAD = THREE.MathUtils.degToRad(180);
 const ROT_RANGE_RAD_HALF = THREE.MathUtils.degToRad(10 / 2);
 
@@ -100,7 +97,7 @@ manager.onProgress = (url, loaded, total) => {
     ease: "none"
   });
 };
-manager.onLoad = () => {
+/* manager.onLoad = () => {
   assetsReady = true;
   loadingText.textContent = `Loaded!`;
   enterButton.disabled = false;
@@ -108,15 +105,16 @@ manager.onLoad = () => {
 
   enterButton.classList.add("active");
   enterButtonMute.classList.add("active");
-};
+}; */
 
-/* manager.onLoad = () => {
+manager.onLoad = () => {
   // Skip loading screen completely
   assetsReady = true;
   loadingScreen.remove();
-  monitorAnimStarted = true;
-  playIntroAnimation(); // Start scene directly
-}; */
+   playLoadingScreenExit(false);
+  playIntroAnimation(); // Start scene 
+  startMonitorWarmup();
+};
 
 function playLoadingScreenExit(withSound = true) {
   const tl = gsap.timeline({
@@ -507,6 +505,181 @@ let currentCameraIndex = 1;
 
 const cameraToggleBtn = document.getElementById("camera-toggle");
 
+cameraToggleBtn.classList.add("glow");
+
+function stopCameraBtnGlow() {
+  cameraToggleBtn.classList.remove("glow");
+}
+
+cameraToggleBtn.addEventListener("click", () => {
+  stopCameraBtnGlow();
+});
+
+cameraToggleBtn.addEventListener("touchend", (e) => {
+  touchHappened = true;
+  e.preventDefault();
+  stopCameraBtnGlow();
+}, { passive: false });
+
+// ===== show animation index 3 helper =====
+function tintMeshMaterials(mesh, toColor = { r: 3, g: 3, b: 3 }, duration = 0.5, delay = 0) {
+  if (!mesh?.material) return;
+
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
+  mats.forEach((m) => {
+    // store originals once
+    if (!m.userData) m.userData = {};
+    if (!m.userData._origColor && m.color) m.userData._origColor = m.color.clone();
+    if (!m.userData._origEmissive && m.emissive) m.userData._origEmissive = m.emissive.clone();
+
+    // prefer emissive if available (looks nicer on Standard/Physical)
+    if (m.emissive) {
+      gsap.to(m.emissive, {
+        r: toColor.r, g: toColor.g, b: toColor.b,
+        duration, delay, yoyo: true, repeat: 1,
+        onComplete: () => { if (m.userData._origEmissive) m.emissive.copy(m.userData._origEmissive); }
+      });
+    } else if (m.color) {
+      gsap.to(m.color, {
+        r: toColor.r, g: toColor.g, b: toColor.b,
+        duration, delay, yoyo: true, repeat: 1,
+        onComplete: () => { if (m.userData._origColor) m.color.copy(m.userData._origColor); }
+      });
+    }
+  });
+}
+
+function nudgePosition(mesh, delta = new THREE.Vector3(0.03, 0, -0.12), duration = 0.35, delay = 0) {
+  if (!mesh) return;
+  if (!mesh.userData._origPos) mesh.userData._origPos = mesh.position.clone();
+  const p = mesh.userData._origPos;
+  gsap.to(mesh.position, {
+    x: p.x + delta.x, y: p.y + delta.y, z: p.z + delta.z,
+    duration, delay, yoyo: true, repeat: 1, ease: "power2.inOut"
+  });
+}
+
+function boopScale(mesh, scaleMul = 1.18, duration = 0.22, delay = 0) {
+  if (!mesh) return;
+  const base = (mesh.userData.initialScaleForIntro || mesh.userData.initialScale || mesh.scale).clone();
+  gsap.to(mesh.scale, {
+    x: base.x * scaleMul, y: base.y * scaleMul, z: base.z * scaleMul,
+    duration, delay, yoyo: true, repeat: 1, ease: "power2.inOut",
+    onComplete: () => mesh.scale.copy(base)
+  });
+}
+
+
+let hintTL = null;
+
+function index2RunInteractiveHint() {
+  if (hintTL) { hintTL.kill(); hintTL = null; }
+
+  const djs = [DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9].filter(Boolean);
+  hintTL = gsap.timeline({ defaults: { ease: "power2.inOut" } });
+
+  // --- SLIDER: nudge + green tint
+  if (sliderMesh) {
+    nudgePosition(sliderMesh, new THREE.Vector3(0.03, 0, -0.61), 0.45, 0.10);
+    tintMeshMaterials(sliderMesh, { r: 0.3, g: 3.0, b: 0.3 }, 0.6, 0.10);
+  }
+
+  // --- PCBTN: tilt + green tint
+  if (pcBtn?.material) {
+    if (!pcBtn.userData._origRot) pcBtn.userData._origRot = pcBtn.rotation.clone();
+    hintTL
+      .to(pcBtn.rotation, { z: pcBtn.userData._origRot.z + 0.2, duration: 0.40, yoyo: true, repeat: 1 }, 0.20);
+    tintMeshMaterials(pcBtn, { r: 0.3, g: 3.0, b: 0.3 }, 0.6, 0.20);
+  }
+
+  // --- DJs: stagger boop + green tint
+  djs.forEach((dj, i) => {
+    const t = 0.35 + i * 0.08;
+    boopScale(dj, 1.4, 0.26, t);
+    tintMeshMaterials(dj, { r: 0.3, g: 3.0, b: 0.3 }, 0.55, t);
+  });
+
+  hintTL.eventCallback("onComplete", () => { hintTL = null; });
+}
+
+function index0RunInteractiveHint({
+  cycles = 3,           // how many up/down bobs per button
+  bobDY  = 0.05,        // bob height
+  bobDur = 0.35,        // time for one up or down
+  gap    = 0.08         // stagger between buttons
+} = {}) {
+  if (hintTL) { hintTL.kill(); hintTL = null; }
+
+  const btns = [contactBtn, legalBtn, workBtn, aboutBtn].filter(Boolean);
+  if (!btns.length) return;
+
+  // cache bases once
+  btns.forEach((b) => {
+    if (!b.userData._origPos) b.userData._origPos = b.position.clone();
+    const m = Array.isArray(b.material) ? b.material[0] : b.material;
+    if (m) {
+      if (!m.userData) m.userData = {};
+      if (m.emissive && !m.userData._origEm)  m.userData._origEm  = m.emissive.clone();
+      if (!m.emissive && m.color && !m.userData._origCol) m.userData._origCol = m.color.clone();
+    }
+  });
+
+  // build arrays for batched tweens
+  const poss   = btns.map(b => b.position);
+  const mats   = btns.map(b => Array.isArray(b.material) ? b.material[0] : b.material).filter(Boolean);
+  const colors = mats.map(m => m.emissive || m.color).filter(Boolean);
+
+  hintTL = gsap.timeline({ defaults: { ease: "sine.inOut" } });
+
+  // 1) Bobbing (position.y), repeated cycles times (yoyo makes it go up then down)
+  hintTL.to(poss, {
+    y: (i) => btns[i].userData._origPos.y + bobDY,
+    duration: bobDur,
+    yoyo: true,
+    repeat: cycles * 2 - 1, // up+down is 2 steps; we already go up once, so -1
+    stagger: { each: gap }
+  }, 0);
+
+  // 2) Color pulse in sync with the bob (shorter & snappier)
+  //    Uses emissive when available, falls back to color.
+  hintTL.to(colors, {
+    // bump toward green each half-cycle
+    keyframes: [
+      { duration: bobDur * 0.35, onStart() {
+          const t = this.targets()[0];
+          t.r += 0.5; 
+          t.g += 0.5; 
+          t.b += 0.5; 
+          
+        }
+      },
+      { duration: bobDur * 0.55, onComplete() {
+          // restore to cached base each half-cycle
+          const t = this.targets()[0];
+          const idx = colors.indexOf(t);
+          const m = mats[idx];
+          if (m?.userData?._origEm && m.emissive) t.copy(m.userData._origEm);
+          else if (!m.emissive && m?.userData?._origCol && m.color) t.copy(m.userData._origCol);
+        }
+      }
+    ],
+    repeat: cycles * 2 - 1,
+    stagger: { each: gap },
+    ease: "power1.out"
+  }, 0);
+
+  // safety: snap everyone back at the very end
+  hintTL.eventCallback("onComplete", () => {
+    btns.forEach((b) => b.position.copy(b.userData._origPos));
+    mats.forEach((m) => {
+      if (m?.userData?._origEm && m.emissive) m.emissive.copy(m.userData._origEm);
+      if (!m.emissive && m?.userData?._origCol && m.color) m.color.copy(m.userData._origCol);
+    });
+    hintTL = null;
+  });
+}
+/**  --------------------------switch camera -------------------------- */
 function switchCameraView() {
   const { position, target } = cameraPositions[currentCameraIndex];
   moveCameraTo(position, target);
@@ -516,6 +689,12 @@ function switchCameraView() {
   }
   // Advance index for next click
   currentCameraIndex = (currentCameraIndex + 1) % cameraPositions.length;
+   if (currentCameraIndex === 2) {
+    index2RunInteractiveHint();
+  }
+  if (currentCameraIndex === 0) {
+  index0RunInteractiveHint();
+}
 }
 
 cameraToggleBtn.addEventListener("click", (e) => {
@@ -774,8 +953,6 @@ function handleRaycasterInteraction() {
 
     // Start/restart the video so frames are ready
     playMonitorVideoFromStart();
-
-
 
     // Blend current -> video (index 4)
     if (monitorMesh?.material?.uniforms) {
@@ -1067,7 +1244,7 @@ loader.load("/models/desert.glb", (glb) => {
     /** ------------------ MONITOR ------------------ **/
     if (name.includes("monitor")) {
       monitorMesh = child;
-      child.userData.isMonitor = true; 
+      child.userData.isMonitor = true;
       child.material = new THREE.ShaderMaterial({
         uniforms: {
           uTextureA: { value: monitor_texture[currentIndex] },
@@ -1322,7 +1499,6 @@ function stopPcBtnIndex3Anim() {
   pcBtn.userData.glowActive = false;
 }
 
-
 function playIntroAnimation() {
   introFinished = false;
   const t1 = gsap.timeline({
@@ -1466,6 +1642,7 @@ function switchTheme(theme) {
   scene.background = new THREE.Color(theme === "night" ? "#1a1a1a" : "#c5dba7");
 }
 
+/**  -------------------------- helpers -------------------------- */
 const clock = new THREE.Clock();
 
 let currentCursor = "default";
@@ -1504,7 +1681,7 @@ function monitorHoverEnter() {
   monitorHoverTL = gsap.timeline();
   monitorHoverTL
     .to(u.uBrightness, { value: 1.18, duration: 0.25, ease: "power2.out" }, 0)
-    .to(u.uContrast,  { value: 1.18, duration: 0.25, ease: "power2.out" }, 0);
+    .to(u.uContrast, { value: 1.18, duration: 0.25, ease: "power2.out" }, 0);
 }
 
 function monitorHoverLeave() {
@@ -1515,7 +1692,7 @@ function monitorHoverLeave() {
   monitorHoverTL = gsap.timeline();
   monitorHoverTL
     .to(u.uBrightness, { value: 1.0, duration: 0.25, ease: "power2.inOut" }, 0)
-    .to(u.uContrast,  { value: 1.0, duration: 0.25, ease: "power2.inOut" }, 0);
+    .to(u.uContrast, { value: 1.0, duration: 0.25, ease: "power2.inOut" }, 0);
 }
 
 const render = () => {
@@ -1553,18 +1730,18 @@ const render = () => {
 
       if (currentIntersects.length > 0) {
         hoveredObject = currentIntersects[0].object;
-       isMonitor = !!hoveredObject.userData?.isMonitor;
+        isMonitor = !!hoveredObject.userData?.isMonitor;
         isPointer = hoveredObject.name.includes("pointer");
         isHoverA = hoveredObject.name.includes("hover");
       }
 
       // after setting hoveredObject & isMonitor
-if (isMonitor) {
-  monitorHoverEnter();
-} else if (monitorHoverActive) {
-  // pointer moved away from monitor
-  monitorHoverLeave();
-}
+      if (isMonitor) {
+        monitorHoverEnter();
+      } else if (monitorHoverActive) {
+        // pointer moved away from monitor
+        monitorHoverLeave();
+      }
 
       if (isHoverA && !hoveredObject?.userData?.hoverDisabled) {
         if (hoveredObject !== currentHoveredObject) {
@@ -1586,13 +1763,13 @@ if (isMonitor) {
       }
 
       if (currentIntersects.length === 0) {
-  if (monitorHoverActive) monitorHoverLeave();
+        if (monitorHoverActive) monitorHoverLeave();
         leaveHover(currentHoveredObject);
-}
+      }
     }
   }
 
-  // --- keep pcbtn "index 3" attention in sync with currentIndex + suppression ---
+  // --- keep pcbtn "index 3" attention  ---
   if (lastMonitorIndex !== currentIndex && pcBtn && pcBtn.material) {
     const at3 = currentIndex === 3;
 
@@ -1628,7 +1805,6 @@ if (isMonitor) {
         pcIndex3AnimSuppressed = false; // next time we come back to 3, the wobble may run again
       }
     }
-
     lastMonitorIndex = currentIndex;
   }
 
@@ -1636,7 +1812,6 @@ if (isMonitor) {
   requestAnimationFrame(render);
   /*   console.log('Camera Position:', camera.position);
     console.log('Controls Target:', controls.target); */
-
 };
 
 render();
