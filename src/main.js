@@ -63,6 +63,8 @@ let lastMonitorIndex = -1;          // change detector
 let sliderIsAtOriginal = true;
 const sliderOffset = new THREE.Vector3(0.025, 0, -0.5); // ← relative movement
 
+let forceBGMDucked = false; // lock: while true, never restore BGM
+
 const modals = {
   work: document.querySelector(".modal.work"),
   about: document.querySelector(".modal.about"),
@@ -176,10 +178,13 @@ function djFadeOutBG() {
 }
 
 function djFadeInBG() {
-  if (musicPlaying) {
+  if (!musicPlaying) return;
+  // restore ONLY if: not forced, no DJs active, no monitor video
+  if (!forceBGMDucked && djActiveCount === 0 && !monitorVideoPlaying) {
     backgroundMusic.fade(backgroundMusic.volume(), DJ_RESTORE_BGM_VOL, DJ_MUSIC_FADE_TIME);
   }
 }
+
 
 // --- Monitor video ducking ---
 function monitorFadeOutBG() {
@@ -189,10 +194,22 @@ function monitorFadeOutBG() {
 }
 
 function monitorMaybeFadeInBG() {
-  // Only restore if no DJ pads are still ducking the BGM
-  if (musicPlaying && djActiveCount === 0) {
+  // Only restore if no DJ pads, no forced duck, and no monitor video
+  if (musicPlaying && djActiveCount === 0 && !forceBGMDucked && !monitorVideoPlaying) {
     backgroundMusic.fade(backgroundMusic.volume(), DJ_RESTORE_BGM_VOL, DJ_MUSIC_FADE_TIME);
   }
+}
+
+function resetMonitorAudioForPlayback() {
+  if (!monitorVideo) return;
+
+  // keep your existing mute policy tied to global music
+  monitorVideo.muted = !musicPlaying;
+
+  // if we’re duck-locked (project open), start silent; otherwise use baseline
+  monitorVideo.volume = (musicPlaying && !forceBGMDucked)
+    ? MONITOR_DEFAULT_VOL
+    : 0;
 }
 
 enterButton.addEventListener(
@@ -984,13 +1001,14 @@ function handleRaycasterInteraction() {
     }
   }
 
-  function recalcBGMDuck() {
-    if (!musicPlaying) return; // if globally muted, do nothing here
+function recalcBGMDuck() {
+  if (!musicPlaying) return;
+  // Duck if any active reason OR the lock is on
+  const shouldDuck = forceBGMDucked || monitorVideoPlaying || djActiveCount > 0;
+  const target = shouldDuck ? DJ_TARGET_BGM_VOL : DJ_RESTORE_BGM_VOL;
+  backgroundMusic.fade(backgroundMusic.volume(), target, DJ_MUSIC_FADE_TIME);
+}
 
-    const shouldDuck = monitorVideoPlaying || djActiveCount > 0;
-    const target = shouldDuck ? DJ_TARGET_BGM_VOL : DJ_RESTORE_BGM_VOL;
-    backgroundMusic.fade(backgroundMusic.volume(), target, DJ_MUSIC_FADE_TIME);
-  }
   const match = clickedObj.name.match(/DJ[1-9]/);
 
   if (match && musicPlaying) {
@@ -1467,17 +1485,32 @@ let monitorVideoTexture = null;
 let monitorVideoPlaying = false;
 const MONITOR_VIDEO_SRC = "/MonitorVideo.mp4";
 
-// --- Monitor video audio fade ---
-const MONITOR_DEFAULT_VOL = 0.7;
-const MONITOR_FADE_TIME_S = 0.7;     // seconds (≈700ms)
+// --- Monitor video audio fade helpers ---
+const MONITOR_DEFAULT_VOL = 0.7;      // your preferred baseline
+const MONITOR_FADE_TIME_S = 0.7;      // ~700ms
+
+function fadeMonitorAudio(toVol, dur = MONITOR_FADE_TIME_S) {
+  if (!monitorVideo) return;
+  // kill any previous volume tweens to avoid racing
+  gsap.killTweensOf(monitorVideo, "volume");
+  gsap.to(monitorVideo, {
+    volume: THREE.MathUtils.clamp(toVol, 0, 1),
+    duration: dur,
+    ease: "power2.inOut",
+  });
+}
 
 function fadeOutMonitorAudio() {
+  // only fade if the element exists and isn't muted
   if (monitorVideo && !monitorVideo.muted) {
-    gsap.to(monitorVideo, {
-      volume: 0,
-      duration: MONITOR_FADE_TIME_S,
-      ease: "power2.inOut"
-    });
+    fadeMonitorAudio(0, MONITOR_FADE_TIME_S);
+  }
+}
+
+function fadeInMonitorAudio() {
+  // restore only if video exists, is playing/should be audible, and global music is on
+  if (monitorVideo && !monitorVideo.muted && musicPlaying) {
+    fadeMonitorAudio(MONITOR_DEFAULT_VOL, MONITOR_FADE_TIME_S);
   }
 }
 
@@ -1516,11 +1549,14 @@ function playMonitorVideoFromStart() {
 
   const vTex = ensureMonitorVideo();
 
-  try { monitorVideo.pause(); } catch (_) { }
-  try { monitorVideo.currentTime = 0; } catch (_) { }
+  try { monitorVideo.pause(); } catch (_) {}
+  try { monitorVideo.currentTime = 0; } catch (_) {}
+
+  resetMonitorAudioForPlayback();   // <— ensure audible next time (unless locked)
+
   monitorVideo.playbackRate = 1;
   const p = monitorVideo.play();
-  if (p?.catch) p.catch(() => { });
+  if (p?.catch) p.catch(() => {});
 
   monitorVideoPlaying = true;
 
@@ -1537,7 +1573,7 @@ function playMonitorVideoFromStart() {
     u.uTextureB.value = monitor_texture[0];
     u.uMix.value = 0.0;
 
-    // Restore BGM if no DJ is active
+    // Don’t restore BGM if we’re still locked by the project viewer
     monitorMaybeFadeInBG();
   };
 }
@@ -1968,6 +2004,7 @@ function openProject(slug) {
 
   fadeOutMonitorAudio();
   pauseRender();
+  forceBGMDucked = true;
   projectViewer.classList.remove("hidden");
   djFadeOutBG();
 }
@@ -1976,7 +2013,18 @@ function closeProject() {
   projectViewer.classList.add("hidden");
   projectContent.innerHTML = "";
   resumeRender();
+
+  forceBGMDucked = false;
+
   djFadeInBG();
+
+  // If video is currently playing, fade back in; if it already ended, just prep next time
+  if (monitorVideoPlaying) {
+    fadeInMonitorAudio();
+  } else if (monitorVideo && musicPlaying) {
+    monitorVideo.volume = MONITOR_DEFAULT_VOL;
+    monitorVideo.muted = false; 
+  }
 }
 
 projectClose.addEventListener("click", closeProject);
@@ -2004,4 +2052,3 @@ document.querySelectorAll(".more-button").forEach(btn => {
     openProject(slug);
   });
 });
-
