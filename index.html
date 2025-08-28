@@ -102,7 +102,7 @@
               <span class="keyword">Wireless Game Module</span>
               <span class="year">2024</span>
             </div>
-            <a class="more-button" href="interphysis.html">More</a>
+            <a class="more-button" data-project="interphysis">More</a>
           </div>
         </div>
 
@@ -114,7 +114,7 @@
               <span class="keyword">Realtime AI Installtion</span>
               <span class="year">2024</span>
             </div>
-            <a class="more-button" href="anglerfish.html">More</a>
+            <a class="more-button" data-project="anglerfish">More</a>
           </div>
         </div>
 
@@ -126,7 +126,7 @@
               <span class="keyword">Web-based Interaction</span>
               <span class="year">2024</span>
             </div>
-            <a class="more-button" href="dna.html">More</a>
+            <a class="more-button" data-project="dna">More</a>
           </div>
         </div>
 
@@ -138,13 +138,12 @@
               <span class="keyword">Illustration</span>
               <span class="year">2022</span>
             </div>
-            <a class="more-button" href="futurehuman.html">More</a>
+            <a class="more-button" data-project="futurehuman">More</a>
           </div>
         </div>
       </div>
     </div>
   </section>
-
 
   <section class="about modal hidden">
     <div class="titlebar">
@@ -193,7 +192,6 @@
     </div>
 
   </section>
-
 
   <section class="contact modal hidden">
     <div class="titlebar">
@@ -250,7 +248,8 @@
     <div class="modal-content">
       <h1>Credits</h1>
       <hr />
-      <p>Extra thanks for the inspiration: <a href="https://www.youtube.com/@andrewwoan" target="_blank" rel="noopener noreferrer">Andrew Woan</a> – Sooah’s Room
+      <p>Extra thanks for the inspiration: <a href="https://www.youtube.com/@andrewwoan" target="_blank"
+          rel="noopener noreferrer">Andrew Woan</a> – Sooah’s Room
       </p>
       <hr>
       <p>Thanks to the talented creators on Sketchfab for their amazing assets (licensed under CC Attribution) featured
@@ -325,6 +324,102 @@
     </div>
   </section>
 
+  <!-- Fullscreen Project Viewer -->
+  <div id="project-viewer" class="project-viewer hidden">
+    <div class="project-titlebar">
+      <h1 class="project-title">Project</h1>
+      <button class="project-close" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="filepath-bar">
+      <span class="path">C:\WINNT\SYSTEM32\Weisdevice\Work\Interphysis</span>
+      <div class="status-indicators">
+        <span>View: Projects</span>
+        <span>Size: Auto</span>
+        <span>Read-only</span>
+      </div>
+    </div>
+
+    <div id="project-content" class="modal-content"></div>
+  </div>
+
+  <!-- Project Templates -->
+  <template id="project-interphysis">
+    <article class="project-body">
+      <main>
+        <div class="iframe-wrapper">
+          <iframe width="560" height="315"
+            src="https://www.youtube.com/embed/UBtRPuUeMXk?rel=0&modestbranding=1&autohide=1&showinfo=0&controls=1&vq=hd1080&rel=0&modestbranding=1"
+            title="YouTube video" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+
+        <p class="project-tag">"Unity, Arduino, Uduino, Touchdesigner, wireless, generated geometries."</p>
+
+        <div class="description">
+          <p>“InterPhysis” is a portmanteau of “Interface” and “Physis,” symbolizing how technological advancement is
+            gradually blurring the line between the physical and digital worlds. This experimental game design explores
+            the
+            fluid transformation between a “physicalized interface” and an “interfaced physicalization.”</p>
+        </div>
+
+        <div class="images">
+          <img class="cube-image" src="/images/interphysis_prototyping.webp" alt="interphysis_prototyping.webp">
+        </div>
+
+        <div class="description">
+          <p>Uduino is used to enable wireless interaction between Unity and Arduino. Components are compactly soldered
+            onto
+            a PCB prototyping board. The object’s coordinates and angles are adjusted using acceleration and quaternion
+            values from the MPU6050. Six light sensors on the cube’s faces detect hand coverage and ambient light,
+            influencing the generated Geometries. A buzzer and vibration motor provide feedback for two trigger
+            conditions.
+          </p>
+        </div>
+
+        <div class="images">
+          <img src="/images/interphysis_project_image1.webp" alt="interphysis_project_image1.webp">
+          <img src="/images/interphysis_project_image2.webp" alt="iinterphysis_project_image2.webp">
+        </div>
+      </main>
+
+      <footer>
+        <div class="credits">
+          <p>Music source: Island People (2017). “Vultures and Doves.” Island People. The music in this project is used
+            only
+            for university projects and job applications. All rights belong to the original artists; no commercial use
+            or
+            copyright infringement is intended.</p>
+        </div>
+        <p style="text-align:center; margin-top: 1rem;">&copy; 2025 Xianyao Wei</p>
+      </footer>
+    </article>
+  </template>
+
+  <template id="project-anglerfish">
+    <article class="project-body">
+      <h1>Anglerfish</h1>
+      <p>Realtime AI Installation — 2024.</p>
+      <p>Full description, media, embeds…</p>
+    </article>
+  </template>
+
+  <template id="project-dna">
+    <article class="project-body">
+      <h1>dna</h1>
+      <p>Realtime AI Installation — 2024.</p>
+      <p>Full description, media, embeds…</p>
+    </article>
+  </template>
+
+  <template id="project-futurehuman">
+    <article class="project-body">
+      <h1>futurehuman</h1>
+      <p>Realtime AI Installation — 2024.</p>
+      <p>Full description, media, embeds…</p>
+    </article>
+  </template>
+
+  <!-- filter & 3js canvas -->
   <svg style="display: none;">
     <filter id="wobble">
       <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="turbulence" />

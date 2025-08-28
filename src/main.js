@@ -153,13 +153,6 @@ function playLoadingScreenExit(withSound = true) {
       duration: 1.2,
       ease: "expo.in"
     })
-    .to(".white-overlay", { // soft iris-like flash
-      opacity: 0.7,
-      duration: 0.35,
-      ease: "sine.inOut",
-      yoyo: true,
-      repeat: 1
-    }, "-=0.8");
 
   if (withSound) {
     if (!backgroundMusic.playing()) {
@@ -174,7 +167,7 @@ function playLoadingScreenExit(withSound = true) {
 let djActiveCount = 0;
 const DJ_MUSIC_FADE_TIME = 700;          // ms
 const DJ_TARGET_BGM_VOL = 0.0;           // fade to this while DJ plays
-const DJ_RESTORE_BGM_VOL = 1.0;          
+const DJ_RESTORE_BGM_VOL = 0.2;
 
 function djFadeOutBG() {
   if (musicPlaying && backgroundMusic.playing()) {
@@ -229,7 +222,7 @@ enterButtonMute.addEventListener(
     e.preventDefault();
     musicPlaying = false;
     playLoadingScreenExit(false);
-    updateMonitorVideoMute(); 
+    updateMonitorVideoMute();
   },
   { passive: false }
 );
@@ -241,7 +234,7 @@ enterButtonMute.addEventListener(
     e.preventDefault();
     musicPlaying = false;
     playLoadingScreenExit(false);
-    updateMonitorVideoMute(); 
+    updateMonitorVideoMute();
   },
   { passive: false }
 );
@@ -395,7 +388,7 @@ musicToggleBtn.addEventListener(
       backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
-    updateMonitorVideoMute(); 
+    updateMonitorVideoMute();
   },
   { passive: false }
 );
@@ -415,7 +408,7 @@ musicToggleBtn.addEventListener(
       backgroundMusic.pause();
       musicIcon.src = "/icon/music_off_124dp_3B3935_FILL0_wght700_GRAD-25_opsz48.svg";
     }
-    updateMonitorVideoMute(); 
+    updateMonitorVideoMute();
   },
   { passive: false }
 );
@@ -640,77 +633,92 @@ function index2RunInteractiveHint() {
 }
 
 function index0RunInteractiveHint({
-  cycles = 3,           // how many up/down bobs per button
-  bobDY  = 0.05,        // bob height
-  bobDur = 0.35,        // time for one up or down
-  gap    = 0.08         // stagger between buttons
+  cycles = 3,        
+  bobDY  = 0.05,     // bob height
+  bobDur = 0.35,     // time for one up or down
+  gap    = 0.08,     
+  useEmissiveGlow = true, 
+  greenBoost = 1.90,      
 } = {}) {
   if (hintTL) { hintTL.kill(); hintTL = null; }
 
-  const btns = [contactBtn, legalBtn, workBtn, aboutBtn].filter(Boolean);
+  const btns = [contactBtn, legalBtn, aboutBtn, workBtn].filter(Boolean);
   if (!btns.length) return;
 
-  // cache bases once
+  // Cache base transforms & colors once
   btns.forEach((b) => {
     if (!b.userData._origPos) b.userData._origPos = b.position.clone();
+
     const m = Array.isArray(b.material) ? b.material[0] : b.material;
     if (m) {
       if (!m.userData) m.userData = {};
       if (m.emissive && !m.userData._origEm)  m.userData._origEm  = m.emissive.clone();
       if (!m.emissive && m.color && !m.userData._origCol) m.userData._origCol = m.color.clone();
+      if (typeof m.emissiveIntensity === "number" && m.userData._origEI == null) {
+        m.userData._origEI = m.emissiveIntensity;
+      }
     }
   });
 
-  // build arrays for batched tweens
+  // Build arrays for batched tweens
   const poss   = btns.map(b => b.position);
   const mats   = btns.map(b => Array.isArray(b.material) ? b.material[0] : b.material).filter(Boolean);
   const colors = mats.map(m => m.emissive || m.color).filter(Boolean);
+  const glowMats = mats.filter(m => typeof m.emissiveIntensity === "number");
 
   hintTL = gsap.timeline({ defaults: { ease: "sine.inOut" } });
 
-  // 1) Bobbing (position.y), repeated cycles times (yoyo makes it go up then down)
+  // 1) Bobbing (position.y), repeated "cycles" times (yoyo gives up+down)
   hintTL.to(poss, {
     y: (i) => btns[i].userData._origPos.y + bobDY,
     duration: bobDur,
     yoyo: true,
-    repeat: cycles * 2 - 1, // up+down is 2 steps; we already go up once, so -1
+    repeat: cycles * 2 - 1, // up+down=2 steps; we already go up once, so -1
     stagger: { each: gap }
   }, 0);
 
-  // 2) Color pulse in sync with the bob (shorter & snappier)
-  //    Uses emissive when available, falls back to color.
-  hintTL.to(colors, {
-    // bump toward green each half-cycle
-    keyframes: [
-      { duration: bobDur * 0.35, onStart() {
-          const t = this.targets()[0];
-          t.r += 0.9; 
-          t.g += 0.9; 
-          t.b += 0.9; 
-          
-        }
-      },
-      { duration: bobDur * 0.55, onComplete() {
-          // restore to cached base each half-cycle
-          const t = this.targets()[0];
-          const idx = colors.indexOf(t);
-          const m = mats[idx];
-          if (m?.userData?._origEm && m.emissive) t.copy(m.userData._origEm);
-          else if (!m.emissive && m?.userData?._origCol && m.color) t.copy(m.userData._origCol);
-        }
+  // 2) Smooth color pulse toward green; yoyo restores automatically
+  if (colors.length) {
+    hintTL.to(colors, {
+      r: `+=${greenBoost}`,
+      g: `+=${greenBoost}`,
+      b: `+=${greenBoost}`,
+      duration: bobDur * 0.35,
+      yoyo: true,
+      repeat: cycles * 2 - 1,
+      ease: "sine.out",
+      stagger: { each: gap },
+      // Clamp to avoid HDR blowout if your pipeline is LDR
+      onUpdate() {
+        const c = this.targets()[0];
+        c.r = Math.min(c.r, 1);
+        c.g = Math.min(c.g, 1);
+        c.b = Math.min(c.b, 1);
       }
-    ],
-    repeat: cycles * 2 - 1,
-    stagger: { each: gap },
-    ease: "power1.out"
-  }, 0);
+    }, 0);
+  }
 
-  // safety: snap everyone back at the very end
+  // 3) Optional emissive glow pulse (nice on Standard/Physical materials)
+  if (useEmissiveGlow && glowMats.length) {
+    hintTL.to(glowMats, {
+      emissiveIntensity: (i, m) => (m.userData._origEI ?? 1) * 1.8,
+      duration: bobDur * 0.35,
+      yoyo: true,
+      repeat: cycles * 2 - 1,
+      ease: "sine.out",
+      stagger: { each: gap * 0.8 }
+    }, 0);
+  }
+
+  // Safety: snap everyone back at the very end
   hintTL.eventCallback("onComplete", () => {
     btns.forEach((b) => b.position.copy(b.userData._origPos));
     mats.forEach((m) => {
       if (m?.userData?._origEm && m.emissive) m.emissive.copy(m.userData._origEm);
       if (!m.emissive && m?.userData?._origCol && m.color) m.color.copy(m.userData._origCol);
+      if (m?.userData?._origEI != null && typeof m.emissiveIntensity === "number") {
+        m.emissiveIntensity = m.userData._origEI;
+      }
     });
     hintTL = null;
   });
@@ -725,12 +733,12 @@ function switchCameraView() {
   }
   // Advance index for next click
   currentCameraIndex = (currentCameraIndex + 1) % cameraPositions.length;
-   if (currentCameraIndex === 2) {
+  if (currentCameraIndex === 2) {
     index2RunInteractiveHint();
   }
   if (currentCameraIndex === 0) {
-  index0RunInteractiveHint();
-}
+    index0RunInteractiveHint();
+  }
 }
 
 cameraToggleBtn.addEventListener("click", (e) => {
@@ -976,30 +984,30 @@ function handleRaycasterInteraction() {
     }
   }
 
-function recalcBGMDuck() {
-  if (!musicPlaying) return; // if globally muted, do nothing here
+  function recalcBGMDuck() {
+    if (!musicPlaying) return; // if globally muted, do nothing here
 
-  const shouldDuck = monitorVideoPlaying || djActiveCount > 0;
-  const target = shouldDuck ? DJ_TARGET_BGM_VOL : DJ_RESTORE_BGM_VOL;
-  backgroundMusic.fade(backgroundMusic.volume(), target, DJ_MUSIC_FADE_TIME);
-}
+    const shouldDuck = monitorVideoPlaying || djActiveCount > 0;
+    const target = shouldDuck ? DJ_TARGET_BGM_VOL : DJ_RESTORE_BGM_VOL;
+    backgroundMusic.fade(backgroundMusic.volume(), target, DJ_MUSIC_FADE_TIME);
+  }
   const match = clickedObj.name.match(/DJ[1-9]/);
 
-if (match && musicPlaying) {
-  const key = match[0];
-  const howl = djSounds[key];
+  if (match && musicPlaying) {
+    const key = match[0];
+    const howl = djSounds[key];
 
- // when a DJ pad starts
-const soundId = howl.play();
-djActiveCount++;
-recalcBGMDuck();
+    // when a DJ pad starts
+    const soundId = howl.play();
+    djActiveCount++;
+    recalcBGMDuck();
 
-// when THIS pad finishes
-howl.once('end', () => {
-  djActiveCount = Math.max(0, djActiveCount - 1);
-  recalcBGMDuck(); // only restores if no video and no other pads
-}, soundId);
-}
+    // when THIS pad finishes
+    howl.once('end', () => {
+      djActiveCount = Math.max(0, djActiveCount - 1);
+      recalcBGMDuck(); // only restores if no video and no other pads
+    }, soundId);
+  }
   //--------------pc btn-----------------//
   if (clickedObj.name.includes("pcbtn")) {
     if (musicPlaying) {
@@ -1459,6 +1467,20 @@ let monitorVideoTexture = null;
 let monitorVideoPlaying = false;
 const MONITOR_VIDEO_SRC = "/MonitorVideo.mp4";
 
+// --- Monitor video audio fade ---
+const MONITOR_DEFAULT_VOL = 0.7;
+const MONITOR_FADE_TIME_S = 0.7;     // seconds (≈700ms)
+
+function fadeOutMonitorAudio() {
+  if (monitorVideo && !monitorVideo.muted) {
+    gsap.to(monitorVideo, {
+      volume: 0,
+      duration: MONITOR_FADE_TIME_S,
+      ease: "power2.inOut"
+    });
+  }
+}
+
 function ensureMonitorVideo() {
   if (monitorVideoTexture) return monitorVideoTexture;
 
@@ -1467,9 +1489,11 @@ function ensureMonitorVideo() {
   monitorVideo.preload = "auto";
   monitorVideo.crossOrigin = "anonymous";
   monitorVideo.playsInline = true;
-  monitorVideo.muted = !musicPlaying;  
+  monitorVideo.muted = !musicPlaying;
   monitorVideo.loop = false;
   monitorVideo.controls = false;
+
+  monitorVideo.volume = MONITOR_DEFAULT_VOL;
 
   monitorVideoTexture = new THREE.VideoTexture(monitorVideo);
   monitorVideoTexture.flipY = false;
@@ -1500,7 +1524,7 @@ function playMonitorVideoFromStart() {
 
   monitorVideoPlaying = true;
 
-   monitorFadeOutBG();
+  monitorFadeOutBG();
 
   nextIndex = 4;
 
@@ -1513,7 +1537,7 @@ function playMonitorVideoFromStart() {
     u.uTextureB.value = monitor_texture[0];
     u.uMix.value = 0.0;
 
-        // Restore BGM if no DJ is active
+    // Restore BGM if no DJ is active
     monitorMaybeFadeInBG();
   };
 }
@@ -1538,7 +1562,7 @@ function stopMonitorVideo() {
     u.uMix.value = 0.0;
   }
 
-    // Restore BGM if no DJ is active
+  // Restore BGM if no DJ is active
   monitorMaybeFadeInBG();
 }
 
@@ -1763,7 +1787,12 @@ function monitorHoverLeave() {
     .to(u.uContrast, { value: 1.0, duration: 0.25, ease: "power2.inOut" }, 0);
 }
 
+/**  -------------------------- render -------------------------- */
+let renderingActive = true;
+let renderReq;
+
 const render = () => {
+  if (!renderingActive) return;
   controls.update();
   const time = clock.getElapsedTime();
 
@@ -1883,3 +1912,96 @@ const render = () => {
 };
 
 render();
+
+/**  -------------------------- project-page -------------------------- */
+const projectData = {
+  interphysis: {
+    title: "Interphysis",
+    path: "C:\\WINNT\\SYSTEM32\\Weisdevice\\Work\\Interphysis"
+  },
+  anglerfish: {
+    title: "Anglerfish",
+    path: "C:\\WINNT\\SYSTEM32\\Weisdevice\\Work\\Anglerfish"
+  },
+  dna: {
+    title: "DNA",
+    path: "C:\\WINNT\\SYSTEM32\\Weisdevice\\Work\\DNA"
+  },
+  futurehuman: {
+    title: "Futurehuman",
+    path: "C:\\WINNT\\SYSTEM32\\Weisdevice\\Work\\Futurehuman"
+  }
+};
+
+function pauseRender() {
+  renderingActive = false;
+  if (renderReq) cancelAnimationFrame(renderReq);
+}
+
+function resumeRender() {
+  if (!renderingActive) {
+    renderingActive = true;
+    render();
+  }
+}
+
+
+const projectViewer = document.getElementById("project-viewer");
+const projectContent = document.getElementById("project-content");
+const projectClose = projectViewer.querySelector(".project-close");
+const projectTitle = projectViewer.querySelector(".project-title");
+const projectPath = projectViewer.querySelector(".filepath-bar .path");
+
+function openProject(slug) {
+  const data = projectData[slug];
+  if (!data) return;
+
+  projectTitle.textContent = data.title;
+
+  projectPath.textContent = data.path;
+
+  const tpl = document.getElementById(`project-${slug}`);
+  if (!tpl) return;
+
+  projectContent.innerHTML = "";
+  projectContent.appendChild(tpl.content.cloneNode(true));
+
+  fadeOutMonitorAudio();
+  pauseRender();
+  projectViewer.classList.remove("hidden");
+  djFadeOutBG();
+}
+
+function closeProject() {
+  projectViewer.classList.add("hidden");
+  projectContent.innerHTML = "";
+  resumeRender();
+  djFadeInBG();
+}
+
+projectClose.addEventListener("click", closeProject);
+
+document.querySelectorAll(".more-button").forEach(btn => {
+  btn.addEventListener("click", e => {
+    if (touchHappened) return;
+    e.preventDefault();
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
+    const slug = btn.dataset.project || btn.getAttribute("href").replace(".html", "");
+    openProject(slug);
+  });
+
+  btn.addEventListener("touchend", e => {//not sure i fi need sthat
+    touchHappened = true;
+    e.preventDefault();
+    if (musicPlaying) {
+      uiMusic.currentTime = 0;
+      uiMusic.play();
+    }
+    const slug = btn.dataset.project || btn.getAttribute("href").replace(".html", "");
+    openProject(slug);
+  });
+});
+
