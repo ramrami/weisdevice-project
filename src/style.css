@@ -1,6 +1,7 @@
 @import "/src/styles/fonts.css";
 @import "/src/styles/reset.css";
 @import "/src/styles/variables.css";
+@import "/src/styles/projects.css";
 
 * {
   margin: 0;
@@ -721,6 +722,8 @@ border: 0.125rem solid var(--color-base-black);
 
 .project-title {
   color: var(--color-base-white);
+  font-size: 1.3rem;
+  padding-top: 0.8rem;
 }
 
 .project-close {
