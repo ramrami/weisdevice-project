@@ -1483,7 +1483,7 @@ loader.load("/models/desert.glb", (glb) => {
 let monitorVideo = null;
 let monitorVideoTexture = null;
 let monitorVideoPlaying = false;
-const MONITOR_VIDEO_SRC = "/MonitorVideo.mp4";
+const MONITOR_VIDEO_SRC = "/textures/monitor/MonitorVideo.mp4";
 
 // --- Monitor video audio fade helpers ---
 const MONITOR_DEFAULT_VOL = 0.7;      // your preferred baseline
