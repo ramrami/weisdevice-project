@@ -690,7 +690,7 @@ function index0RunInteractiveHint({
     y: (i) => btns[i].userData._origPos.y + bobDY,
     duration: bobDur,
     yoyo: true,
-    repeat: cycles * 2 - 1, // up+down=2 steps; we already go up once, so -1
+    repeat: cycles * 2 - 1,
     stagger: { each: gap }
   }, 0);
 
@@ -1091,7 +1091,6 @@ function recalcBGMDuck() {
         ease: "power2.inOut"
       });
     }
-
     sliderIsAtOriginal = !sliderIsAtOriginal;
   }
 
@@ -1486,8 +1485,8 @@ let monitorVideoPlaying = false;
 const MONITOR_VIDEO_SRC = "/textures/monitor/MonitorVideo.mp4";
 
 // --- Monitor video audio fade helpers ---
-const MONITOR_DEFAULT_VOL = 0.7;      // your preferred baseline
-const MONITOR_FADE_TIME_S = 0.7;      // ~700ms
+const MONITOR_DEFAULT_VOL = 0.7;   
+const MONITOR_FADE_TIME_S = 0.7;      
 
 function fadeMonitorAudio(toVol, dur = MONITOR_FADE_TIME_S) {
   if (!monitorVideo) return;
@@ -1573,7 +1572,6 @@ function playMonitorVideoFromStart() {
     u.uTextureB.value = monitor_texture[0];
     u.uMix.value = 0.0;
 
-    // Don’t restore BGM if we’re still locked by the project viewer
     monitorMaybeFadeInBG();
   };
 }
@@ -1615,7 +1613,7 @@ function startPcBtnIndex3Anim() {
   tl.to(pcBtn.rotation, { z: baseR.z + 0.22 }, 0); // slight tilt
 
   pcBtn.userData.index3TL = tl;
-  pcBtn.userData.glowActive = true; // you referenced this flag elsewhere
+  pcBtn.userData.glowActive = true; 
 }
 
 function stopPcBtnIndex3Anim() {
@@ -1980,7 +1978,6 @@ function resumeRender() {
     render();
   }
 }
-
 
 const projectViewer = document.getElementById("project-viewer");
 const projectContent = document.getElementById("project-content");
