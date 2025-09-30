@@ -3,6 +3,7 @@
 - HTML  
 - CSS  
 - Vanilla JavaScript  
-- Three.js  
+- Three.js
+- GLSL
 
 ![Screenshot](screenshot.webp)
