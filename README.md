@@ -3,7 +3,8 @@
 - HTML  
 - CSS  
 - Vanilla JavaScript  
-- Three.js
+- three.js
 - GLSL
+- howler.js
 
 ![Screenshot](screenshot.webp)
