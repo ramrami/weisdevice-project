@@ -4,6 +4,7 @@
 - CSS  
 - Vanilla JavaScript  
 - three.js
+- GSAP
 - GLSL
 - howler.js
 
