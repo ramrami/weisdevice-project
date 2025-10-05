@@ -1663,7 +1663,7 @@ const gridRes = 1;
 
 const gridgeometry = new THREE.PlaneGeometry(gridSize, gridSize, gridRes, gridRes);
 
-const gridmaterial = new THREE.ShaderMaterial({
+const gridMaterial = new THREE.ShaderMaterial({
   transparent: true,
   /*  side: THREE.DoubleSide, */
   uniforms: {
@@ -1674,7 +1674,7 @@ const gridmaterial = new THREE.ShaderMaterial({
   fragmentShader: gridFragmentShader,
 });
 
-const grid = new THREE.Mesh(gridgeometry, gridmaterial);
+const grid = new THREE.Mesh(gridgeometry, gridMaterial);
 grid.rotation.x = -Math.PI / 2;
 grid.position.set(0.5, -2.01, 0.5);
 scene.add(grid);
@@ -1742,7 +1742,7 @@ function switchTheme(theme) {
   const modelRoot = scene.userData.modelRoot;
   if (!modelRoot) return;
 
-  gridmaterial.uniforms.uLineColor.value.set(
+  gridMaterial.uniforms.uLineColor.value.set(
     theme === "night" ? 0.4 : 0.2,
     theme === "night" ? 0.4 : 0.2,
     theme === "night" ? 0.4 : 0.2
@@ -2029,7 +2029,7 @@ projectClose.addEventListener("click", closeProject);
 document.querySelectorAll(".more-button").forEach(btn => {
   btn.addEventListener("click", e => {
     if (touchHappened) return;
-    e.preventDefault();
+
     if (musicPlaying) {
       uiMusic.currentTime = 0;
       uiMusic.play();
