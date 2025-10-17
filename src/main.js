@@ -50,14 +50,14 @@ let currentIndex = 0;
 let nextIndex = 1;
 
 let pointerDirty = true;
-let lastRaycastTime = 0;        // optional: periodic fallback
-const RAYCAST_FPS = 30;         // optional: cap raycasts to 30fps
+let lastRaycastTime = 0;        
+const RAYCAST_FPS = 30;        
 const RAYCAST_INTERVAL = 1 / RAYCAST_FPS;
 
 
 let monitorMesh, sliderMesh;
 let pcIndex3AnimSuppressed = false; // set true after click; cleared when we leave index 3
-let pcIndex3Active = false;         // tracks if the wobble is currently running
+let pcIndex3Active = false;       
 let lastMonitorIndex = -1;          // change detector
 
 let sliderIsAtOriginal = true;
@@ -121,7 +121,7 @@ manager.onLoad = () => {
 function playLoadingScreenExit(withSound = true) {
   const tl = gsap.timeline({
     onComplete: () => {
-      monitorAnimStarted = true; // start monitor glow
+      monitorAnimStarted = true;
       loadingScreen.remove();
       playIntroAnimation();
       startMonitorWarmup();
@@ -132,7 +132,7 @@ function playLoadingScreenExit(withSound = true) {
     transformOrigin: "center center",
     rotationX: 10,
     rotationY: -5,
-    scale: 1.02, // tiny overshoot first
+    scale: 1.02,
     y: "-2vh",
     duration: 0.4,
     ease: "power2.out"
@@ -149,7 +149,7 @@ function playLoadingScreenExit(withSound = true) {
       rotationX: 70,
       rotationY: -25,
       scale: 0.05,
-      x: "20vw", // give it a nice curve to the side
+      x: "20vw", 
       y: "-250vh",
       opacity: 0,
       duration: 1.2,
@@ -167,8 +167,8 @@ function playLoadingScreenExit(withSound = true) {
 
 // --- DJ ducking ---
 let djActiveCount = 0;
-const DJ_MUSIC_FADE_TIME = 700;          // ms
-const DJ_TARGET_BGM_VOL = 0.0;           // fade to this while DJ plays
+const DJ_MUSIC_FADE_TIME = 700;    
+const DJ_TARGET_BGM_VOL = 0.0;           
 const DJ_RESTORE_BGM_VOL = 0.2;
 
 function djFadeOutBG() {
@@ -184,7 +184,6 @@ function djFadeInBG() {
     backgroundMusic.fade(backgroundMusic.volume(), DJ_RESTORE_BGM_VOL, DJ_MUSIC_FADE_TIME);
   }
 }
-
 
 // --- Monitor video ducking ---
 function monitorFadeOutBG() {
@@ -362,7 +361,7 @@ Object.values(djKeyMap).forEach((soundKey) => {
     volume: 1,
   });
 });
-// UI button sounds
+
 const pcButtonMusic = new Howl({
   src: ['/audio/sound/444492__breviceps__high-pitched-click.ogg'],
   volume: 1,
@@ -574,12 +573,10 @@ function tintMeshMaterials(mesh, toColor = { r: 3, g: 3, b: 3 }, duration = 0.5,
   const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
   mats.forEach((m) => {
-    // store originals once
     if (!m.userData) m.userData = {};
     if (!m.userData._origColor && m.color) m.userData._origColor = m.color.clone();
     if (!m.userData._origEmissive && m.emissive) m.userData._origEmissive = m.emissive.clone();
 
-    // prefer emissive if available (looks nicer on Standard/Physical)
     if (m.emissive) {
       gsap.to(m.emissive, {
         r: toColor.r, g: toColor.g, b: toColor.b,
@@ -616,7 +613,6 @@ function boopScale(mesh, scaleMul = 1.18, duration = 0.22, delay = 0) {
   });
 }
 
-
 let hintTL = null;
 
 function index2RunInteractiveHint() {
@@ -625,13 +621,11 @@ function index2RunInteractiveHint() {
   const djs = [DJ1, DJ2, DJ3, DJ4, DJ5, DJ6, DJ7, DJ8, DJ9].filter(Boolean);
   hintTL = gsap.timeline({ defaults: { ease: "power2.inOut" } });
 
-  // --- SLIDER: nudge + green tint
   if (sliderMesh) {
     nudgePosition(sliderMesh, new THREE.Vector3(0.03, 0, -0.61), 0.45, 0.10);
     tintMeshMaterials(sliderMesh, { r: 0.3, g: 3.0, b: 0.3 }, 0.6, 0.10);
   }
 
-  // --- PCBTN: tilt + green tint
   if (pcBtn?.material) {
     if (!pcBtn.userData._origRot) pcBtn.userData._origRot = pcBtn.rotation.clone();
     hintTL
@@ -639,7 +633,6 @@ function index2RunInteractiveHint() {
     tintMeshMaterials(pcBtn, { r: 0.3, g: 3.0, b: 0.3 }, 0.6, 0.20);
   }
 
-  // --- DJs: stagger boop + green tint
   djs.forEach((dj, i) => {
     const t = 0.35 + i * 0.08;
     boopScale(dj, 1.4, 0.26, t);
@@ -651,8 +644,8 @@ function index2RunInteractiveHint() {
 
 function index0RunInteractiveHint({
   cycles = 3,        
-  bobDY  = 0.05,     // bob height
-  bobDur = 0.35,     // time for one up or down
+  bobDY  = 0.05,     
+  bobDur = 0.35,     
   gap    = 0.08,     
   useEmissiveGlow = true, 
   greenBoost = 1.90,      
@@ -662,7 +655,6 @@ function index0RunInteractiveHint({
   const btns = [contactBtn, legalBtn, aboutBtn, workBtn].filter(Boolean);
   if (!btns.length) return;
 
-  // Cache base transforms & colors once
   btns.forEach((b) => {
     if (!b.userData._origPos) b.userData._origPos = b.position.clone();
 
@@ -677,7 +669,6 @@ function index0RunInteractiveHint({
     }
   });
 
-  // Build arrays for batched tweens
   const poss   = btns.map(b => b.position);
   const mats   = btns.map(b => Array.isArray(b.material) ? b.material[0] : b.material).filter(Boolean);
   const colors = mats.map(m => m.emissive || m.color).filter(Boolean);
@@ -685,7 +676,6 @@ function index0RunInteractiveHint({
 
   hintTL = gsap.timeline({ defaults: { ease: "sine.inOut" } });
 
-  // 1) Bobbing (position.y), repeated "cycles" times (yoyo gives up+down)
   hintTL.to(poss, {
     y: (i) => btns[i].userData._origPos.y + bobDY,
     duration: bobDur,
@@ -694,7 +684,6 @@ function index0RunInteractiveHint({
     stagger: { each: gap }
   }, 0);
 
-  // 2) Smooth color pulse toward green; yoyo restores automatically
   if (colors.length) {
     hintTL.to(colors, {
       r: `+=${greenBoost}`,
@@ -705,7 +694,7 @@ function index0RunInteractiveHint({
       repeat: cycles * 2 - 1,
       ease: "sine.out",
       stagger: { each: gap },
-      // Clamp to avoid HDR blowout if your pipeline is LDR
+
       onUpdate() {
         const c = this.targets()[0];
         c.r = Math.min(c.r, 1);
@@ -715,7 +704,6 @@ function index0RunInteractiveHint({
     }, 0);
   }
 
-  // 3) Optional emissive glow pulse (nice on Standard/Physical materials)
   if (useEmissiveGlow && glowMats.length) {
     hintTL.to(glowMats, {
       emissiveIntensity: (i, m) => (m.userData._origEI ?? 1) * 1.8,
@@ -727,7 +715,6 @@ function index0RunInteractiveHint({
     }, 0);
   }
 
-  // Safety: snap everyone back at the very end
   hintTL.eventCallback("onComplete", () => {
     btns.forEach((b) => b.position.copy(b.userData._origPos));
     mats.forEach((m) => {
@@ -748,7 +735,7 @@ function switchCameraView() {
     uiMusic.currentTime = 0;
     uiMusic.play();
   }
-  // Advance index for next click
+
   currentCameraIndex = (currentCameraIndex + 1) % cameraPositions.length;
   if (currentCameraIndex === 2) {
     index2RunInteractiveHint();
@@ -911,8 +898,8 @@ function handleRaycasterInteraction() {
 
     if (monitorMesh?.material?.uniforms) {
       const u = monitorMesh.material.uniforms;
-      const fromTex = ensureMonitorVideo();    // current video frame
-      const toTex = monitor_texture[0];      // slide 0
+      const fromTex = ensureMonitorVideo();   
+      const toTex = monitor_texture[0];     
 
       u.uTextureA.value = fromTex;
       u.uTextureB.value = toTex;
@@ -928,19 +915,17 @@ function handleRaycasterInteraction() {
           u.uTextureA.value = toTex;
           u.uTextureB.value = toTex;
           u.uMix.value = 0.0;
-
-          // stop playback AFTER the blend so there’s no snap
+//something wrong there
           stopMonitorVideo();
         }
       });
     } else {
-      // fallback: just stop and snap if uniforms missing
+
       stopMonitorVideo();
       currentIndex = 0;
       nextIndex = 1;
     }
-
-    return; // prevent falling into the slide-advance branch
+    return; 
   }
 
   if (clickedObj.name.includes("monitor") && currentIndex < 3) {
@@ -968,7 +953,7 @@ function handleRaycasterInteraction() {
         pcButtonMusic.play();
       }
 
-      return; // end here, no slide advance
+      return; 
     }
 
     if (musicPlaying && currentIndex < 3) {
@@ -978,7 +963,6 @@ function handleRaycasterInteraction() {
     }
     nextIndex = currentIndex + 1;
 
-    // Prepare new textures for blending
     if (monitorMesh?.material?.uniforms) {
       const uniforms = monitorMesh.material.uniforms;
 
@@ -1015,15 +999,13 @@ function recalcBGMDuck() {
     const key = match[0];
     const howl = djSounds[key];
 
-    // when a DJ pad starts
     const soundId = howl.play();
     djActiveCount++;
     recalcBGMDuck();
 
-    // when THIS pad finishes
     howl.once('end', () => {
       djActiveCount = Math.max(0, djActiveCount - 1);
-      recalcBGMDuck(); // only restores if no video and no other pads
+      recalcBGMDuck(); 
     }, soundId);
   }
   //--------------pc btn-----------------//
@@ -1033,16 +1015,13 @@ function recalcBGMDuck() {
       pcButtonMusic.play();
     }
 
-    // Start/restart the video so frames are ready
     playMonitorVideoFromStart();
 
-    // Blend current -> video (index 4)
     if (monitorMesh?.material?.uniforms) {
       const u = monitorMesh.material.uniforms;
 
-      // from = current slide texture (or current video if already on 4)
       const fromTex = (currentIndex === 4) ? ensureMonitorVideo() : monitor_texture[currentIndex];
-      const toTex = ensureMonitorVideo(); // video texture
+      const toTex = ensureMonitorVideo();
 
       u.uTextureA.value = fromTex;
       u.uTextureB.value = toTex;
@@ -1055,7 +1034,7 @@ function recalcBGMDuck() {
         onComplete: () => {
           currentIndex = 4;
           nextIndex = 4;
-          // lock to video after the blend
+
           u.uTextureA.value = toTex;
           u.uTextureB.value = toTex;
           u.uMix.value = 0.0;
@@ -1073,7 +1052,6 @@ function recalcBGMDuck() {
     const sliderOrigPosition = sliderMesh.userData.originalPosition;
 
     if (sliderIsAtOriginal) {
-      // Move to offset position
       gsap.to(sliderMesh.position, {
         x: sliderOrigPosition.x + sliderOffset.x,
         y: sliderOrigPosition.y + sliderOffset.y,
@@ -1082,7 +1060,6 @@ function recalcBGMDuck() {
         ease: "power2.inOut"
       });
     } else {
-      // Move back to original
       gsap.to(sliderMesh.position, {
         x: sliderOrigPosition.x,
         y: sliderOrigPosition.y,
@@ -1096,7 +1073,6 @@ function recalcBGMDuck() {
 
   if (clickedObj.name.includes("slider") || clickedObj.name.includes("DJ")) {
 
-    // Save original color (only once per object)
     if (!clickedObj.userData.originalColor) {
       clickedObj.userData.originalColor = clickedObj.material.color.clone();
     }
@@ -1107,7 +1083,6 @@ function recalcBGMDuck() {
       yoyo: true,
       repeat: 1,
       onComplete: () => {
-        // Restore to original color (optional safety)
         clickedObj.material.color.copy(clickedObj.userData.originalColor);
       }
     });
@@ -1180,7 +1155,6 @@ monitor_texture.forEach(tex => {
 const loadedTextures = { day: {}, night: {} };
 
 Object.entries(textureMap).forEach(([key, paths]) => {
-  // Load and configure day texture
   const dayTexture = textureLoader.load(paths.day);
   dayTexture.flipY = false;
   dayTexture.colorSpace = THREE.SRGBColorSpace;
@@ -1188,7 +1162,6 @@ Object.entries(textureMap).forEach(([key, paths]) => {
   dayTexture.magFilter = THREE.LinearFilter;
   loadedTextures.day[key] = dayTexture;
 
-  // Load and configure night texture
   const nightTexture = textureLoader.load(paths.night);
   nightTexture.flipY = false;
   nightTexture.colorSpace = THREE.SRGBColorSpace;
@@ -1350,10 +1323,8 @@ loader.load("/models/desert.glb", (glb) => {
       name.includes("contactbtn") ||
       name.includes("legalbtn");
 
-    if (needsIntroHide) {
-      // Store intended scale before hiding
+    if (needsIntroHide) {//nononono no this
       child.userData.initialScaleForIntro = child.scale.clone();
-      // Hide for intro animation
       child.scale.set(0, 0, 0);
     }
 
@@ -1490,7 +1461,6 @@ const MONITOR_FADE_TIME_S = 0.7;
 
 function fadeMonitorAudio(toVol, dur = MONITOR_FADE_TIME_S) {
   if (!monitorVideo) return;
-  // kill any previous volume tweens to avoid racing
   gsap.killTweensOf(monitorVideo, "volume");
   gsap.to(monitorVideo, {
     volume: THREE.MathUtils.clamp(toVol, 0, 1),
@@ -1500,14 +1470,12 @@ function fadeMonitorAudio(toVol, dur = MONITOR_FADE_TIME_S) {
 }
 
 function fadeOutMonitorAudio() {
-  // only fade if the element exists and isn't muted
   if (monitorVideo && !monitorVideo.muted) {
     fadeMonitorAudio(0, MONITOR_FADE_TIME_S);
   }
 }
 
 function fadeInMonitorAudio() {
-  // restore only if video exists, is playing/should be audible, and global music is on
   if (monitorVideo && !monitorVideo.muted && musicPlaying) {
     fadeMonitorAudio(MONITOR_DEFAULT_VOL, MONITOR_FADE_TIME_S);
   }
@@ -1542,7 +1510,6 @@ function updateMonitorVideoMute() {
   }
 }
 
-// start (or restart) video and show it on the monitor
 function playMonitorVideoFromStart() {
   if (!monitorMesh?.material?.uniforms) return;
 
@@ -1551,7 +1518,7 @@ function playMonitorVideoFromStart() {
   try { monitorVideo.pause(); } catch (_) {}
   try { monitorVideo.currentTime = 0; } catch (_) {}
 
-  resetMonitorAudioForPlayback();   // <— ensure audible next time (unless locked)
+  resetMonitorAudioForPlayback(); 
 
   monitorVideo.playbackRate = 1;
   const p = monitorVideo.play();
@@ -1576,7 +1543,6 @@ function playMonitorVideoFromStart() {
   };
 }
 
-// stop video if it’s playing (no texture changes here)
 function stopMonitorVideo() {
   if (!monitorVideoPlaying) return;
   monitorVideoPlaying = false;
@@ -1596,7 +1562,6 @@ function stopMonitorVideo() {
     u.uMix.value = 0.0;
   }
 
-  // Restore BGM if no DJ is active
   monitorMaybeFadeInBG();
 }
 
@@ -1610,7 +1575,7 @@ function startPcBtnIndex3Anim() {
   const baseR = pcBtn.userData.originalRot;
 
   const tl = gsap.timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut", duration: 0.6 } });
-  tl.to(pcBtn.rotation, { z: baseR.z + 0.22 }, 0); // slight tilt
+  tl.to(pcBtn.rotation, { z: baseR.z + 0.22 }, 0); 
 
   pcBtn.userData.index3TL = tl;
   pcBtn.userData.glowActive = true; 
@@ -1681,7 +1646,7 @@ scene.add(grid);
 
 const fadePlaneMaterial = new THREE.ShaderMaterial({
   uniforms: {
-    uColor: { value: new THREE.Color(0xff0000) } // Change for yPlane
+    uColor: { value: new THREE.Color(0xff0000) } 
   },
   vertexShader: fadePlaneVertexShader,
   fragmentShader: fadePlaneFragmentShader,
@@ -1866,11 +1831,9 @@ const render = () => {
         isHoverA = hoveredObject.name.includes("hover");
       }
 
-      // after setting hoveredObject & isMonitor
       if (isMonitor) {
         monitorHoverEnter();
       } else if (monitorHoverActive) {
-        // pointer moved away from monitor
         monitorHoverLeave();
       }
 
@@ -1906,14 +1869,12 @@ const render = () => {
 
     if (at3) {
       if (pcIndex3AnimSuppressed) {
-        // user just clicked pcbtn while it was animating -> keep it stopped
         stopPcBtnIndex3Anim();
         pcIndex3Active = false;
         if (pcBtn.userData.originalColor) {
           pcBtn.material.color.copy(pcBtn.userData.originalColor);
         }
       } else {
-        // allowed to animate at index 3
         if (!pcIndex3Active) {
           if (!pcBtn.userData.originalColor) {
             pcBtn.userData.originalColor = pcBtn.material.color.clone();
@@ -1924,7 +1885,6 @@ const render = () => {
         }
       }
     } else {
-      // leaving index 3: stop animation, restore color, and clear suppression
       if (pcIndex3Active) {
         stopPcBtnIndex3Anim();
         pcIndex3Active = false;
@@ -2015,7 +1975,7 @@ function closeProject() {
 
   djFadeInBG();
 
-  // If video is currently playing, fade back in; if it already ended, just prep next time
+  // If video is currently playing, fade back in; if it already ended, just prep next time, something wrong
   if (monitorVideoPlaying) {
     fadeInMonitorAudio();
   } else if (monitorVideo && musicPlaying) {

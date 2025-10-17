@@ -283,10 +283,9 @@ body {
 
 
 #camera-toggle:active {
-  /* Mobile and desktop press effect */
   transform: translateX(-50%) scale(0.9);
 }
-/* Normal hover (desktop only) */
+/* normal hover (desktop only) */
 .no-touch #camera-toggle:hover {
   background-color: var(--color-accent-yellow);
   transform: translateX(-50%) rotate(14deg) scale(1.05);
@@ -301,7 +300,6 @@ body {
   display: none !important;
 }
 
-/* in your CSS */
 @keyframes glowPulse {
   0%   { box-shadow: 0 0 5px 2px var(--color-accent-yellow); }
   50%  { box-shadow: 0 0 15px 4px var(--color-accent-yellow); }
@@ -324,7 +322,6 @@ body {
   background-color: rgba(32, 32, 32, 0.2);
 }
 
-/* Base modal window */
 .modal {
   filter: url(#wobble);
   position: absolute;
@@ -351,7 +348,6 @@ body {
   display: none !important;
 }
 
-/* Title bar with button */
 .titlebar {
   display: flex;
   justify-content: space-between;
@@ -370,7 +366,6 @@ body {
   text-transform: uppercase;
 }
 
-/* Exit "X" button */
 .modal-exit-button {
   width: 1.5625rem;
   height: 1.5625rem;
@@ -394,7 +389,6 @@ body {
   transform: rotate(-15deg) scale(1.4);
 }
 
-/* Filepath bar */
 .filepath-bar {
   display: flex;
   justify-content: space-between;
@@ -495,7 +489,6 @@ body {
   color: var(--color-base-black);
 }
 
-/* Sticky-style "More" button */
 .more-button {
   position: absolute;
   bottom: 1.875rem;
@@ -592,7 +585,6 @@ img.about-me-image {
   transform: rotate(-2deg);
 }
 
-/* Scrollbar styles */
 .modal-content::-webkit-scrollbar {
   width: 1rem;
 }
@@ -611,8 +603,8 @@ img.about-me-image {
 .modal-content::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-accent-yellow);
 }
+//firefox not right
 
-/* Responsive tweaks */
 @media (max-width: 786px) {
   .image-list {
     gap: 1rem;
@@ -692,24 +684,19 @@ border: 0.125rem solid var(--color-base-black);
 
 }
 
-/* Hidden by default */
 .project-viewer.hidden {
   display: none;
 }
 
-/* Content area */
 .project-viewer #project-content {
-  
-
   margin: 0;
   padding: 0;
   width: 100%;
   overflow: auto-y;
- /* smooth scroll on iOS */
 }
 
 .project-titlebar {
-  flex: 0 0 3rem;          /* height = 3rem */
+  flex: 0 0 3rem;         
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -717,7 +704,7 @@ border: 0.125rem solid var(--color-base-black);
   color: var(--color-base-white);
   padding: 0 1rem;
   border-bottom: 0.125rem solid var(--color-base-black);
-  z-index: 1;              /* stays above content */
+  z-index: 1;       
 }
 
 .project-title {
@@ -747,7 +734,7 @@ border: 0.125rem solid var(--color-base-black);
   background-color: var(--color-accent-yellow);
   transform: rotate(-15deg) scale(1.4);
 }
-/* Project body elements */
+
 .project-body img,
 .project-body video,
 .project-body iframe {
